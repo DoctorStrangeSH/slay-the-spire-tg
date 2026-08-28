@@ -1,0 +1,8 @@
+﻿# Токены и секреты
+.env
+*.token
+bot/token.txt
+
+# Системные файлы
+.DS_Store
+Thumbs.db

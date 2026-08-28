@@ -1,0 +1,608 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background: #1a1a2e;
+    color: #fff;
+    touch-action: manipulation;
+    user-select: none;
+    -webkit-user-select: none;
+    -webkit-tap-highlight-color: transparent;
+}
+
+#game-container {
+    max-width: 480px;
+    margin: 0 auto;
+    min-height: 100vh;
+    background: linear-gradient(135deg, #16213e 0%, #0f3460 100%);
+    position: relative;
+    overflow: hidden;
+}
+
+/* Загрузочный экран */
+#loading-screen {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    font-size: 24px;
+}
+
+/* Главное меню */
+#main-menu {
+    padding: 40px 20px;
+    text-align: center;
+}
+
+#main-menu h1 {
+    font-size: 36px;
+    margin-bottom: 40px;
+    color: #e94560;
+    text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+}
+
+#main-menu button {
+    display: block;
+    width: 100%;
+    padding: 15px;
+    margin: 10px 0;
+    font-size: 18px;
+    background: #e94560;
+    color: white;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+#main-menu button:hover {
+    background: #ff6b6b;
+    transform: scale(1.05);
+}
+
+#main-menu button:active {
+    transform: scale(0.95);
+}
+
+/* Экран выбора героя */
+#hero-select {
+    padding: 20px;
+}
+
+#hero-select h2 {
+    text-align: center;
+    margin-bottom: 20px;
+    color: #ffd700;
+    font-size: 24px;
+}
+
+#hero-list {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.hero-card {
+    background: rgba(255, 255, 255, 0.1);
+    border: 3px solid #666;
+    border-radius: 15px;
+    padding: 20px;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+.hero-card:hover {
+    transform: scale(1.02);
+    box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+}
+
+.hero-card:active {
+    transform: scale(0.98);
+}
+
+.hero-emoji {
+    font-size: 48px;
+    text-align: center;
+    margin-bottom: 10px;
+}
+
+.hero-card h3 {
+    text-align: center;
+    font-size: 20px;
+    margin-bottom: 5px;
+}
+
+.hero-title {
+    text-align: center;
+    color: #ffd700;
+    font-size: 14px;
+    margin-bottom: 10px;
+}
+
+.hero-desc {
+    text-align: center;
+    color: #ccc;
+    font-size: 13px;
+    margin-bottom: 10px;
+}
+
+/* Боевой экран */
+#battle-screen {
+    padding: 20px;
+    min-height: 100vh;
+    position: relative;
+}
+
+#enemy-area {
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+#enemy-sprite {
+    font-size: 80px;
+    margin-bottom: 10px;
+    animation: enemy-idle 2s infinite;
+}
+
+@keyframes enemy-idle {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-10px); }
+}
+
+#enemy-info {
+    background: rgba(255,255,255,0.1);
+    border-radius: 10px;
+    padding: 15px;
+}
+
+#enemy-name {
+    font-size: 20px;
+    font-weight: bold;
+    margin-bottom: 10px;
+}
+
+.hp-bar {
+    width: 100%;
+    height: 25px;
+    background: #333;
+    border-radius: 12px;
+    overflow: hidden;
+    margin: 5px 0;
+    position: relative;
+}
+
+.hp-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #ff4444, #ff6b6b);
+    transition: width 0.5s ease;
+    border-radius: 12px;
+}
+
+#enemy-hp-fill {
+    background: linear-gradient(90deg, #ff4444, #ff8800);
+}
+
+#player-hp-fill {
+    background: linear-gradient(90deg, #44ff44, #88ff88);
+}
+
+#enemy-hp-text, #player-hp-text {
+    font-size: 14px;
+    font-weight: bold;
+    text-align: center;
+    margin: 2px 0;
+    text-shadow: 1px 1px 2px rgba(0,0,0,0.8);
+}
+
+#enemy-block, #player-block {
+    font-size: 14px;
+    margin: 2px 0;
+    color: #4ecdc4;
+}
+
+#enemy-effects, #player-effects {
+    font-size: 12px;
+    margin: 5px 0;
+    color: #ffd700;
+    min-height: 18px;
+}
+
+#enemy-intent {
+    font-size: 14px;
+    margin: 5px 0;
+    color: #ff6b6b;
+}
+
+#player-area {
+    margin-bottom: 20px;
+}
+
+#player-info {
+    background: rgba(255,255,255,0.1);
+    border-radius: 10px;
+    padding: 15px;
+}
+
+#player-name {
+    font-size: 20px;
+    font-weight: bold;
+    margin-bottom: 10px;
+}
+
+#player-energy, #player-block {
+    font-size: 16px;
+    margin: 5px 0;
+}
+
+/* Карты */
+#hand-area {
+    display: flex;
+    gap: 10px;
+    overflow-x: auto;
+    padding: 10px 0;
+    min-height: 150px;
+    margin-bottom: 20px;
+}
+
+.card {
+    min-width: 120px;
+    max-width: 120px;
+    height: 170px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border-radius: 10px;
+    padding: 10px;
+    cursor: pointer;
+    transition: all 0.3s;
+    position: relative;
+    flex-shrink: 0;
+    border: 2px solid transparent;
+}
+
+.card:active {
+    transform: scale(0.95);
+}
+
+.card.selected {
+    transform: translateY(-20px);
+    box-shadow: 0 0 20px rgba(78, 205, 196, 0.8);
+    border: 2px solid #4ecdc4;
+}
+
+.card-cost {
+    position: absolute;
+    top: 5px;
+    left: 5px;
+    width: 25px;
+    height: 25px;
+    background: #ffd700;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    color: #333;
+}
+
+.card-name {
+    font-size: 14px;
+    font-weight: bold;
+    margin-top: 20px;
+    text-align: center;
+}
+
+.card-description {
+    font-size: 11px;
+    text-align: center;
+    margin-top: 10px;
+}
+
+.card-type-attack {
+    background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+}
+
+.card-type-skill {
+    background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+}
+
+.card-type-power {
+    background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+}
+
+/* Превью карты */
+.card-preview {
+    position: fixed;
+    bottom: 200px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: #2d2d44;
+    padding: 15px;
+    border-radius: 10px;
+    border: 2px solid #4ecdc4;
+    font-size: 14px;
+    z-index: 100;
+    max-width: 90%;
+    text-align: center;
+    box-shadow: 0 5px 20px rgba(0,0,0,0.5);
+}
+
+/* Кнопки действий */
+#action-buttons {
+    display: flex;
+    gap: 10px;
+    margin-top: 20px;
+    flex-wrap: wrap;
+}
+
+#action-buttons button {
+    flex: 1;
+    min-width: 100px;
+    padding: 15px;
+    background: #e94560;
+    color: white;
+    border: none;
+    border-radius: 10px;
+    font-size: 14px;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+#action-buttons button:hover {
+    background: #ff6b6b;
+    transform: scale(1.05);
+}
+
+#action-buttons button:active {
+    transform: scale(0.95);
+}
+
+/* Карта мира */
+#map-screen {
+    padding: 20px;
+}
+
+#map-screen h2 {
+    text-align: center;
+    margin-bottom: 20px;
+    color: #ffd700;
+}
+
+.act-info {
+    text-align: center;
+    margin-bottom: 20px;
+    padding: 15px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 10px;
+}
+
+.act-info h2 {
+    color: #ffd700;
+    margin-bottom: 5px;
+}
+
+.act-info p {
+    margin: 5px 0;
+    color: #ccc;
+}
+
+#map-nodes {
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: 10px;
+    padding: 10px;
+    overflow-y: auto;
+    max-height: 70vh;
+}
+
+.map-wrapper {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    padding: 10px;
+}
+
+.floor-row {
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    gap: 5px;
+    min-height: 60px;
+    position: relative;
+}
+
+.floor-label {
+    font-size: 12px;
+    color: #888;
+    width: 30px;
+    text-align: center;
+    flex-shrink: 0;
+}
+
+.map-node-container {
+    flex: 1;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    max-width: 80px;
+}
+
+.map-node-btn {
+    width: 65px;
+    height: 65px;
+    border-radius: 50%;
+    border: 3px solid #666;
+    background: #2d2d44;
+    color: white;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 2px;
+    cursor: pointer;
+    transition: all 0.3s;
+    padding: 5px;
+    position: relative;
+    z-index: 2;
+    font-size: 10px;
+}
+
+.map-node-btn:active {
+    transform: scale(0.9);
+}
+
+.map-node-btn.visited {
+    background: #4a4a5a;
+    border-color: #888;
+}
+
+.map-node-btn.available {
+    border-color: #4ecdc4;
+    background: #1a3a3a;
+    box-shadow: 0 0 15px rgba(78, 205, 196, 0.5);
+    animation: pulse 1.5s infinite;
+}
+
+.map-node-btn.available:hover {
+    transform: scale(1.1);
+    background: #2a4a4a;
+}
+
+.map-node-btn:disabled {
+    cursor: not-allowed;
+}
+
+.map-node-btn.past {
+    opacity: 0.6;
+    background: #3a3a4a;
+}
+
+.map-node-btn.future {
+    background: #2a2a3a;
+}
+
+.map-node-btn.current {
+    border-color: #4ecdc4;
+    box-shadow: 0 0 10px rgba(78, 205, 196, 0.3);
+}
+
+@keyframes pulse {
+    0%, 100% {
+        box-shadow: 0 0 15px rgba(78, 205, 196, 0.5);
+    }
+    50% {
+        box-shadow: 0 0 25px rgba(78, 205, 196, 0.8);
+    }
+}
+
+.node-icon {
+    font-size: 22px;
+    line-height: 1;
+}
+
+.node-label {
+    font-size: 9px;
+    white-space: nowrap;
+}
+
+.map-node-btn[data-type="battle"] {
+    border-color: #e94560;
+}
+
+.map-node-btn[data-type="elite"] {
+    border-color: #ffd700;
+}
+
+.map-node-btn[data-type="rest"] {
+    border-color: #4ecdc4;
+}
+
+.map-node-btn[data-type="event"] {
+    border-color: #a855f7;
+}
+
+.map-node-btn[data-type="shop"] {
+    border-color: #3b82f6;
+}
+
+.map-node-btn[data-type="boss"] {
+    border-color: #ef4444;
+    background: #4a1a1a;
+}
+
+/* Модальные окна */
+.modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.8);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+}
+
+.modal-content {
+    background: #2d2d44;
+    padding: 20px;
+    border-radius: 15px;
+    max-width: 90%;
+    width: 350px;
+    max-height: 80vh;
+    overflow-y: auto;
+}
+
+.modal-content h3 {
+    color: #ffd700;
+    margin-bottom: 10px;
+    text-align: center;
+}
+
+.modal-content p {
+    margin-bottom: 15px;
+    text-align: center;
+    color: #ccc;
+}
+
+.modal-content button {
+    display: block;
+    width: 100%;
+    padding: 12px;
+    margin: 8px 0;
+    background: #e94560;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 16px;
+    transition: all 0.3s;
+}
+
+.modal-content button:hover {
+    background: #ff6b6b;
+    transform: scale(1.02);
+}
+
+.shop-item {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    padding: 10px;
+    margin: 5px 0;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 8px;
+}
+
+.shop-item span {
+    font-size: 14px;
+}
+
+.shop-item button {
+    padding: 8px;
+    font-size: 14px;
+    background: #4ecdc4;
+    color: #333;
+}

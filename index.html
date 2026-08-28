@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Card Roguelike</title>
+    <link rel="stylesheet" href="css/style.css">
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+</head>
+<body>
+    <div id="game-container">
+        <!-- Экран загрузки -->
+        <div id="loading-screen">
+            <h1>Загрузка...</h1>
+        </div>
+        
+        <!-- Главное меню -->
+        <div id="main-menu" style="display: none;">
+            <h1>🗡️ Card Roguelike</h1>
+            <button onclick="showHeroSelect()">Новая игра</button>
+            <button onclick="continueGame()">Продолжить</button>
+            <div id="player-stats"></div>
+        </div>
+        
+        <!-- Экран выбора героя -->
+        <div id="hero-select" style="display: none;">
+            <h2>Выберите героя</h2>
+            <div id="hero-list"></div>
+        </div>
+        
+        <!-- Боевой экран -->
+        <div id="battle-screen" style="display: none;">
+            <!-- Враг -->
+            <div id="enemy-area">
+                <div id="enemy-sprite">👹</div>
+                <div id="enemy-info">
+                    <div id="enemy-name">Враг</div>
+                    <div id="enemy-hp-bar">
+                        <div id="enemy-hp-fill"></div>
+                    </div>
+                    <div id="enemy-hp-text">❤️ 0/0</div>
+                    <div id="enemy-block">🛡️ Броня: 0</div>
+                    <div id="enemy-intent">Намерение: Атака</div>
+                    <div id="enemy-effects"></div>
+                </div>
+            </div>
+            
+            <!-- Игрок -->
+            <div id="player-area">
+                <div id="player-info">
+                    <div id="player-name">Игрок</div>
+                    <div id="player-hp-bar">
+                        <div id="player-hp-fill"></div>
+                    </div>
+                    <div id="player-hp-text">❤️ 0/0</div>
+                    <div id="player-energy">⚡ Энергия: 3/3</div>
+                    <div id="player-block">🛡️ Броня: 0</div>
+                    <div id="player-effects"></div>
+                </div>
+            </div>
+            
+            <!-- Рука карт -->
+            <div id="hand-area">
+                <!-- Карты будут добавляться сюда -->
+            </div>
+            
+            <!-- Кнопки действий -->
+            <div id="action-buttons">
+                <button onclick="playSelectedCards()">⚔️ Разыграть выбранные</button>
+                <button onclick="endTurn()">⏭️ Завершить ход</button>
+                <button onclick="drawPile()">🃏 Колода: <span id="draw-count">0</span></button>
+                <button onclick="discardPile()">🗑️ Сброс: <span id="discard-count">0</span></button>
+            </div>
+        </div>
+        
+        <!-- Экран карты мира -->
+        <div id="map-screen" style="display: none;">
+            <h2>Карта мира</h2>
+            <div id="map-nodes">
+                <!-- Узлы карты -->
+            </div>
+        </div>
+    </div>
+    
+    <!-- Конфигурация -->
+    <script src="js/config/constants.js"></script>
+    
+    <!-- Данные -->
+    <script src="js/data/heroes.js"></script>
+    <script src="js/data/cards/berserk.js"></script>
+    <script src="js/data/cards/index.js"></script>
+    <script src="js/data/enemies.js"></script>
+    
+    <!-- Системы -->
+    <script src="js/systems/MapGenerator.js"></script>
+    <script src="js/systems/BattleSystem.js"></script>
+    <script src="js/systems/Game.js"></script>
+    
+    <!-- UI -->
+    <script src="js/ui/HeroSelect.js"></script>
+    <script src="js/ui/BattleUI.js"></script>
+    <script src="js/ui/MapUI.js"></script>
+    
+    <!-- Точка входа -->
+    <script src="js/main.js"></script>
+</body>
+</html>
