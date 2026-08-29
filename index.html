@@ -42,6 +42,9 @@
                 </div>
             </div>
             
+            <!-- Конструкции (для Инженера) -->
+            <div id="buildings-area" style="display: none;"></div>
+            
             <!-- Игрок -->
             <div id="player-area">
                 <div id="player-info">
@@ -75,11 +78,18 @@
     
     <!-- Данные -->
     <script src="js/data/heroes.js"></script>
+    <script src="js/data/cards/common.js"></script>
     <script src="js/data/cards/berserk.js"></script>
+    <script src="js/data/cards/engineer.js"></script>
     <script src="js/data/cards/index.js"></script>
     <script src="js/data/enemies.js"></script>
     
     <!-- Системы -->
+    <script src="js/systems/battle/BattleCore.js"></script>
+    <script src="js/systems/battle/BattleEffects.js"></script>
+    <script src="js/systems/battle/BattleBuildings.js"></script>
+    <script src="js/systems/battle/BattleCards.js"></script>
+    <script src="js/systems/battle/BattleTurn.js"></script>
     <script src="js/systems/MapGenerator.js"></script>
     <script src="js/systems/BattleSystem.js"></script>
     <script src="js/systems/Game.js"></script>

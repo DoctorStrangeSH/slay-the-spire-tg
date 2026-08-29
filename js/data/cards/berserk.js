@@ -1,16 +1,7 @@
-// Карты Берсерка
+// Уникальные карты Берсерка (60 карт)
 const BERSERK_CARDS = {
-    // ===== АТАКИ =====
-    wideStrike: {
-        id: 'wideStrike',
-        name: 'Размашистый удар',
-        type: CARD_TYPES.ATTACK,
-        rarity: CARD_RARITY.COMMON,
-        cost: 2,
-        damage: 10,
-        description: 'Наносит 10 урона',
-        emoji: '⚔️'
-    },
+    // ===== АТАКИ (20 карт) =====
+    // Обычные (8)
     bloodCut: {
         id: 'bloodCut',
         name: 'Кровавый порез',
@@ -29,7 +20,7 @@ const BERSERK_CARDS = {
         rarity: CARD_RARITY.COMMON,
         cost: 1,
         damage: 6,
-        description: 'Наносит 6 урона. Если HP < 50%, наносит 12 урона',
+        description: 'Наносит 6 урона. Если HP < 50% — 12 урона',
         emoji: '⚡'
     },
     cutWound: {
@@ -39,19 +30,8 @@ const BERSERK_CARDS = {
         rarity: CARD_RARITY.COMMON,
         cost: 1,
         damage: 3,
-        description: 'Наносит 3 урона. Если у врага Кровотечение, наносит 8 урона',
+        description: 'Наносит 3 урона. Если у врага Кровотечение — 8 урона',
         emoji: '🗡️'
-    },
-    vulnerableStrike: {
-        id: 'vulnerableStrike',
-        name: 'Удар в уязвимое место',
-        type: CARD_TYPES.ATTACK,
-        rarity: CARD_RARITY.COMMON,
-        cost: 1,
-        damage: 5,
-        vulnerable: 1,
-        description: 'Наносит 5 урона. Накладывает 1 Уязвимость',
-        emoji: '🎯'
     },
     boneBreaker: {
         id: 'boneBreaker',
@@ -84,11 +64,32 @@ const BERSERK_CARDS = {
         cost: 2,
         damage: 3,
         hits: 4,
-        description: 'Наносит 3 урона 4 раза. +1 урона за удар по врагу с Кровотечением',
+        description: 'Наносит 3 урона 4 раза',
         emoji: '🌊'
     },
+    wideStrike: {
+        id: 'wideStrike',
+        name: 'Размашистый удар',
+        type: CARD_TYPES.ATTACK,
+        rarity: CARD_RARITY.COMMON,
+        cost: 2,
+        damage: 10,
+        description: 'Наносит 10 урона',
+        emoji: '⚔️'
+    },
+    vulnerableStrike: {
+        id: 'vulnerableStrike',
+        name: 'Удар в уязвимое место',
+        type: CARD_TYPES.ATTACK,
+        rarity: CARD_RARITY.COMMON,
+        cost: 1,
+        damage: 5,
+        vulnerable: 1,
+        description: 'Наносит 5 урона. Накладывает 1 Уязвимость',
+        emoji: '🎯'
+    },
     
-    // Необычные атаки
+    // Необычные (7)
     wildLunge: {
         id: 'wildLunge',
         name: 'Дикий выпад',
@@ -119,7 +120,7 @@ const BERSERK_CARDS = {
         cost: 2,
         damage: 6,
         hits: 2,
-        description: 'Наносит 6 урона 2 раза. Если теряли HP в этот ход, 3 раза',
+        description: 'Наносит 6 урона 2 раза',
         emoji: '⛓️'
     },
     cleave: {
@@ -130,7 +131,7 @@ const BERSERK_CARDS = {
         cost: 2,
         damage: 8,
         aoe: true,
-        description: 'Наносит 8 урона. Если HP < 50%, наносит 8 урона ВСЕМ',
+        description: 'Наносит 8 урона ВСЕМ',
         emoji: '🌪️'
     },
     mercyStrike: {
@@ -140,7 +141,7 @@ const BERSERK_CARDS = {
         rarity: CARD_RARITY.UNCOMMON,
         cost: 1,
         damage: 4,
-        description: 'Наносит 4 урона. Если у врага 10+ Кровотечения, наносит 14',
+        description: 'Наносит 4 урона. Если 10+ Кровотечения — 14 урона',
         emoji: '🙏'
     },
     bloodWave: {
@@ -154,8 +155,18 @@ const BERSERK_CARDS = {
         description: 'Наносит 6 урона. Накладывает 5 Кровотечения',
         emoji: '🌊'
     },
+    execution: {
+        id: 'execution',
+        name: 'Добивание',
+        type: CARD_TYPES.ATTACK,
+        rarity: CARD_RARITY.UNCOMMON,
+        cost: 2,
+        damage: 10,
+        description: 'Наносит 10 урона. Если враг < 30% HP — 30 урона',
+        emoji: '💀'
+    },
     
-    // Редкие атаки
+    // Редкие (5)
     bloodbath: {
         id: 'bloodbath',
         name: 'Кровавая бойня',
@@ -168,16 +179,6 @@ const BERSERK_CARDS = {
         description: 'Наносит 8 урона ВСЕМ. Накладывает 3 Кровотечения ВСЕМ',
         emoji: '🩸'
     },
-    execution: {
-        id: 'execution',
-        name: 'Добивание',
-        type: CARD_TYPES.ATTACK,
-        rarity: CARD_RARITY.RARE,
-        cost: 2,
-        damage: 10,
-        description: 'Наносит 10 урона. Если у врага < 30% HP, наносит 30',
-        emoji: '💀'
-    },
     beheading: {
         id: 'beheading',
         name: 'Обезглавливание',
@@ -185,7 +186,7 @@ const BERSERK_CARDS = {
         rarity: CARD_RARITY.RARE,
         cost: 3,
         damage: 18,
-        description: 'Наносит 18 урона. Если убивает, лечит 8 HP и даёт 1 Энергию',
+        description: 'Наносит 18 урона. Если убивает — лечит 8 HP',
         emoji: '🪓'
     },
     bloodVortex: {
@@ -198,19 +199,8 @@ const BERSERK_CARDS = {
         bleed: 2,
         aoe: true,
         selfDamage: 2,
-        description: 'Наносит 5 урона ВСЕМ. Накладывает 2 Кровотечения ВСЕМ. Вы получаете 2 урона',
+        description: 'Наносит 5 урона ВСЕМ. Накладывает 2 Кровотечения',
         emoji: '🌀'
-    },
-    sacrificialBlade: {
-        id: 'sacrificialBlade',
-        name: 'Жертвенный клинок',
-        type: CARD_TYPES.ATTACK,
-        rarity: CARD_RARITY.RARE,
-        cost: 2,
-        damage: 10,
-        selfDamage: 5,
-        description: 'Вы теряете 5 HP. Наносит 10 урона + 1 за каждые 5 потерянных HP',
-        emoji: '🗡️'
     },
     bloodTide: {
         id: 'bloodTide',
@@ -220,21 +210,32 @@ const BERSERK_CARDS = {
         cost: 2,
         damage: 12,
         bleed: 4,
-        description: 'Наносит 12 урона. Накладывает 4 Кровотечения. Лечит 2 HP за 5 стаков Кровотечения',
+        description: 'Наносит 12 урона. Накладывает 4 Кровотечения',
         emoji: '🌊'
     },
+    sacrificialBlade: {
+        id: 'sacrificialBlade',
+        name: 'Жертвенный клинок',
+        type: CARD_TYPES.ATTACK,
+        rarity: CARD_RARITY.RARE,
+        cost: 2,
+        damage: 10,
+        selfDamage: 5,
+        description: 'Теряете 5 HP. Наносит 10 урона',
+        emoji: '🗡️'
+    },
     
-    // ===== НАВЫКИ =====
-    bandage: {
-        id: 'bandage',
-        name: 'Перевязка',
+    // ===== НАВЫКИ (20 карт) =====
+    // Обычные (8)
+    berserkStance: {
+        id: 'berserkStance',
+        name: 'Стойка берсерка',
         type: CARD_TYPES.SKILL,
         rarity: CARD_RARITY.COMMON,
-        cost: 1,
-        block: 5,
-        heal: 1,
-        description: 'Даёт 5 Блока. Лечит 1 HP',
-        emoji: '🩹'
+        cost: 2,
+        block: 12,
+        description: 'Даёт 12 Блока. Если HP < 50% — 20 Блока',
+        emoji: '🛡️'
     },
     bloodRitual: {
         id: 'bloodRitual',
@@ -245,52 +246,8 @@ const BERSERK_CARDS = {
         selfDamage: 3,
         energy: 1,
         exhaust: true,
-        description: 'Вы теряете 3 HP. Получите 1 Энергию. Убирается',
+        description: 'Теряете 3 HP. Получите 1 Энергию. Убирается',
         emoji: '🩸'
-    },
-    bestialInstinct: {
-        id: 'bestialInstinct',
-        name: 'Звериный инстинкт',
-        type: CARD_TYPES.SKILL,
-        rarity: CARD_RARITY.COMMON,
-        cost: 1,
-        draw: 2,
-        selfDamage: 1,
-        description: 'Возьмите 2 карты. Вы получаете 1 урона',
-        emoji: '👁️'
-    },
-    berserkStance: {
-        id: 'berserkStance',
-        name: 'Стойка берсерка',
-        type: CARD_TYPES.SKILL,
-        rarity: CARD_RARITY.COMMON,
-        cost: 2,
-        block: 12,
-        description: 'Даёт 12 Блока. Если HP < 50%, даёт 20 Блока',
-        emoji: '🛡️'
-    },
-    dash: {
-        id: 'dash',
-        name: 'Рывок',
-        type: CARD_TYPES.SKILL,
-        rarity: CARD_RARITY.COMMON,
-        cost: 1,
-        block: 4,
-        draw: 1,
-        description: 'Даёт 4 Блока. Возьмите 1 карту',
-        emoji: '💨'
-    },
-    beastRoar: {
-        id: 'beastRoar',
-        name: 'Звериный рёв',
-        type: CARD_TYPES.SKILL,
-        rarity: CARD_RARITY.COMMON,
-        cost: 0,
-        selfDamage: 1,
-        vulnerableAll: 1,
-        exhaust: true,
-        description: 'Вы получаете 1 урона. Накладывает 1 Уязвимость на ВСЕХ. Убирается',
-        emoji: '🦁'
     },
     lickWounds: {
         id: 'lickWounds',
@@ -311,8 +268,31 @@ const BERSERK_CARDS = {
         cost: 1,
         block: 6,
         bleed: 2,
-        description: 'Даёт 6 Блока. Накладывает 2 Кровотечения на случайного врага',
+        description: 'Даёт 6 Блока. Накладывает 2 Кровотечения',
         emoji: '🩸'
+    },
+    bestialInstinct: {
+        id: 'bestialInstinct',
+        name: 'Звериный инстинкт',
+        type: CARD_TYPES.SKILL,
+        rarity: CARD_RARITY.COMMON,
+        cost: 1,
+        draw: 2,
+        selfDamage: 1,
+        description: 'Возьмите 2 карты. Получаете 1 урона',
+        emoji: '👁️'
+    },
+    beastRoar: {
+        id: 'beastRoar',
+        name: 'Звериный рёв',
+        type: CARD_TYPES.SKILL,
+        rarity: CARD_RARITY.COMMON,
+        cost: 0,
+        selfDamage: 1,
+        vulnerable: 1,
+        exhaust: true,
+        description: 'Получаете 1 урона. Накладывает 1 Уязвимость. Убирается',
+        emoji: '🦁'
     },
     madDash: {
         id: 'madDash',
@@ -321,11 +301,22 @@ const BERSERK_CARDS = {
         rarity: CARD_RARITY.COMMON,
         cost: 1,
         block: 5,
-        description: 'Даёт 5 Блока. В следующем ходу ваши Атаки стоят на 1 меньше',
+        description: 'Даёт 5 Блока. В след. ходу Атаки стоят на 1 меньше',
         emoji: '🏃'
     },
+    dash: {
+        id: 'dash',
+        name: 'Рывок',
+        type: CARD_TYPES.SKILL,
+        rarity: CARD_RARITY.COMMON,
+        cost: 1,
+        block: 4,
+        draw: 1,
+        description: 'Даёт 4 Блока. Возьмите 1 карту',
+        emoji: '💨'
+    },
     
-    // Необычные навыки
+    // Необычные (7)
     freshWound: {
         id: 'freshWound',
         name: 'Свежая рана',
@@ -333,20 +324,8 @@ const BERSERK_CARDS = {
         rarity: CARD_RARITY.UNCOMMON,
         cost: 1,
         bleed: 4,
-        description: 'Накладывает 4 Кровотечения. Если HP < 50%, накладывает 8',
+        description: 'Накладывает 4 Кровотечения. Если HP < 50% — 8',
         emoji: '🩸'
-    },
-    scarletVeil: {
-        id: 'scarletVeil',
-        name: 'Алая пелена',
-        type: CARD_TYPES.SKILL,
-        rarity: CARD_RARITY.UNCOMMON,
-        cost: 1,
-        weak: 1,
-        vulnerable: 1,
-        selfDamage: 2,
-        description: 'Накладывает 1 Слабость и 1 Уязвимость. Вы теряете 2 HP',
-        emoji: '🌫️'
     },
     vampirism: {
         id: 'vampirism',
@@ -368,8 +347,20 @@ const BERSERK_CARDS = {
         cost: 1,
         bleed: 3,
         draw: 1,
-        description: 'Накладывает 3 Кровотечения. Если враг уже истекает кровью, возьмите 1 карту',
+        description: 'Накладывает 3 Кровотечения. Возьмите 1 карту',
         emoji: '🔪'
+    },
+    scarletVeil: {
+        id: 'scarletVeil',
+        name: 'Алая пелена',
+        type: CARD_TYPES.SKILL,
+        rarity: CARD_RARITY.UNCOMMON,
+        cost: 1,
+        weak: 1,
+        vulnerable: 1,
+        selfDamage: 2,
+        description: 'Накладывает 1 Слабость и 1 Уязвимость',
+        emoji: '🌫️'
     },
     bloodSmell: {
         id: 'bloodSmell',
@@ -378,7 +369,7 @@ const BERSERK_CARDS = {
         rarity: CARD_RARITY.UNCOMMON,
         cost: 1,
         draw: 2,
-        description: 'Возьмите 2 карты. Если в руке есть Атака, она стоит на 1 меньше',
+        description: 'Возьмите 2 карты. Если есть Атака — стоит на 1 меньше',
         emoji: '👃'
     },
     spiritFortification: {
@@ -388,11 +379,22 @@ const BERSERK_CARDS = {
         rarity: CARD_RARITY.UNCOMMON,
         cost: 1,
         block: 7,
-        description: 'Даёт 7 Блока. Если HP < 50%, даёт 14 Блока',
+        description: 'Даёт 7 Блока. Если HP < 50% — 14 Блока',
         emoji: '💪'
     },
+    bandage: {
+        id: 'bandage',
+        name: 'Перевязка',
+        type: CARD_TYPES.SKILL,
+        rarity: CARD_RARITY.UNCOMMON,
+        cost: 1,
+        block: 5,
+        heal: 1,
+        description: 'Даёт 5 Блока. Лечит 1 HP',
+        emoji: '🩹'
+    },
     
-    // Редкие навыки
+    // Редкие (5)
     lastStand: {
         id: 'lastStand',
         name: 'Последний рубеж',
@@ -401,7 +403,7 @@ const BERSERK_CARDS = {
         cost: 2,
         block: 15,
         selfDamage: 5,
-        description: 'Даёт 15 Блока. Вы получаете 5 урона. Если HP < 25%, даёт 30 Блока без урона',
+        description: 'Даёт 15 Блока. Если HP < 25% — 30 Блока',
         emoji: '🛡️'
     },
     bloodSacrifice: {
@@ -412,20 +414,8 @@ const BERSERK_CARDS = {
         cost: 1,
         selfDamage: 5,
         exhaust: true,
-        description: 'Вы теряете 5 HP. Удваивает текущую Силу до конца боя. Убирается',
+        description: 'Теряете 5 HP. Удваивает Силу. Убирается',
         emoji: '💉'
-    },
-    scarletFog: {
-        id: 'scarletFog',
-        name: 'Алый туман',
-        type: CARD_TYPES.SKILL,
-        rarity: CARD_RARITY.RARE,
-        cost: 2,
-        weakAll: 2,
-        vulnerableAll: 2,
-        selfDamage: 4,
-        description: 'Накладывает 2 Слабости и 2 Уязвимости на ВСЕХ. Вы теряете 4 HP',
-        emoji: '🌫️'
     },
     bloodRecovery: {
         id: 'bloodRecovery',
@@ -434,8 +424,20 @@ const BERSERK_CARDS = {
         rarity: CARD_RARITY.RARE,
         cost: 2,
         heal: 5,
-        description: 'Лечит 5 HP. Снимает все Кровотечения. +1 HP за 3 стака',
+        description: 'Лечит 5 HP. Снимает Кровотечение',
         emoji: '💚'
+    },
+    scarletFog: {
+        id: 'scarletFog',
+        name: 'Алый туман',
+        type: CARD_TYPES.SKILL,
+        rarity: CARD_RARITY.RARE,
+        cost: 2,
+        weak: 2,
+        vulnerable: 2,
+        selfDamage: 4,
+        description: 'Накладывает 2 Слабости и 2 Уязвимости',
+        emoji: '🌫️'
     },
     finalBattle: {
         id: 'finalBattle',
@@ -446,18 +448,19 @@ const BERSERK_CARDS = {
         block: 20,
         selfDamage: 3,
         exhaust: true,
-        description: 'Даёт 20 Блока. Вы получаете 3 урона. Если HP < 20%, даёт 35 Блока',
+        description: 'Даёт 20 Блока. Если HP < 20% — 35 Блока',
         emoji: '⚔️'
     },
     
-    // ===== СИЛЫ =====
+    // ===== СИЛЫ (20 карт) =====
+    // Обычные (8)
     killThirst: {
         id: 'killThirst',
         name: 'Жажда убийства',
         type: CARD_TYPES.POWER,
         rarity: CARD_RARITY.COMMON,
         cost: 1,
-        description: 'В начале хода, если HP < 50%, получите 1 Силу',
+        description: 'В начале хода, если HP < 50% — 1 Сила',
         emoji: '🔥'
     },
     bloodletting: {
@@ -466,7 +469,7 @@ const BERSERK_CARDS = {
         type: CARD_TYPES.POWER,
         rarity: CARD_RARITY.COMMON,
         cost: 1,
-        description: 'Когда вы получаете урон, накладывайте 1 Кровотечение на случайного врага',
+        description: 'Когда получаете урон — 1 Кровотечение врагу',
         emoji: '🩸'
     },
     adrenalineRush: {
@@ -475,7 +478,7 @@ const BERSERK_CARDS = {
         type: CARD_TYPES.POWER,
         rarity: CARD_RARITY.COMMON,
         cost: 1,
-        description: 'Когда убиваете врага, лечите 2 HP и возьмите 1 карту',
+        description: 'При убийстве — лечите 2 HP и берёте 1 карту',
         emoji: '⚡'
     },
     battlePulse: {
@@ -484,37 +487,56 @@ const BERSERK_CARDS = {
         type: CARD_TYPES.POWER,
         rarity: CARD_RARITY.COMMON,
         cost: 2,
-        description: 'В начале хода, если HP < 25%, лечите 3 HP',
+        description: 'В начале хода, если HP < 25% — лечите 3 HP',
         emoji: '💓'
     },
+    warmup: {
+        id: 'warmup',
+        name: 'Разминка',
+        type: CARD_TYPES.POWER,
+        rarity: CARD_RARITY.COMMON,
+        cost: 1,
+        strength: 1,
+        description: 'Получите 1 Силу',
+        emoji: '💪'
+    },
+    confidence: {
+        id: 'confidence',
+        name: 'Уверенность',
+        type: CARD_TYPES.POWER,
+        rarity: CARD_RARITY.COMMON,
+        cost: 1,
+        description: 'В начале хода — 1 Блок',
+        emoji: '😤'
+    },
+    focus: {
+        id: 'focus',
+        name: 'Фокус',
+        type: CARD_TYPES.POWER,
+        rarity: CARD_RARITY.COMMON,
+        cost: 1,
+        description: 'В начале хода — берите 1 карту',
+        emoji: '🎯'
+    },
+    regeneration: {
+        id: 'regeneration',
+        name: 'Регенерация',
+        type: CARD_TYPES.POWER,
+        rarity: CARD_RARITY.COMMON,
+        cost: 2,
+        description: 'В начале хода — лечите 1 HP',
+        emoji: '💚'
+    },
     
-    // Необычные силы
+    // Необычные (7)
     painPath: {
         id: 'painPath',
         name: 'Путь боли',
         type: CARD_TYPES.POWER,
         rarity: CARD_RARITY.UNCOMMON,
         cost: 2,
-        description: 'В начале хода вы теряете 1 HP и получаете 1 Силу',
+        description: 'В начале хода: -1 HP, +1 Сила',
         emoji: '😈'
-    },
-    beastSkin: {
-        id: 'beastSkin',
-        name: 'Звериная шкура',
-        type: CARD_TYPES.POWER,
-        rarity: CARD_RARITY.UNCOMMON,
-        cost: 2,
-        description: 'Когда получаете урон, даёт 1 Блок в начале следующего хода',
-        emoji: '🐻'
-    },
-    bloodAura: {
-        id: 'bloodAura',
-        name: 'Кровавая аура',
-        type: CARD_TYPES.POWER,
-        rarity: CARD_RARITY.UNCOMMON,
-        cost: 2,
-        description: 'В начале хода, если HP < 50%, накладывайте 2 Кровотечения на случайного врага',
-        emoji: '🩸'
     },
     bloodthirst: {
         id: 'bloodthirst',
@@ -522,8 +544,17 @@ const BERSERK_CARDS = {
         type: CARD_TYPES.POWER,
         rarity: CARD_RARITY.UNCOMMON,
         cost: 1,
-        description: 'Когда враг получает урон от Кровотечения, вы лечите 1 HP',
+        description: 'Урон от Кровотечения лечит 1 HP',
         emoji: '🧛'
+    },
+    bloodAura: {
+        id: 'bloodAura',
+        name: 'Кровавая аура',
+        type: CARD_TYPES.POWER,
+        rarity: CARD_RARITY.UNCOMMON,
+        cost: 2,
+        description: 'Начало хода при HP<50%: 2 Кровотечения врагу',
+        emoji: '🩸'
     },
     battleMadness: {
         id: 'battleMadness',
@@ -531,18 +562,45 @@ const BERSERK_CARDS = {
         type: CARD_TYPES.POWER,
         rarity: CARD_RARITY.UNCOMMON,
         cost: 1,
-        description: 'Когда вы теряете HP, возьмите 1 карту (максимум 2 раза за ход)',
+        description: 'При потере HP — берите 1 карту (2 раза/ход)',
         emoji: '🤪'
     },
+    beastSkin: {
+        id: 'beastSkin',
+        name: 'Звериная шкура',
+        type: CARD_TYPES.POWER,
+        rarity: CARD_RARITY.UNCOMMON,
+        cost: 2,
+        description: 'При получении урона — 1 Блок в след. ходу',
+        emoji: '🐻'
+    },
+    adaptation: {
+        id: 'adaptation',
+        name: 'Адаптация',
+        type: CARD_TYPES.POWER,
+        rarity: CARD_RARITY.UNCOMMON,
+        cost: 2,
+        description: 'Навык даёт 1 Блок',
+        emoji: '🔄'
+    },
+    secondWind: {
+        id: 'secondWind',
+        name: 'Второе дыхание',
+        type: CARD_TYPES.POWER,
+        rarity: CARD_RARITY.UNCOMMON,
+        cost: 2,
+        description: 'Нет Блока в начале хода — получите 3 Блока',
+        emoji: '🌬️'
+    },
     
-    // Редкие силы
+    // Редкие (5)
     berserkMode: {
         id: 'berserkMode',
         name: 'Берсерк-режим',
         type: CARD_TYPES.POWER,
         rarity: CARD_RARITY.RARE,
         cost: 2,
-        description: 'Вы получаете 2 Силы. В конце хода теряете 1 HP за каждую карту в руке',
+        description: '+2 Силы. В конце хода -1 HP за карту в руке',
         emoji: '🔴'
     },
     bloodSeal: {
@@ -551,7 +609,7 @@ const BERSERK_CARDS = {
         type: CARD_TYPES.POWER,
         rarity: CARD_RARITY.RARE,
         cost: 3,
-        description: 'Когда враг получает урон от Кровотечения, вы лечите 2 HP',
+        description: 'Урон от Кровотечения лечит 2 HP',
         emoji: '🔯'
     },
     titanRage: {
@@ -560,7 +618,7 @@ const BERSERK_CARDS = {
         type: CARD_TYPES.POWER,
         rarity: CARD_RARITY.RARE,
         cost: 2,
-        description: 'Все ваши Атаки стоят на 1 меньше. В начале хода вы получаете 2 урона',
+        description: 'Атаки стоят на 1 меньше. В начале хода -2 HP',
         emoji: '💢'
     },
     painIsPower: {
@@ -569,62 +627,8 @@ const BERSERK_CARDS = {
         type: CARD_TYPES.POWER,
         rarity: CARD_RARITY.RARE,
         cost: 1,
-        description: 'Когда вы теряете HP, получите 1 Силу (максимум 1 раз за ход)',
+        description: 'При потере HP — +1 Сила (1 раз/ход)',
         emoji: '💪'
-    },
-    scars: {
-        id: 'scars',
-        name: 'Шрамы',
-        type: CARD_TYPES.POWER,
-        rarity: CARD_RARITY.RARE,
-        cost: 2,
-        description: 'В начале боя вы получаете 10 Блока. Когда получаете урон, +1 Блок в начале следующего хода',
-        emoji: '🔪'
-    },
-    invulnerability: {
-        id: 'invulnerability',
-        name: 'Неуязвимость',
-        type: CARD_TYPES.POWER,
-        rarity: CARD_RARITY.RARE,
-        cost: 3,
-        description: 'Когда вы получаете урон, уменьшите его на 2 (минимум 0)',
-        emoji: '🛡️'
-    },
-    bloodCovenant: {
-        id: 'bloodCovenant',
-        name: 'Кровавый завет',
-        type: CARD_TYPES.POWER,
-        rarity: CARD_RARITY.RARE,
-        cost: 2,
-        description: 'В начале хода теряете 2 HP и получаете 1 Силу. Если HP < 50%, теряете 1 HP и получаете 2 Силы',
-        emoji: '📜'
-    },
-    beastRage: {
-        id: 'beastRage',
-        name: 'Звериная ярость',
-        type: CARD_TYPES.POWER,
-        rarity: CARD_RARITY.RARE,
-        cost: 3,
-        description: 'Вы получаете 3 Силы. В конце хода получаете 1 урона за каждую карту в руке',
-        emoji: '🐺'
-    },
-    bloodRiver: {
-        id: 'bloodRiver',
-        name: 'Кровавая река',
-        type: CARD_TYPES.POWER,
-        rarity: CARD_RARITY.RARE,
-        cost: 2,
-        description: 'Когда вы разыгрываете Атаку, накладывайте 1 Кровотечение на цель',
-        emoji: '🌊'
-    },
-    painIsWeapon: {
-        id: 'painIsWeapon',
-        name: 'Боль — это оружие',
-        type: CARD_TYPES.POWER,
-        rarity: CARD_RARITY.RARE,
-        cost: 1,
-        description: 'Когда вы теряете HP, ваш следующий Удар наносит +2 урона',
-        emoji: '🗡️'
     },
     secondLife: {
         id: 'secondLife',
@@ -632,21 +636,23 @@ const BERSERK_CARDS = {
         type: CARD_TYPES.POWER,
         rarity: CARD_RARITY.RARE,
         cost: 3,
-        description: 'Когда вы должны умереть, выживаете с 1 HP (один раз). Лечите 10 HP. Убирается',
+        description: 'При смерти выживаете с 10 HP (один раз)',
         emoji: '💖'
     }
 };
 
 // Стартовая колода Берсерка
 const BERSERK_STARTER_DECK = [
-    { ...BERSERK_CARDS.wideStrike },
+    // Общие карты
+    { ...COMMON_CARDS.strike },
+    { ...COMMON_CARDS.strike },
+    { ...COMMON_CARDS.strike },
+    { ...COMMON_CARDS.defend },
+    { ...COMMON_CARDS.defend },
+    { ...COMMON_CARDS.defend },
+    // Уникальные карты Берсерка
     { ...BERSERK_CARDS.bloodCut },
     { ...BERSERK_CARDS.bloodCut },
     { ...BERSERK_CARDS.retaliationStrike },
-    { ...BERSERK_CARDS.bandage },
-    { ...BERSERK_CARDS.bandage },
-    { ...BERSERK_CARDS.berserkStance },
-    { ...BERSERK_CARDS.berserkStance },
-    { ...BERSERK_CARDS.dash },
-    { ...BERSERK_CARDS.killThirst }
+    { ...BERSERK_CARDS.berserkStance }
 ];

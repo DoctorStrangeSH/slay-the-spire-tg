@@ -14,11 +14,11 @@ const HEROES = {
     engineer: {
         id: 'engineer',
         name: 'Инженер',
-        title: 'Контроль поля, AFK',
+        title: 'Контроль поля, Конструкции',
         color: '#ff8c00',
         emoji: '🔧',
-        description: 'Конструкции: турели, дроны.',
-        unlocked: false,
+        description: 'Конструкции: турели, дроны, щиты.',
+        unlocked: true,
         maxHp: 80,
         starterDeck: 'engineer'
     },
