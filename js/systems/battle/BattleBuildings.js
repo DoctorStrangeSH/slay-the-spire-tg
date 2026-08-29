@@ -1,13 +1,26 @@
-// Механики конструкций Инженера
+// Механики конструкций Инженера (4 слота, статусы)
 class BattleBuildings {
     constructor() {
-        this.buildings = []; // Активные конструкции на поле
+        this.buildings = [];
+        this.maxSlots = 4;
+        this.nextId = 1;
     }
     
-    // Выложить конструкцию
+    getFreeSlots() {
+        return this.maxSlots - this.buildings.length;
+    }
+    
+    hasFreeSlots() {
+        return this.buildings.length < this.maxSlots;
+    }
+    
     placeBuilding(battle, card) {
+        if (!this.hasFreeSlots()) {
+            return { success: false, message: 'Нет свободных слотов!' };
+        }
+        
         const building = {
-            id: `building_${Date.now()}_${Math.random()}`,
+            id: this.nextId++,
             cardId: card.id,
             name: card.name,
             emoji: card.emoji,
@@ -21,11 +34,18 @@ class BattleBuildings {
             weak: card.weak || 0,
             vulnerable: card.vulnerable || 0,
             aoe: card.aoe || false,
-            triggerCount: 1,
-            upgraded: false
+            upgraded: false,
+            cost: card.cost || 0,
+            // Статусы на конструкции
+            statusEffects: {
+                poison: 0,
+                bleed: 0,
+                vulnerable: 0,
+                weak: 0,
+                strength: 0
+            }
         };
         
-        // Применяем эффекты сил
         if (battle.hasPower('livingSteel')) {
             building.hp += 5;
             building.maxHp += 5;
@@ -38,46 +58,131 @@ class BattleBuildings {
         
         this.buildings.push(building);
         
-        // Перепроизводство - взять карту
         if (battle.hasPower('overproduction')) {
             battle.drawCards(1);
         }
         
-        // Модульная конструкция - блок всем конструкциям
         if (battle.hasPower('modularConstruction')) {
             this.buildings.forEach(b => {
                 b.hp = Math.min(b.maxHp, b.hp + 2);
             });
         }
         
-        return building;
+        return { success: true, building };
     }
     
-    // Срабатывание конструкций в конце хода
-    triggerEndOfTurn(battle) {
-        let doubleTrigger = battle.hasPower('totalAutomation') || 
-                           (battle.hasPower('automation') && Math.random() < 0.5);
+    upgradeExisting(battle, card) {
+        if (this.buildings.length === 0) return { success: false, message: 'Нет конструкций' };
         
-        // Нексус удваивает срабатывание других конструкций
+        const existing = this.buildings.find(b => b.cardId === card.id);
+        
+        if (existing) {
+            existing.maxHp += Math.floor(card.hp * 0.5);
+            existing.hp = Math.min(existing.maxHp, existing.hp + Math.floor(card.hp * 0.5));
+            existing.damage += card.damage ? 2 : 0;
+            existing.block += card.block ? 2 : 0;
+            existing.upgraded = true;
+            return { success: true, action: 'upgraded', building: existing };
+        }
+        
+        const randomBuilding = this.getRandomBuilding();
+        if (randomBuilding) {
+            randomBuilding.maxHp += 3;
+            randomBuilding.hp = Math.min(randomBuilding.maxHp, randomBuilding.hp + 3);
+            randomBuilding.damage += 1;
+            randomBuilding.upgraded = true;
+            return { success: true, action: 'upgraded', building: randomBuilding };
+        }
+        
+        return { success: false, message: 'Нечего улучшать' };
+    }
+    
+    demolishBuilding(battle, buildingId) {
+        const index = this.buildings.findIndex(b => b.id === buildingId);
+        if (index !== -1) {
+            const destroyed = this.buildings.splice(index, 1)[0];
+            
+            if (battle.hasPower('systemOverload')) {
+                battle.enemy.hp -= 3;
+                battle.enemy.hp = Math.max(0, battle.enemy.hp);
+            }
+            
+            return { success: true, destroyed };
+        }
+        return { success: false, message: 'Конструкция не найдена' };
+    }
+    
+    demolishAll(battle) {
+        const count = this.buildings.length;
+        this.buildings = [];
+        return count;
+    }
+    
+    // Применение статусов на конструкцию
+    applyStatusToBuilding(battle, buildingId, statusType, value) {
+        const building = this.buildings.find(b => b.id === buildingId);
+        if (building) {
+            building.statusEffects[statusType] = (building.statusEffects[statusType] || 0) + value;
+        }
+    }
+    
+    // Срабатывание статусов на конструкциях в конце хода
+    triggerStatusEffects(battle) {
+        this.buildings.forEach((building, index) => {
+            // Яд на конструкции
+            if (building.statusEffects.poison > 0) {
+                building.hp -= building.statusEffects.poison;
+                building.statusEffects.poison--;
+                
+                if (building.hp <= 0) {
+                    this.buildings.splice(index, 1);
+                    if (battle.hasPower('systemOverload')) {
+                        battle.enemy.hp -= 3;
+                        battle.enemy.hp = Math.max(0, battle.enemy.hp);
+                    }
+                    return;
+                }
+            }
+            
+            // Кровотечение на конструкции
+            if (building.statusEffects.bleed > 0) {
+                building.hp -= building.statusEffects.bleed;
+                building.statusEffects.bleed--;
+                
+                if (building.hp <= 0) {
+                    this.buildings.splice(index, 1);
+                    if (battle.hasPower('systemOverload')) {
+                        battle.enemy.hp -= 3;
+                        battle.enemy.hp = Math.max(0, battle.enemy.hp);
+                    }
+                }
+            }
+        });
+    }
+    
+    triggerEndOfTurn(battle) {
         const hasNexus = this.buildings.some(b => b.cardId === 'nexus');
+        const doubleTrigger = battle.hasPower('totalAutomation');
+        
+        // Сначала статусы на конструкциях
+        this.triggerStatusEffects(battle);
         
         this.buildings.forEach(building => {
+            if (building.cardId === 'nexus') return;
+            
             let triggers = 1;
-            
-            if (building.cardId === 'nexus') return; // Нексус не атакует сам
-            
             if (battle.hasPower('engineeringNetwork')) triggers += 1;
-            if (doubleTrigger && building.cardId !== 'nexus') triggers += 1;
-            if (hasNexus && building.cardId !== 'nexus') triggers += 1;
+            if (doubleTrigger) triggers += 1;
+            if (hasNexus) triggers += 1;
             
             for (let i = 0; i < triggers; i++) {
-                this.triggerBuilding(battle, building);
+                this.triggerBuildingEnd(battle, building);
             }
         });
         
-        // Фабрика дронов призывает дрона
+        // Фабрика дронов
         const droneFactory = this.buildings.find(b => b.cardId === 'droneFactory');
-        if (droneFactory) {
+        if (droneFactory && this.hasFreeSlots()) {
             this.placeBuilding(battle, {
                 id: 'drone',
                 name: 'Дрон',
@@ -88,44 +193,38 @@ class BattleBuildings {
         }
     }
     
-    // Срабатывание конструкций в начале хода
     triggerStartOfTurn(battle) {
         const hasNexus = this.buildings.some(b => b.cardId === 'nexus');
         
         this.buildings.forEach(building => {
-            let triggers = 1;
-            
             if (building.cardId === 'nexus') return;
             
+            let triggers = 1;
             if (battle.hasPower('engineeringNetwork')) triggers += 1;
-            if (battle.hasPower('totalAutomation') && building.cardId !== 'nexus') triggers += 1;
-            if (hasNexus && building.cardId !== 'nexus') triggers += 1;
+            if (battle.hasPower('totalAutomation')) triggers += 1;
+            if (hasNexus) triggers += 1;
             
             for (let i = 0; i < triggers; i++) {
                 this.triggerBuildingStart(battle, building);
             }
         });
         
-        // Энергетическое ядро
         const energyCore = this.buildings.find(b => b.cardId === 'energyCore');
         if (energyCore) {
             battle.energy += this.buildings.length;
         }
         
-        // Мастерская
         const workshop = this.buildings.find(b => b.cardId === 'workshop');
         if (workshop && Math.random() < 0.5) {
-            const buildingCards = Object.values(ENGINEER_CARDS).filter(c => c.type === 'building');
+            const buildingCards = Object.values(ENGINEER_CARDS).filter(c => c.type === CARD_TYPES.BUILDING);
             const randomBuilding = buildingCards[Math.floor(Math.random() * buildingCards.length)];
             battle.hand.push({ ...randomBuilding });
         }
         
-        // Оружейный завод
         if (battle.hasPower('weaponsFactory')) {
             battle.hand.push({ ...ENGINEER_CARDS.smallTurret });
         }
         
-        // Несокрушимая крепость
         if (battle.hasPower('indestructibleFortress')) {
             battle.block += 3;
             this.buildings.forEach(b => {
@@ -134,17 +233,20 @@ class BattleBuildings {
         }
     }
     
-    // Срабатывание конкретной конструкции (конец хода)
-    triggerBuilding(battle, building) {
-        if (building.damage > 0) {
-            let damage = building.damage;
-            
+    triggerBuildingEnd(battle, building) {
+        // Учитываем силу конструкции
+        let damage = building.damage + (building.statusEffects.strength || 0);
+        
+        // Уязвимость на конструкции снижает урон
+        if (building.statusEffects.weak > 0) {
+            damage = Math.floor(damage * 0.75);
+        }
+        
+        if (damage > 0) {
             if (building.aoe) {
-                // Урон всем врагам (у нас один враг)
                 battle.enemy.hp -= damage;
                 battle.enemy.hp = Math.max(0, battle.enemy.hp);
             } else {
-                // Урон случайному врагу (у нас один)
                 battle.enemy.hp -= damage;
                 battle.enemy.hp = Math.max(0, battle.enemy.hp);
             }
@@ -163,7 +265,6 @@ class BattleBuildings {
         }
     }
     
-    // Срабатывание конструкции (начало хода)
     triggerBuildingStart(battle, building) {
         if (building.block > 0) {
             battle.block += building.block;
@@ -178,51 +279,16 @@ class BattleBuildings {
         }
     }
     
-    // Получить урон по конструкции
-    damageBuilding(battle, buildingIndex, damage) {
-        if (this.buildings[buildingIndex]) {
-            this.buildings[buildingIndex].hp -= damage;
-            
-            if (this.buildings[buildingIndex].hp <= 0) {
-                const destroyed = this.buildings.splice(buildingIndex, 1)[0];
-                
-                // Перегрузка систем - урон врагу при уничтожении
-                if (battle.hasPower('systemOverload')) {
-                    battle.enemy.hp -= 3;
-                    battle.enemy.hp = Math.max(0, battle.enemy.hp);
-                }
-                
-                return { destroyed: true, building: destroyed };
-            }
-        }
-        return { destroyed: false };
+    getRandomBuilding() {
+        if (this.buildings.length === 0) return null;
+        return this.buildings[Math.floor(Math.random() * this.buildings.length)];
     }
     
-    // Починить конструкцию
-    repairBuilding(battle, buildingIndex, amount) {
-        if (this.buildings[buildingIndex]) {
-            this.buildings[buildingIndex].hp = Math.min(
-                this.buildings[buildingIndex].maxHp,
-                this.buildings[buildingIndex].hp + amount
-            );
-        }
-    }
-    
-    // Уничтожить все конструкции
-    destroyAllBuildings() {
-        const count = this.buildings.length;
-        this.buildings = [];
-        return count;
-    }
-    
-    // Получить количество конструкций
     getBuildingCount() {
         return this.buildings.length;
     }
     
-    // Получить случайную конструкцию
-    getRandomBuilding() {
-        if (this.buildings.length === 0) return null;
-        return this.buildings[Math.floor(Math.random() * this.buildings.length)];
+    getBuilding(index) {
+        return this.buildings[index] || null;
     }
 }

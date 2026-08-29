@@ -177,6 +177,21 @@ class Game {
         }
     }
 
+    demolishBuilding(buildingId) {
+        if (!this.currentBattle || !this.currentBattle.buildings) return;
+
+        const result = this.currentBattle.buildings.demolishBuilding(this.currentBattle, buildingId);
+
+        const modal = document.getElementById('building-modal');
+        if (modal) modal.remove();
+
+        if (result.success) {
+            BattleUI.update(this);
+        } else {
+            alert(result.message);
+        }
+    }
+
     endBattle(victory) {
         if (victory) {
             const goldReward = Math.floor(Math.random() * 20) + 10;
@@ -194,7 +209,6 @@ class Game {
         }
     }
 
-    // ===== НАГРАДЫ =====
     offerCard() {
         const cards = getCardsForHero(this.player.heroId);
         const cardIds = Object.keys(cards);
@@ -248,7 +262,6 @@ class Game {
         }
     }
 
-    // ===== МОДАЛЬНОЕ ОКНО КАРТЫ =====
     showCardModal(card, context = 'view') {
         this.closeCardModal();
 
@@ -288,6 +301,7 @@ class Game {
             case CARD_TYPES.ATTACK: return 'Атака';
             case CARD_TYPES.SKILL: return 'Навык';
             case CARD_TYPES.POWER: return 'Сила';
+            case CARD_TYPES.BUILDING: return 'Конструкция';
             default: return 'Неизвестно';
         }
     }
@@ -301,7 +315,6 @@ class Game {
         }
     }
 
-    // ===== ПРОСМОТР КОЛОДЫ И СБРОСА =====
     viewDrawPile() {
         if (!this.currentBattle) return;
 
@@ -377,7 +390,6 @@ class Game {
         }
     }
 
-    // ===== СОБЫТИЯ =====
     triggerEvent() {
         const events = this.getEventsForAct();
         const event = events[Math.floor(Math.random() * events.length)];
@@ -385,40 +397,34 @@ class Game {
     }
 
     getEventsForAct() {
-        const commonEvents = [
+        return [
             {
                 name: 'Загадочный фонтан',
-                description: 'Вы нашли древний фонтан с светящейся водой.',
+                description: 'Вы нашли древний фонтан.',
                 options: [
-                    {
-                        text: 'Испить (Восстановить 25 HP)', action: () => {
-                            this.player.hp = Math.min(this.player.maxHp, this.player.hp + 25);
-                            alert('Вы чувствуете прилив сил!');
-                        }
-                    },
-                    { text: 'Уйти', action: () => { } }
+                    { text: 'Испить (Восстановить 25 HP)', action: () => {
+                        this.player.hp = Math.min(this.player.maxHp, this.player.hp + 25);
+                        alert('Вы чувствуете прилив сил!');
+                    }},
+                    { text: 'Уйти', action: () => {} }
                 ]
             },
             {
                 name: 'Странный торговец',
-                description: 'Торговец предлагает редкие карты.',
+                description: 'Торговец предлагает карты.',
                 options: [
-                    {
-                        text: 'Купить карту (50 золота)', action: () => {
-                            if (this.player.gold >= 50) {
-                                this.player.gold -= 50;
-                                this.offerCard();
-                            } else {
-                                alert('Недостаточно золота!');
-                            }
+                    { text: 'Купить карту (50 золота)', action: () => {
+                        if (this.player.gold >= 50) {
+                            this.player.gold -= 50;
+                            this.offerCard();
+                        } else {
+                            alert('Недостаточно золота!');
                         }
-                    },
-                    { text: 'Уйти', action: () => { } }
+                    }},
+                    { text: 'Уйти', action: () => {} }
                 ]
             }
         ];
-
-        return commonEvents;
     }
 
     showEventModal(event) {
@@ -446,7 +452,6 @@ class Game {
         this.currentEvent = event;
     }
 
-    // ===== МАГАЗИН =====
     openShop() {
         const cards = getCardsForHero(this.player.heroId);
         const cardIds = Object.keys(cards);
@@ -501,7 +506,6 @@ class Game {
         document.body.appendChild(modal);
     }
 
-    // ===== ПРОДОЛЖЕНИЕ ПУТИ =====
     continueJourney() {
         if (this.floor >= this.mapGenerator.floors - 1) {
             this.completeAct();
@@ -513,7 +517,7 @@ class Game {
     completeAct() {
         if (this.act < this.maxActs) {
             this.act++;
-            alert(`Акт ${this.act - 1} пройден! Переход к акту ${this.act}`);
+            alert(`Акт ${this.act - 1} пройден!`);
             this.generateNewMap();
             this.showMap();
         } else {
@@ -522,7 +526,6 @@ class Game {
         }
     }
 
-    // ===== ОТДЫХ =====
     rest() {
         const healAmount = Math.floor(this.player.maxHp * 0.3);
         this.player.hp = Math.min(this.player.maxHp, Math.floor(this.player.hp + healAmount));

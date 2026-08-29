@@ -6,6 +6,7 @@ const BattleUI = {
         const battle = game.currentBattle;
         
         this.renderEnemy(game, battle);
+        this.renderBuildings(game, battle);
         this.renderPlayer(game, battle);
         this.renderHand(game, battle);
         this.updatePreview(game, battle);
@@ -38,7 +39,13 @@ const BattleUI = {
         const effectsEl = document.getElementById('enemy-effects');
         effectsEl.innerHTML = '';
         
-        const effects = this.getEnemyEffects(battle);
+        const effects = [
+            { icon: '💪', value: battle.statusEffects.enemy.strength, type: 'buff', label: 'Сила', name: 'Сила', description: 'Увеличивает урон атак на указанное значение.' },
+            { icon: '🎯', value: battle.statusEffects.enemy.vulnerable, type: 'debuff', label: 'Уязвимость', name: 'Уязвимость', description: 'Получает на 50% больше урона. Уменьшается на 1 в конце хода.' },
+            { icon: '📉', value: battle.statusEffects.enemy.weak, type: 'debuff', label: 'Слабость', name: 'Слабость', description: 'Наносит на 25% меньше урона. Уменьшается на 1 в конце хода.' },
+            { icon: '🩸', value: battle.statusEffects.enemy.bleed, type: 'debuff', label: 'Кровотечение', name: 'Кровотечение', description: 'Получает урон в конце хода. Уменьшается на 1 каждый ход.' },
+            { icon: '☠️', value: battle.statusEffects.enemy.poison, type: 'debuff', label: 'Яд', name: 'Яд', description: 'Получает урон в конце хода. Уменьшается на 1 каждый ход.' }
+        ];
         
         effects.forEach(effect => {
             if (effect.value > 0) {
@@ -50,6 +57,65 @@ const BattleUI = {
                 effectsEl.appendChild(badge);
             }
         });
+    },
+    
+    renderBuildings(game, battle) {
+        const buildingsArea = document.getElementById('buildings-area');
+        
+        if (!buildingsArea) return;
+        
+        if (battle.buildings) {
+            buildingsArea.style.display = 'flex';
+            buildingsArea.innerHTML = '';
+            
+            for (let i = 0; i < battle.buildings.maxSlots; i++) {
+                const building = battle.buildings.getBuilding(i);
+                
+                if (building) {
+                    const buildingCard = document.createElement('div');
+                    buildingCard.className = 'building-card';
+                    buildingCard.innerHTML = `
+                        <div class="building-emoji">${building.emoji}</div>
+                        <div class="building-name">${building.name}</div>
+                        <div class="building-hp">❤️ ${building.hp}/${building.maxHp}</div>
+                        ${building.damage > 0 ? `<div class="building-effect">⚔️ ${building.damage}</div>` : ''}
+                        ${building.block > 0 ? `<div class="building-effect">🛡️ ${building.block}</div>` : ''}
+                        ${building.upgraded ? '<div class="building-upgraded">⭐</div>' : ''}
+                    `;
+                    
+                    buildingCard.onclick = () => this.showBuildingOptions(game, battle, building);
+                    
+                    buildingsArea.appendChild(buildingCard);
+                } else {
+                    const emptySlot = document.createElement('div');
+                    emptySlot.className = 'building-slot-empty';
+                    emptySlot.textContent = '⬜';
+                    buildingsArea.appendChild(emptySlot);
+                }
+            }
+        } else {
+            buildingsArea.style.display = 'none';
+        }
+    },
+    
+    showBuildingOptions(game, battle, building) {
+        const modal = document.createElement('div');
+        modal.className = 'modal';
+        modal.id = 'building-modal';
+        
+        modal.innerHTML = `
+            <div class="modal-content">
+                <h3>${building.emoji} ${building.name}</h3>
+                <p>❤️ HP: ${building.hp}/${building.maxHp}</p>
+                ${building.damage > 0 ? `<p>⚔️ Урон: ${building.damage}</p>` : ''}
+                ${building.block > 0 ? `<p>🛡️ Блок: ${building.block}</p>` : ''}
+                ${building.upgraded ? '<p>⭐ Улучшена</p>' : ''}
+                <button onclick="game.demolishBuilding(${building.id})">🗑️ Снести</button>
+                <button onclick="document.getElementById('building-modal').remove()">Закрыть</button>
+            </div>
+        `;
+        
+        document.body.appendChild(modal);
     },
     
     renderPlayer(game, battle) {
@@ -69,7 +135,14 @@ const BattleUI = {
         const effectsEl = document.getElementById('player-effects');
         effectsEl.innerHTML = '';
         
-        const effects = this.getPlayerEffects(battle);
+        const effects = [
+            { icon: '💪', value: battle.statusEffects.player.strength, type: 'buff', label: 'Сила', name: 'Сила', description: 'Увеличивает урон ваших атак.' },
+            { icon: '🎯', value: battle.statusEffects.player.vulnerable, type: 'debuff', label: 'Уязвимость', name: 'Уязвимость', description: 'Вы получаете на 50% больше урона.' },
+            { icon: '📉', value: battle.statusEffects.player.weak, type: 'debuff', label: 'Слабость', name: 'Слабость', description: 'Вы наносите на 25% меньше урона.' },
+            { icon: '🩸', value: battle.statusEffects.player.bleed, type: 'debuff', label: 'Кровотечение', name: 'Кровотечение', description: 'Вы получаете урон в конце хода.' },
+            { icon: '☠️', value: battle.statusEffects.player.poison, type: 'debuff', label: 'Яд', name: 'Яд', description: 'Вы получаете урон в конце хода.' },
+            { icon: '🌵', value: battle.statusEffects.player.thorns, type: 'buff', label: 'Шипы', name: 'Шипы', description: 'Враг получает урон при атаке на вас.' }
+        ];
         
         effects.forEach(effect => {
             if (effect.value > 0) {
@@ -81,104 +154,6 @@ const BattleUI = {
                 effectsEl.appendChild(badge);
             }
         });
-    },
-    
-    getEnemyEffects(battle) {
-        return [
-            { 
-                icon: '💪', 
-                value: battle.statusEffects.enemy.strength, 
-                type: 'buff', 
-                label: 'Сила',
-                name: 'Сила',
-                description: 'Увеличивает урон атак на указанное значение.'
-            },
-            { 
-                icon: '🎯', 
-                value: battle.statusEffects.enemy.vulnerable, 
-                type: 'debuff', 
-                label: 'Уязвимость',
-                name: 'Уязвимость',
-                description: 'Получает на 50% больше урона от атак. Уменьшается на 1 в конце хода.'
-            },
-            { 
-                icon: '📉', 
-                value: battle.statusEffects.enemy.weak, 
-                type: 'debuff', 
-                label: 'Слабость',
-                name: 'Слабость',
-                description: 'Наносит на 25% меньше урона. Уменьшается на 1 в конце хода.'
-            },
-            { 
-                icon: '🩸', 
-                value: battle.statusEffects.enemy.bleed, 
-                type: 'debuff', 
-                label: 'Кровотечение',
-                name: 'Кровотечение',
-                description: 'Получает урон в конце своего хода. Уменьшается на 1 каждый ход.'
-            },
-            { 
-                icon: '☠️', 
-                value: battle.statusEffects.enemy.poison, 
-                type: 'debuff', 
-                label: 'Яд',
-                name: 'Яд',
-                description: 'Получает урон в конце хода. Уменьшается на 1 каждый ход.'
-            }
-        ];
-    },
-    
-    getPlayerEffects(battle) {
-        return [
-            { 
-                icon: '💪', 
-                value: battle.statusEffects.player.strength, 
-                type: 'buff', 
-                label: 'Сила',
-                name: 'Сила',
-                description: 'Увеличивает урон ваших атак на указанное значение.'
-            },
-            { 
-                icon: '🎯', 
-                value: battle.statusEffects.player.vulnerable, 
-                type: 'debuff', 
-                label: 'Уязвимость',
-                name: 'Уязвимость',
-                description: 'Вы получаете на 50% больше урона. Уменьшается на 1 в конце хода.'
-            },
-            { 
-                icon: '📉', 
-                value: battle.statusEffects.player.weak, 
-                type: 'debuff', 
-                label: 'Слабость',
-                name: 'Слабость',
-                description: 'Вы наносите на 25% меньше урона. Уменьшается на 1 в конце хода.'
-            },
-            { 
-                icon: '🩸', 
-                value: battle.statusEffects.player.bleed, 
-                type: 'debuff', 
-                label: 'Кровотечение',
-                name: 'Кровотечение',
-                description: 'Вы получаете урон в конце хода. Уменьшается на 1 каждый ход.'
-            },
-            { 
-                icon: '☠️', 
-                value: battle.statusEffects.player.poison, 
-                type: 'debuff', 
-                label: 'Яд',
-                name: 'Яд',
-                description: 'Вы получаете урон в конце хода. Уменьшается на 1 каждый ход.'
-            },
-            { 
-                icon: '🌵', 
-                value: battle.statusEffects.player.thorns, 
-                type: 'buff', 
-                label: 'Шипы',
-                name: 'Шипы',
-                description: 'Когда вы получаете урон от атаки, враг получает указанное количество урона.'
-            }
-        ];
     },
     
     showStatusModal(effect) {

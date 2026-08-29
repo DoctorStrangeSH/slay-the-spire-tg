@@ -367,7 +367,7 @@ const ENGINEER_CARDS = {
     smallTurret: {
         id: 'smallTurret',
         name: 'Малая турель',
-        type: 'building',
+        type: CARD_TYPES.BUILDING,  // Используем CARD_TYPES.BUILDING
         rarity: CARD_RARITY.COMMON,
         cost: 1,
         hp: 6,
@@ -378,7 +378,7 @@ const ENGINEER_CARDS = {
     barrier: {
         id: 'barrier',
         name: 'Барьер',
-        type: 'building',
+        type: CARD_TYPES.BUILDING,
         rarity: CARD_RARITY.COMMON,
         cost: 1,
         hp: 8,
@@ -389,7 +389,7 @@ const ENGINEER_CARDS = {
     scoutDrone: {
         id: 'scoutDrone',
         name: 'Дрон-разведчик',
-        type: 'building',
+        type: CARD_TYPES.BUILDING,
         rarity: CARD_RARITY.COMMON,
         cost: 1,
         hp: 4,
@@ -400,7 +400,7 @@ const ENGINEER_CARDS = {
     firePoint: {
         id: 'firePoint',
         name: 'Огневая точка',
-        type: 'building',
+        type: CARD_TYPES.BUILDING,
         rarity: CARD_RARITY.COMMON,
         cost: 2,
         hp: 10,
@@ -411,7 +411,7 @@ const ENGINEER_CARDS = {
     generator: {
         id: 'generator',
         name: 'Генератор',
-        type: 'building',
+        type: CARD_TYPES.BUILDING,
         rarity: CARD_RARITY.COMMON,
         cost: 2,
         hp: 6,
@@ -424,7 +424,7 @@ const ENGINEER_CARDS = {
     acidSprayer: {
         id: 'acidSprayer',
         name: 'Кислотный распылитель',
-        type: 'building',
+        type: CARD_TYPES.BUILDING,
         rarity: CARD_RARITY.UNCOMMON,
         cost: 2,
         hp: 8,
@@ -435,7 +435,7 @@ const ENGINEER_CARDS = {
     frostCannon: {
         id: 'frostCannon',
         name: 'Морозная пушка',
-        type: 'building',
+        type: CARD_TYPES.BUILDING,
         rarity: CARD_RARITY.UNCOMMON,
         cost: 2,
         hp: 7,
@@ -446,7 +446,7 @@ const ENGINEER_CARDS = {
     powerShield: {
         id: 'powerShield',
         name: 'Силовой щит',
-        type: 'building',
+        type: CARD_TYPES.BUILDING,
         rarity: CARD_RARITY.UNCOMMON,
         cost: 2,
         hp: 12,
@@ -457,7 +457,7 @@ const ENGINEER_CARDS = {
     teslaTower: {
         id: 'teslaTower',
         name: 'Тесла-башня',
-        type: 'building',
+        type: CARD_TYPES.BUILDING,
         rarity: CARD_RARITY.UNCOMMON,
         cost: 3,
         hp: 10,
@@ -469,7 +469,7 @@ const ENGINEER_CARDS = {
     rocketLauncher: {
         id: 'rocketLauncher',
         name: 'Ракетная установка',
-        type: 'building',
+        type: CARD_TYPES.BUILDING,
         rarity: CARD_RARITY.UNCOMMON,
         cost: 3,
         hp: 8,
@@ -482,7 +482,7 @@ const ENGINEER_CARDS = {
     workshop: {
         id: 'workshop',
         name: 'Мастерская',
-        type: 'building',
+        type: CARD_TYPES.BUILDING,
         rarity: CARD_RARITY.RARE,
         cost: 3,
         hp: 10,
@@ -492,7 +492,7 @@ const ENGINEER_CARDS = {
     targetDesignator: {
         id: 'targetDesignator',
         name: 'Целеуказатель',
-        type: 'building',
+        type: CARD_TYPES.BUILDING,
         rarity: CARD_RARITY.RARE,
         cost: 2,
         hp: 6,
@@ -503,7 +503,7 @@ const ENGINEER_CARDS = {
     energyCore: {
         id: 'energyCore',
         name: 'Энергетическое ядро',
-        type: 'building',
+        type: CARD_TYPES.BUILDING,
         rarity: CARD_RARITY.RARE,
         cost: 3,
         hp: 15,
@@ -513,7 +513,7 @@ const ENGINEER_CARDS = {
     droneFactory: {
         id: 'droneFactory',
         name: 'Фабрика дронов',
-        type: 'building',
+        type: CARD_TYPES.BUILDING,
         rarity: CARD_RARITY.RARE,
         cost: 3,
         hp: 8,
@@ -523,7 +523,7 @@ const ENGINEER_CARDS = {
     nexus: {
         id: 'nexus',
         name: 'Нексус',
-        type: 'building',
+        type: CARD_TYPES.BUILDING,
         rarity: CARD_RARITY.RARE,
         cost: 4,
         hp: 20,

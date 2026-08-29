@@ -1,7 +1,7 @@
 // Константы игры
 const GAME_CONFIG = {
     maxActs: 3,
-    floorsPerAct: 15,
+    floorsPerAct: 16,
     maxHandSize: 10,
     baseEnergy: 3,
     maxEnergy: 3
@@ -10,7 +10,8 @@ const GAME_CONFIG = {
 const CARD_TYPES = {
     ATTACK: 'attack',
     SKILL: 'skill',
-    POWER: 'power'
+    POWER: 'power',
+    BUILDING: 'building'
 };
 
 const CARD_RARITY = {
