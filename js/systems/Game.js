@@ -10,6 +10,8 @@ class Game {
         this.currentNodeId = 'floor_0_node_0';
         this.floor = 0;
         this.currentEvent = null;
+        this.offeredCards = [];
+        this.currentRewardIndex = -1;
     }
 
     selectHero(heroId) {
@@ -53,6 +55,7 @@ class Game {
         this.gameState = 'map';
         hideAllScreens();
         document.getElementById('map-screen').style.display = 'block';
+        window._currentMapPaths = this.mapGenerator.paths;
         MapUI.render(this);
     }
 
@@ -128,7 +131,6 @@ class Game {
         }
     }
 
-    // Выбор карты
     selectCard(index) {
         if (!this.currentBattle) return;
 
@@ -137,7 +139,6 @@ class Game {
         if (result.success) {
             BattleUI.update(this);
 
-            // Если есть превью - показываем
             if (result.preview && result.preview.description) {
                 BattleUI.showPreview(result.preview.description);
             } else {
@@ -148,7 +149,6 @@ class Game {
         }
     }
 
-    // Розыгрыш выбранных карт
     playSelectedCards() {
         if (!this.currentBattle) return;
 
@@ -194,46 +194,190 @@ class Game {
         }
     }
 
+    // ===== НАГРАДЫ =====
     offerCard() {
         const cards = getCardsForHero(this.player.heroId);
         const cardIds = Object.keys(cards);
-        const offeredCards = [];
+        this.offeredCards = [];
 
         for (let i = 0; i < 3; i++) {
             const randomId = cardIds[Math.floor(Math.random() * cardIds.length)];
-            offeredCards.push({ ...cards[randomId] });
+            this.offeredCards.push({ ...cards[randomId] });
+        }
+
+        const modal = document.createElement('div');
+        modal.className = 'modal';
+        modal.id = 'reward-modal';
+        modal.innerHTML = `
+            <div class="modal-content">
+                <h3>Выберите карту:</h3>
+                <div class="reward-cards">
+                    ${this.offeredCards.map((card, index) => `
+                        <div class="reward-card" onclick="game.showCardModalFromReward(${index})">
+                            <div class="reward-card-emoji">${card.emoji}</div>
+                            <div class="reward-card-name">${card.name}</div>
+                            <div class="reward-card-cost">${card.cost}⚡</div>
+                            <button onclick="event.stopPropagation(); game.takeCardFromReward(${index})">Взять</button>
+                        </div>
+                    `).join('')}
+                </div>
+                <button onclick="document.getElementById('reward-modal').remove(); game.continueJourney();">Пропустить</button>
+            </div>
+        `;
+
+        document.body.appendChild(modal);
+    }
+
+    showCardModalFromReward(index) {
+        const card = this.offeredCards[index];
+        if (card) {
+            this.currentRewardIndex = index;
+            this.showCardModal(card, 'reward');
+        }
+    }
+
+    takeCardFromReward(index) {
+        const card = this.offeredCards[index];
+        if (card) {
+            this.player.deck.push({ ...card });
+            const modal = document.getElementById('reward-modal');
+            if (modal) modal.remove();
+            this.closeCardModal();
+            alert(`Карта "${card.name}" добавлена!`);
+            this.continueJourney();
+        }
+    }
+
+    // ===== МОДАЛЬНОЕ ОКНО КАРТЫ =====
+    showCardModal(card, context = 'view') {
+        this.closeCardModal();
+
+        const modal = document.createElement('div');
+        modal.className = 'modal';
+        modal.id = 'card-modal';
+
+        modal.innerHTML = `
+            <div class="modal-content card-modal-content">
+                <div class="card-detail">
+                    <div class="card-detail-header">
+                        <span class="card-detail-emoji">${card.emoji || '🃏'}</span>
+                        <h3>${card.name}</h3>
+                    </div>
+                    <div class="card-detail-cost">Стоимость: ${card.cost}⚡</div>
+                    <div class="card-detail-type">Тип: ${this.getCardTypeName(card.type)}</div>
+                    <div class="card-detail-description">${card.description}</div>
+                    ${card.rarity ? `<div class="card-detail-rarity">Редкость: ${this.getRarityName(card.rarity)}</div>` : ''}
+                </div>
+                <div class="card-modal-buttons">
+                    ${context === 'reward' ? `<button onclick="game.takeCardFromReward(${this.currentRewardIndex})">Взять</button>` : ''}
+                    <button onclick="game.closeCardModal()">Закрыть</button>
+                </div>
+            </div>
+        `;
+
+        document.body.appendChild(modal);
+    }
+
+    closeCardModal() {
+        const modal = document.getElementById('card-modal');
+        if (modal) modal.remove();
+    }
+
+    getCardTypeName(type) {
+        switch (type) {
+            case CARD_TYPES.ATTACK: return 'Атака';
+            case CARD_TYPES.SKILL: return 'Навык';
+            case CARD_TYPES.POWER: return 'Сила';
+            default: return 'Неизвестно';
+        }
+    }
+
+    getRarityName(rarity) {
+        switch (rarity) {
+            case CARD_RARITY.COMMON: return 'Обычная';
+            case CARD_RARITY.UNCOMMON: return 'Необычная';
+            case CARD_RARITY.RARE: return 'Редкая';
+            default: return 'Обычная';
+        }
+    }
+
+    // ===== ПРОСМОТР КОЛОДЫ И СБРОСА =====
+    viewDrawPile() {
+        if (!this.currentBattle) return;
+
+        const cards = this.currentBattle.viewDrawPile();
+        if (cards.length === 0) {
+            alert('Колода пуста');
+            return;
         }
 
         const modal = document.createElement('div');
         modal.className = 'modal';
         modal.innerHTML = `
             <div class="modal-content">
-                <h3>Выберите карту:</h3>
+                <h3>Колода (${cards.length} карт)</h3>
+                <div class="pile-cards">
+                    ${cards.map((card, index) => `
+                        <div class="pile-card" onclick="game.showCardModalFromPile('draw', ${index})">
+                            <span>${card.emoji || '🃏'}</span>
+                            <span>${card.name}</span>
+                            <span>${card.cost}⚡</span>
+                        </div>
+                    `).join('')}
+                </div>
+                <button onclick="this.closest('.modal').remove()">Закрыть</button>
             </div>
         `;
-
-        offeredCards.forEach(card => {
-            const cardBtn = document.createElement('button');
-            cardBtn.textContent = `${card.emoji} ${card.name} (${card.cost}⚡)`;
-            cardBtn.onclick = () => {
-                this.player.deck.push(card);
-                document.body.removeChild(modal);
-                this.continueJourney();
-            };
-            modal.querySelector('.modal-content').appendChild(cardBtn);
-        });
-
-        const skipBtn = document.createElement('button');
-        skipBtn.textContent = 'Пропустить';
-        skipBtn.onclick = () => {
-            document.body.removeChild(modal);
-            this.continueJourney();
-        };
-        modal.querySelector('.modal-content').appendChild(skipBtn);
-
         document.body.appendChild(modal);
     }
 
+    viewDiscardPile() {
+        if (!this.currentBattle) return;
+
+        const cards = this.currentBattle.viewDiscardPile();
+        if (cards.length === 0) {
+            alert('Сброс пуст');
+            return;
+        }
+
+        const modal = document.createElement('div');
+        modal.className = 'modal';
+        modal.innerHTML = `
+            <div class="modal-content">
+                <h3>Сброс (${cards.length} карт)</h3>
+                <div class="pile-cards">
+                    ${cards.map((card, index) => `
+                        <div class="pile-card" onclick="game.showCardModalFromPile('discard', ${index})">
+                            <span>${card.emoji || '🃏'}</span>
+                            <span>${card.name}</span>
+                            <span>${card.cost}⚡</span>
+                        </div>
+                    `).join('')}
+                </div>
+                <button onclick="this.closest('.modal').remove()">Закрыть</button>
+            </div>
+        `;
+        document.body.appendChild(modal);
+    }
+
+    showCardModalFromPile(pileType, index) {
+        if (!this.currentBattle) return;
+
+        let card = null;
+        if (pileType === 'draw') {
+            const cards = this.currentBattle.viewDrawPile();
+            card = cards[index];
+        } else if (pileType === 'discard') {
+            const cards = this.currentBattle.viewDiscardPile();
+            card = cards[index];
+        }
+
+        if (card) {
+            this.showCardModal(card, 'view');
+        }
+    }
+
+    // ===== СОБЫТИЯ =====
     triggerEvent() {
         const events = this.getEventsForAct();
         const event = events[Math.floor(Math.random() * events.length)];
@@ -302,6 +446,7 @@ class Game {
         this.currentEvent = event;
     }
 
+    // ===== МАГАЗИН =====
     openShop() {
         const cards = getCardsForHero(this.player.heroId);
         const cardIds = Object.keys(cards);
@@ -356,6 +501,7 @@ class Game {
         document.body.appendChild(modal);
     }
 
+    // ===== ПРОДОЛЖЕНИЕ ПУТИ =====
     continueJourney() {
         if (this.floor >= this.mapGenerator.floors - 1) {
             this.completeAct();
@@ -376,6 +522,7 @@ class Game {
         }
     }
 
+    // ===== ОТДЫХ =====
     rest() {
         const healAmount = Math.floor(this.player.maxHp * 0.3);
         this.player.hp = Math.min(this.player.maxHp, Math.floor(this.player.hp + healAmount));
@@ -395,38 +542,6 @@ class Game {
             document.body.removeChild(modal);
             this.continueJourney();
         };
-    }
-
-    viewDrawPile() {
-        if (!this.currentBattle) return;
-
-        const cards = this.currentBattle.viewDrawPile();
-        if (cards.length === 0) {
-            alert('Колода пуста');
-            return;
-        }
-
-        let cardList = cards.map(card =>
-            `${card.emoji || ''} ${card.name} (${card.cost}⚡) - ${card.description}`
-        ).join('\n');
-
-        alert(`Колода (${cards.length} карт):\n\n${cardList}`);
-    }
-
-    viewDiscardPile() {
-        if (!this.currentBattle) return;
-
-        const cards = this.currentBattle.viewDiscardPile();
-        if (cards.length === 0) {
-            alert('Сброс пуст');
-            return;
-        }
-
-        let cardList = cards.map(card =>
-            `${card.emoji || ''} ${card.name} (${card.cost}⚡) - ${card.description}`
-        ).join('\n');
-
-        alert(`Сброс (${cards.length} карт):\n\n${cardList}`);
     }
 }
 

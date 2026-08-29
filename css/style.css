@@ -23,7 +23,7 @@ body {
     overflow: hidden;
 }
 
-/* Загрузочный экран */
+/* ===== ЗАГРУЗОЧНЫЙ ЭКРАН ===== */
 #loading-screen {
     display: flex;
     justify-content: center;
@@ -32,7 +32,7 @@ body {
     font-size: 24px;
 }
 
-/* Главное меню */
+/* ===== ГЛАВНОЕ МЕНЮ ===== */
 #main-menu {
     padding: 40px 20px;
     text-align: center;
@@ -68,7 +68,7 @@ body {
     transform: scale(0.95);
 }
 
-/* Экран выбора героя */
+/* ===== ЭКРАН ВЫБОРА ГЕРОЯ ===== */
 #hero-select {
     padding: 20px;
 }
@@ -130,21 +130,22 @@ body {
     margin-bottom: 10px;
 }
 
-/* Боевой экран */
+/* ===== БОЕВОЙ ЭКРАН ===== */
 #battle-screen {
-    padding: 20px;
+    padding: 15px;
     min-height: 100vh;
     position: relative;
 }
 
+/* Враг */
 #enemy-area {
     text-align: center;
-    margin-bottom: 20px;
+    margin-bottom: 15px;
 }
 
 #enemy-sprite {
-    font-size: 80px;
-    margin-bottom: 10px;
+    font-size: 70px;
+    margin-bottom: 8px;
     animation: enemy-idle 2s infinite;
 }
 
@@ -154,22 +155,25 @@ body {
 }
 
 #enemy-info {
-    background: rgba(255,255,255,0.1);
-    border-radius: 10px;
+    background: rgba(0, 0, 0, 0.4);
+    border: 2px solid rgba(255, 255, 255, 0.1);
+    border-radius: 15px;
     padding: 15px;
 }
 
 #enemy-name {
-    font-size: 20px;
+    font-size: 22px;
+    color: #ffd700;
     font-weight: bold;
-    margin-bottom: 10px;
+    margin-bottom: 8px;
 }
 
+/* HP бары */
 .hp-bar {
     width: 100%;
-    height: 25px;
+    height: 22px;
     background: #333;
-    border-radius: 12px;
+    border-radius: 11px;
     overflow: hidden;
     margin: 5px 0;
     position: relative;
@@ -177,9 +181,8 @@ body {
 
 .hp-fill {
     height: 100%;
-    background: linear-gradient(90deg, #ff4444, #ff6b6b);
     transition: width 0.5s ease;
-    border-radius: 12px;
+    border-radius: 11px;
 }
 
 #enemy-hp-fill {
@@ -191,7 +194,7 @@ body {
 }
 
 #enemy-hp-text, #player-hp-text {
-    font-size: 14px;
+    font-size: 16px;
     font-weight: bold;
     text-align: center;
     margin: 2px 0;
@@ -200,58 +203,103 @@ body {
 
 #enemy-block, #player-block {
     font-size: 14px;
-    margin: 2px 0;
+    margin: 3px 0;
     color: #4ecdc4;
+    min-height: 20px;
 }
 
-#enemy-effects, #player-effects {
-    font-size: 12px;
+/* Намерение врага */
+.intent {
+    display: inline-block;
+    padding: 8px 15px;
+    border-radius: 20px;
+    font-size: 16px;
+    font-weight: bold;
     margin: 5px 0;
-    color: #ffd700;
-    min-height: 18px;
 }
 
-#enemy-intent {
-    font-size: 14px;
-    margin: 5px 0;
+.intent-attack {
+    background: rgba(233, 69, 96, 0.3);
+    border: 2px solid #e94560;
     color: #ff6b6b;
 }
 
+.intent-defend {
+    background: rgba(78, 205, 196, 0.3);
+    border: 2px solid #4ecdc4;
+    color: #4ecdc4;
+}
+
+/* Эффекты */
+#enemy-effects, #player-effects {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px;
+    margin: 5px 0;
+    min-height: 25px;
+    justify-content: center;
+}
+
+.effect-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    padding: 3px 8px;
+    border-radius: 15px;
+    font-size: 13px;
+    font-weight: bold;
+}
+
+.effect-badge.buff {
+    background: rgba(78, 205, 196, 0.2);
+    border: 1px solid #4ecdc4;
+    color: #4ecdc4;
+}
+
+.effect-badge.debuff {
+    background: rgba(233, 69, 96, 0.2);
+    border: 1px solid #e94560;
+    color: #ff6b6b;
+}
+
+/* Игрок */
 #player-area {
-    margin-bottom: 20px;
+    margin-bottom: 15px;
 }
 
 #player-info {
-    background: rgba(255,255,255,0.1);
-    border-radius: 10px;
+    background: rgba(0, 0, 0, 0.4);
+    border: 2px solid rgba(255, 255, 255, 0.1);
+    border-radius: 15px;
     padding: 15px;
 }
 
 #player-name {
     font-size: 20px;
+    color: #4ecdc4;
     font-weight: bold;
-    margin-bottom: 10px;
+    margin-bottom: 8px;
 }
 
-#player-energy, #player-block {
+#player-energy {
     font-size: 16px;
-    margin: 5px 0;
+    margin: 3px 0;
 }
 
-/* Карты */
+/* ===== КАРТЫ ===== */
 #hand-area {
     display: flex;
     gap: 10px;
     overflow-x: auto;
     padding: 10px 0;
-    min-height: 150px;
-    margin-bottom: 20px;
+    min-height: 160px;
+    margin-bottom: 10px;
 }
 
 .card {
-    min-width: 120px;
-    max-width: 120px;
-    height: 170px;
+    min-width: 110px;
+    max-width: 110px;
+    height: 160px;
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     border-radius: 10px;
     padding: 10px;
@@ -267,9 +315,14 @@ body {
 }
 
 .card.selected {
-    transform: translateY(-20px);
+    transform: translateY(-15px);
     box-shadow: 0 0 20px rgba(78, 205, 196, 0.8);
     border: 2px solid #4ecdc4;
+}
+
+.card-unplayable {
+    opacity: 0.5;
+    filter: grayscale(0.5);
 }
 
 .card-cost {
@@ -287,17 +340,23 @@ body {
     color: #333;
 }
 
+.card-emoji {
+    font-size: 28px;
+    text-align: center;
+    margin-top: 15px;
+}
+
 .card-name {
-    font-size: 14px;
+    font-size: 13px;
     font-weight: bold;
-    margin-top: 20px;
+    margin-top: 5px;
     text-align: center;
 }
 
 .card-description {
-    font-size: 11px;
+    font-size: 10px;
     text-align: center;
-    margin-top: 10px;
+    margin-top: 5px;
 }
 
 .card-type-attack {
@@ -312,68 +371,109 @@ body {
     background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
 }
 
-/* Превью карты */
-.card-preview {
+/* ===== ПРЕВЬЮ ===== */
+#battle-preview {
     position: fixed;
-    bottom: 200px;
+    bottom: 120px;
     left: 50%;
     transform: translateX(-50%);
-    background: #2d2d44;
-    padding: 15px;
-    border-radius: 10px;
-    border: 2px solid #4ecdc4;
-    font-size: 14px;
     z-index: 100;
     max-width: 90%;
-    text-align: center;
-    box-shadow: 0 5px 20px rgba(0,0,0,0.5);
+    display: none;
 }
 
-/* Кнопки действий */
+.preview-content {
+    background: #2d2d44;
+    padding: 12px 18px;
+    border-radius: 12px;
+    border: 2px solid #4ecdc4;
+    box-shadow: 0 5px 20px rgba(0,0,0,0.6);
+    font-size: 14px;
+}
+
+.preview-title {
+    color: #ffd700;
+    font-weight: bold;
+    margin-right: 8px;
+}
+
+.preview-text {
+    color: #fff;
+}
+
+/* ===== КНОПКИ ДЕЙСТВИЙ ===== */
 #action-buttons {
     display: flex;
-    gap: 10px;
-    margin-top: 20px;
+    gap: 8px;
+    margin-top: 10px;
     flex-wrap: wrap;
 }
 
-#action-buttons button {
+.action-btn {
     flex: 1;
-    min-width: 100px;
-    padding: 15px;
-    background: #e94560;
-    color: white;
+    min-width: 70px;
+    padding: 12px 10px;
     border: none;
     border-radius: 10px;
-    font-size: 14px;
+    font-size: 13px;
+    font-weight: bold;
     cursor: pointer;
     transition: all 0.3s;
+    color: white;
 }
 
-#action-buttons button:hover {
-    background: #ff6b6b;
-    transform: scale(1.05);
-}
-
-#action-buttons button:active {
+.action-btn:active {
     transform: scale(0.95);
 }
 
-/* Карта мира */
+.action-btn:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+}
+
+.play-btn {
+    background: linear-gradient(135deg, #4ecdc4 0%, #44b3ab 100%);
+    color: #1a3a3a;
+    font-size: 14px;
+}
+
+.play-btn:not(:disabled):hover {
+    box-shadow: 0 0 15px rgba(78, 205, 196, 0.5);
+}
+
+.end-btn {
+    background: linear-gradient(135deg, #e94560 0%, #c73a50 100%);
+}
+
+.end-btn:hover {
+    box-shadow: 0 0 15px rgba(233, 69, 96, 0.5);
+}
+
+.deck-btn {
+    background: linear-gradient(135deg, #667eea 0%, #5a6fd6 100%);
+    font-size: 12px;
+}
+
+.discard-btn {
+    background: linear-gradient(135deg, #a855f7 0%, #8b3fd4 100%);
+    font-size: 12px;
+}
+
+/* ===== КАРТА МИРА ===== */
 #map-screen {
-    padding: 20px;
+    padding: 10px;
 }
 
 #map-screen h2 {
     text-align: center;
-    margin-bottom: 20px;
+    margin-bottom: 15px;
     color: #ffd700;
 }
 
 .act-info {
     text-align: center;
-    margin-bottom: 20px;
-    padding: 15px;
+    margin-bottom: 15px;
+    padding: 12px;
     background: rgba(255, 255, 255, 0.1);
     border-radius: 10px;
 }
@@ -386,38 +486,50 @@ body {
 .act-info p {
     margin: 5px 0;
     color: #ccc;
+    font-size: 14px;
 }
 
 #map-nodes {
-    background: rgba(0, 0, 0, 0.2);
-    border-radius: 10px;
+    background: rgba(0, 0, 0, 0.3);
+    border-radius: 15px;
     padding: 10px;
     overflow-y: auto;
-    max-height: 70vh;
+    max-height: 75vh;
 }
 
 .map-wrapper {
     display: flex;
     flex-direction: column;
-    gap: 5px;
-    padding: 10px;
+    gap: 0;
 }
 
 .floor-row {
     display: flex;
-    justify-content: space-around;
+    justify-content: space-evenly;
     align-items: center;
-    gap: 5px;
-    min-height: 60px;
+    gap: 8px;
+    min-height: 70px;
     position: relative;
+    padding: 5px 0;
 }
 
 .floor-label {
-    font-size: 12px;
-    color: #888;
-    width: 30px;
+    font-size: 11px;
+    color: #666;
+    width: 25px;
     text-align: center;
     flex-shrink: 0;
+    font-weight: bold;
+}
+
+.floor-connector {
+    height: 25px;
+    background: linear-gradient(180deg, 
+        rgba(78, 205, 196, 0.2) 0%, 
+        rgba(78, 205, 196, 0.4) 50%, 
+        rgba(78, 205, 196, 0.2) 100%);
+    margin: 0 auto;
+    width: 2px;
 }
 
 .map-node-container {
@@ -425,12 +537,12 @@ body {
     display: flex;
     justify-content: center;
     align-items: center;
-    max-width: 80px;
+    max-width: 75px;
 }
 
 .map-node-btn {
-    width: 65px;
-    height: 65px;
+    width: 60px;
+    height: 60px;
     border-radius: 50%;
     border: 3px solid #666;
     background: #2d2d44;
@@ -441,11 +553,15 @@ body {
     justify-content: center;
     gap: 2px;
     cursor: pointer;
-    transition: all 0.3s;
+    transition: all 0.3s ease;
     padding: 5px;
     position: relative;
     z-index: 2;
     font-size: 10px;
+}
+
+.map-node-btn:hover {
+    transform: scale(1.1);
 }
 
 .map-node-btn:active {
@@ -455,18 +571,20 @@ body {
 .map-node-btn.visited {
     background: #4a4a5a;
     border-color: #888;
+    opacity: 0.7;
 }
 
 .map-node-btn.available {
     border-color: #4ecdc4;
     background: #1a3a3a;
-    box-shadow: 0 0 15px rgba(78, 205, 196, 0.5);
-    animation: pulse 1.5s infinite;
+    box-shadow: 0 0 15px rgba(78, 205, 196, 0.6);
+    animation: pulse 2s infinite;
 }
 
 .map-node-btn.available:hover {
-    transform: scale(1.1);
+    transform: scale(1.15);
     background: #2a4a4a;
+    box-shadow: 0 0 25px rgba(78, 205, 196, 0.9);
 }
 
 .map-node-btn:disabled {
@@ -474,25 +592,26 @@ body {
 }
 
 .map-node-btn.past {
-    opacity: 0.6;
+    opacity: 0.5;
     background: #3a3a4a;
 }
 
 .map-node-btn.future {
     background: #2a2a3a;
+    opacity: 0.7;
 }
 
 .map-node-btn.current {
     border-color: #4ecdc4;
-    box-shadow: 0 0 10px rgba(78, 205, 196, 0.3);
+    box-shadow: 0 0 10px rgba(78, 205, 196, 0.4);
 }
 
 @keyframes pulse {
     0%, 100% {
-        box-shadow: 0 0 15px rgba(78, 205, 196, 0.5);
+        box-shadow: 0 0 15px rgba(78, 205, 196, 0.6);
     }
     50% {
-        box-shadow: 0 0 25px rgba(78, 205, 196, 0.8);
+        box-shadow: 0 0 30px rgba(78, 205, 196, 1);
     }
 }
 
@@ -502,8 +621,13 @@ body {
 }
 
 .node-label {
-    font-size: 9px;
+    font-size: 8px;
     white-space: nowrap;
+}
+
+.map-node-btn[data-type="start"] {
+    border-color: #4ecdc4;
+    background: #1a3a3a;
 }
 
 .map-node-btn[data-type="battle"] {
@@ -512,26 +636,56 @@ body {
 
 .map-node-btn[data-type="elite"] {
     border-color: #ffd700;
+    background: #3a3a1a;
 }
 
 .map-node-btn[data-type="rest"] {
     border-color: #4ecdc4;
+    background: #1a3a3a;
 }
 
 .map-node-btn[data-type="event"] {
     border-color: #a855f7;
+    background: #2a1a3a;
 }
 
 .map-node-btn[data-type="shop"] {
     border-color: #3b82f6;
+    background: #1a2a3a;
 }
 
 .map-node-btn[data-type="boss"] {
     border-color: #ef4444;
     background: #4a1a1a;
+    width: 70px;
+    height: 70px;
 }
 
-/* Модальные окна */
+.map-node-btn[data-type="boss"] .node-icon {
+    font-size: 28px;
+}
+
+/* ===== ЛЕГЕНДА ===== */
+.map-legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    justify-content: center;
+    margin-top: 15px;
+    padding: 10px;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 10px;
+    font-size: 11px;
+    color: #ccc;
+}
+
+.map-legend span {
+    display: flex;
+    align-items: center;
+    gap: 3px;
+}
+
+/* ===== МОДАЛЬНЫЕ ОКНА ===== */
 .modal {
     position: fixed;
     top: 0;
@@ -605,4 +759,150 @@ body {
     font-size: 14px;
     background: #4ecdc4;
     color: #333;
+}
+
+/* ===== МОДАЛЬНОЕ ОКНО КАРТЫ ===== */
+.card-modal-content {
+    max-width: 300px;
+}
+
+.card-detail {
+    text-align: center;
+    padding: 10px;
+}
+
+.card-detail-header {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    margin-bottom: 15px;
+}
+
+.card-detail-emoji {
+    font-size: 40px;
+}
+
+.card-detail h3 {
+    color: #ffd700;
+    font-size: 20px;
+}
+
+.card-detail-cost,
+.card-detail-type,
+.card-detail-rarity {
+    font-size: 14px;
+    margin: 5px 0;
+    color: #ccc;
+}
+
+.card-detail-description {
+    font-size: 14px;
+    margin: 10px 0;
+    padding: 10px;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 8px;
+    color: #fff;
+}
+
+.card-modal-buttons {
+    display: flex;
+    gap: 10px;
+    margin-top: 15px;
+}
+
+.card-modal-buttons button {
+    flex: 1;
+    padding: 12px;
+    font-size: 16px;
+}
+
+/* ===== НАГРАДЫ ===== */
+.reward-cards {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin: 15px 0;
+}
+
+.reward-card {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px;
+    background: rgba(255, 255, 255, 0.08);
+    border-radius: 10px;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+.reward-card:hover {
+    background: rgba(255, 255, 255, 0.15);
+    transform: scale(1.02);
+}
+
+.reward-card-emoji {
+    font-size: 28px;
+}
+
+.reward-card-name {
+    flex: 1;
+    font-size: 14px;
+    font-weight: bold;
+}
+
+.reward-card-cost {
+    font-size: 14px;
+    color: #ffd700;
+}
+
+.reward-card button {
+    padding: 8px 15px;
+    background: #4ecdc4;
+    color: #333;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: bold;
+}
+
+/* ===== СТОПКИ КАРТ ===== */
+.pile-cards {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    max-height: 300px;
+    overflow-y: auto;
+    margin: 15px 0;
+}
+
+.pile-card {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px;
+    background: rgba(255, 255, 255, 0.08);
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+.pile-card:hover {
+    background: rgba(255, 255, 255, 0.15);
+}
+
+.pile-card span:first-child {
+    font-size: 22px;
+}
+
+.pile-card span:nth-child(2) {
+    flex: 1;
+    font-size: 14px;
+    font-weight: bold;
+}
+
+.pile-card span:last-child {
+    font-size: 14px;
+    color: #ffd700;
 }

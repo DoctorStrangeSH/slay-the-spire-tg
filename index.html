@@ -35,11 +35,11 @@
                 <div id="enemy-sprite">👹</div>
                 <div id="enemy-info">
                     <div id="enemy-name">Враг</div>
-                    <div id="enemy-hp-bar">
-                        <div id="enemy-hp-fill"></div>
+                    <div id="enemy-hp-bar" class="hp-bar">
+                        <div id="enemy-hp-fill" class="hp-fill"></div>
                     </div>
-                    <div id="enemy-hp-text">❤️ 0/0</div>
-                    <div id="enemy-block">🛡️ Броня: 0</div>
+                    <div id="enemy-hp-text">0/0</div>
+                    <div id="enemy-block"></div>
                     <div id="enemy-intent">Намерение: Атака</div>
                     <div id="enemy-effects"></div>
                 </div>
@@ -49,36 +49,30 @@
             <div id="player-area">
                 <div id="player-info">
                     <div id="player-name">Игрок</div>
-                    <div id="player-hp-bar">
-                        <div id="player-hp-fill"></div>
+                    <div id="player-hp-bar" class="hp-bar">
+                        <div id="player-hp-fill" class="hp-fill"></div>
                     </div>
-                    <div id="player-hp-text">❤️ 0/0</div>
-                    <div id="player-energy">⚡ Энергия: 3/3</div>
-                    <div id="player-block">🛡️ Броня: 0</div>
+                    <div id="player-hp-text">0/0</div>
+                    <div id="player-energy">⚡ 3/3</div>
+                    <div id="player-block"></div>
                     <div id="player-effects"></div>
                 </div>
             </div>
             
             <!-- Рука карт -->
-            <div id="hand-area">
-                <!-- Карты будут добавляться сюда -->
-            </div>
+            <div id="hand-area"></div>
             
-            <!-- Кнопки действий -->
-            <div id="action-buttons">
-                <button onclick="playSelectedCards()">⚔️ Разыграть выбранные</button>
-                <button onclick="endTurn()">⏭️ Завершить ход</button>
-                <button onclick="drawPile()">🃏 Колода: <span id="draw-count">0</span></button>
-                <button onclick="discardPile()">🗑️ Сброс: <span id="discard-count">0</span></button>
-            </div>
+            <!-- Превью эффектов -->
+            <div id="battle-preview"></div>
+            
+            <!-- Кнопки действий (создаются динамически) -->
+            <div id="action-buttons"></div>
         </div>
         
         <!-- Экран карты мира -->
         <div id="map-screen" style="display: none;">
             <h2>Карта мира</h2>
-            <div id="map-nodes">
-                <!-- Узлы карты -->
-            </div>
+            <div id="map-nodes"></div>
         </div>
     </div>
     
