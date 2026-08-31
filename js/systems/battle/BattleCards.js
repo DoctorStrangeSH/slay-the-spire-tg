@@ -1,4 +1,4 @@
-// Розыгрыш карт (обновлённый с конструкциями)
+// Розыгрыш карт (обновлённый с Псайкером)
 class BattleCards {
     selectCard(battle, cardIndex) {
         const card = battle.hand[cardIndex];
@@ -15,8 +15,6 @@ class BattleCards {
         if (battle.hasPower('economy') && (battle.cardsPlayedThisTurn + battle.selectedCards.length + 1) % 3 === 0) {
             cardCost = 0;
         }
-        
-        // Ярость титана - атаки стоят на 1 меньше
         if (battle.hasPower('titanRage') && card.type === CARD_TYPES.ATTACK) {
             cardCost = Math.max(0, cardCost - 1);
         }
@@ -35,7 +33,7 @@ class BattleCards {
         const total = {
             damage: 0, block: 0, heal: 0, selfDamage: 0,
             bleed: 0, vulnerable: 0, weak: 0, draw: 0,
-            strength: 0, description: ''
+            strength: 0, paralysis: 0, echo: 0, description: ''
         };
         
         battle.selectedCards.forEach(cardIndex => {
@@ -52,7 +50,14 @@ class BattleCards {
             total.weak += preview.weak;
             total.draw += preview.draw;
             total.strength += preview.strength;
+            total.paralysis += preview.paralysis;
+            total.echo += preview.echo;
         });
+        
+        // Учитываем эхо
+        if (battle.echoStacks > 0 && total.damage > 0) {
+            total.damage *= 2;
+        }
         
         const parts = [];
         if (total.damage > 0) parts.push(`⚔️ Урон: ${total.damage}`);
@@ -60,7 +65,11 @@ class BattleCards {
         if (total.heal > 0) parts.push(`💚 Лечение: ${total.heal}`);
         if (total.selfDamage > 0) parts.push(`💔 Самоурон: ${total.selfDamage}`);
         if (total.bleed > 0) parts.push(`🩸 Кровотечение: ${total.bleed}`);
+        if (total.vulnerable > 0) parts.push(`🎯 Уязвимость: ${total.vulnerable}`);
+        if (total.weak > 0) parts.push(`📉 Слабость: ${total.weak}`);
         if (total.draw > 0) parts.push(`🃏 Добор: ${total.draw}`);
+        if (total.paralysis > 0) parts.push(`🔒 Паралич: ${total.paralysis}`);
+        if (total.echo > 0) parts.push(`🔁 Эхо: ${total.echo}`);
         
         total.description = parts.join(' | ');
         return total;
@@ -69,25 +78,29 @@ class BattleCards {
     calculateCardPreview(battle, card) {
         const preview = {
             damage: 0, block: 0, heal: 0, selfDamage: 0,
-            bleed: 0, vulnerable: 0, weak: 0, draw: 0, strength: 0
+            bleed: 0, vulnerable: 0, weak: 0, draw: 0,
+            strength: 0, paralysis: 0, echo: 0
         };
         
         if (card.damage) {
             let damage = card.damage + (battle.statusEffects.player.strength || 0);
             
-            // Гаечный ключ - с конструкцией больше урона
-            if (card.id === 'wrench' && battle.buildings?.getBuildingCount() > 0) {
-                damage = 9;
-            }
+            // Усиление разума
+            if (battle.hasPower('mindAmplification')) damage += 3;
             
-            // Перегрузка - урон за каждую конструкцию
-            if (card.id === 'overload' && battle.buildings) {
-                damage = 4 + battle.buildings.getBuildingCount() * 2;
-            }
+            // Телекинез - если враг парализован
+            if (card.id === 'telekinesis' && battle.isEnemyParalyzed()) damage = 12;
             
-            // Болт - с конструкцией больше
-            if (card.id === 'bolt' && battle.buildings?.getBuildingCount() > 0) {
-                damage = 13;
+            // Удар разума - если смотрели колоду
+            if (card.id === 'mindStrike' && battle.scryedThisTurn) damage = 9;
+            
+            // Телепатический удар - если парализован
+            if (card.id === 'telepathicStrike' && battle.isEnemyParalyzed()) damage = 18;
+            
+            // Ментальная бомба - удваивается за паралич
+            if (card.id === 'mentalBomb') {
+                const paralysis = battle.statusEffects.enemy.paralysis || 0;
+                damage = damage * Math.pow(2, paralysis);
             }
             
             if (battle.statusEffects.enemy.vulnerable > 0) damage = Math.floor(damage * 1.5);
@@ -108,6 +121,8 @@ class BattleCards {
         if (card.weak) preview.weak = card.weak;
         if (card.draw) preview.draw = card.draw;
         if (card.strength) preview.strength = card.strength;
+        if (card.paralysis) preview.paralysis = card.paralysis;
+        if (card.echo) preview.echo = card.echo;
         
         return preview;
     }
@@ -151,21 +166,82 @@ class BattleCards {
             battle.cardsPlayedTypes[card.type]++;
         }
         
-        // Конструкция - выкладываем на поле
-        if (card.type === 'building') {
-            battle.buildings.placeBuilding(battle, card);
-        } else {
-            switch (card.type) {
-                case CARD_TYPES.ATTACK:
-                    this.dealDamage(battle, card);
-                    break;
-                case CARD_TYPES.SKILL:
-                    this.applySkill(battle, card);
-                    break;
-                case CARD_TYPES.POWER:
-                    this.applyPower(battle, card);
-                    break;
+        // ОПРЕДЕЛЯЕМ СКОЛЬКО РАЗ СРАБОТАЕТ КАРТА
+        let playCount = 1;
+        
+        // Эхо - следующая карта дважды
+        if (battle.echoStacks > 0) {
+            playCount += battle.echoStacks;
+            battle.echoStacks = 0;
+        }
+        
+        // Эхо для навыков
+        if (battle.echoSkillStacks > 0 && card.type === CARD_TYPES.SKILL) {
+            playCount += battle.echoSkillStacks;
+            battle.echoSkillStacks = 0;
+        }
+        
+        // Эхо-камера - каждая 3-я карта
+        if (battle.hasPower('echoChamber') && battle.cardsPlayedThisTurn % 3 === 0) {
+            playCount += 1;
+        }
+        
+        // Множитель - карты с эхо срабатывают трижды
+        if (battle.hasPower('multiplier') && playCount > 1) {
+            playCount += 1;
+        }
+        
+        // Разыгрываем карту playCount раз
+        for (let i = 0; i < playCount; i++) {
+            if (card.type === 'building') {
+                battle.buildings.placeBuilding(battle, card);
+            } else {
+                switch (card.type) {
+                    case CARD_TYPES.ATTACK:
+                        this.dealDamage(battle, card);
+                        break;
+                    case CARD_TYPES.SKILL:
+                        this.applySkill(battle, card);
+                        break;
+                    case CARD_TYPES.POWER:
+                        this.applyPower(battle, card);
+                        break;
+                }
             }
+        }
+        
+        // Пси-резонанс - навык наносит урон
+        if (card.type === CARD_TYPES.SKILL && battle.hasPower('psyResonance')) {
+            battle.enemy.hp -= 1;
+            battle.enemy.hp = Math.max(0, battle.enemy.hp);
+        }
+        
+        // Устанавливаем эхо от карты
+        if (card.echo) {
+            battle.echoStacks += card.echo;
+        }
+        if (card.echoSkill) {
+            battle.echoSkillStacks += card.echoSkill;
+        }
+        
+        // Предвидение
+        if (card.scry) {
+            battle.scry(card.scry);
+        }
+        
+        // Перемотка
+        if (card.id === 'rewind') {
+            battle.rewindHand();
+        }
+        
+        // Копия
+        if (card.id === 'copy' && cardIndex < battle.hand.length) {
+            battle.copyCard(cardIndex);
+        }
+        
+        // Кража
+        if (card.steal) {
+            battle.stealEnemyCard();
         }
         
         const playedCard = battle.hand.splice(cardIndex, 1)[0];
@@ -182,44 +258,35 @@ class BattleCards {
     dealDamage(battle, card) {
         let damage = Math.floor(card.damage + (battle.statusEffects.player.strength || 0));
         
-        // Механики Инженера
-        if (card.id === 'wrench' && battle.buildings?.getBuildingCount() > 0) damage = 9;
-        if (card.id === 'overload' && battle.buildings) damage = 4 + battle.buildings.getBuildingCount() * 2;
-        if (card.id === 'bolt' && battle.buildings?.getBuildingCount() > 0) damage = 13;
+        // Усиление разума
+        if (battle.hasPower('mindAmplification')) damage += 3;
         
-        // Дрон-камикадзе
-        if (card.id === 'kamikazeDrone' && battle.buildings) {
-            const building = battle.buildings.getRandomBuilding();
-            if (building) {
-                damage = Math.min(15, building.hp);
-                battle.buildings.destroyAllBuildings();
-            } else {
-                damage = 0;
-            }
-        }
-        
-        // Массовая перегрузка
-        if (card.id === 'massOverload' && battle.buildings) {
-            const count = battle.buildings.destroyAllBuildings();
-            damage = count * 6;
-        }
-        
-        // Разрушитель - убирает блок
-        if (card.id === 'destroyer') {
-            battle.enemyBlock = 0;
+        // Специальные условия Псайкера
+        if (card.id === 'telekinesis' && battle.isEnemyParalyzed()) damage = 12;
+        if (card.id === 'mindStrike' && battle.scryedThisTurn) damage = 9;
+        if (card.id === 'telepathicStrike' && battle.isEnemyParalyzed()) damage = 18;
+        if (card.id === 'mentalBomb') {
+            const paralysis = battle.statusEffects.enemy.paralysis || 0;
+            damage = damage * Math.pow(2, paralysis);
         }
         
         if (battle.statusEffects.enemy.vulnerable > 0) damage = Math.floor(damage * 1.5);
         if (battle.statusEffects.player.weak > 0) damage = Math.floor(damage * 0.75);
         
+        // Пси-аура - игнорирует 2 блока
+        let ignoreBlockAmount = 0;
+        if (battle.hasPower('psyAura')) ignoreBlockAmount = 2;
+        
         let hits = card.hits || 1;
         let totalDamage = 0;
         for (let i = 0; i < hits; i++) totalDamage += damage;
         
+        // Игнорирование блока
         if (card.ignoreBlock) {
-            // Игнорируем блок
+            // Полностью игнорируем блок
         } else if (battle.enemyBlock > 0) {
-            const blocked = Math.min(battle.enemyBlock, totalDamage);
+            const effectiveBlock = Math.max(0, battle.enemyBlock - ignoreBlockAmount);
+            const blocked = Math.min(effectiveBlock, totalDamage);
             battle.enemyBlock -= blocked;
             totalDamage -= blocked;
         }
@@ -228,9 +295,14 @@ class BattleCards {
         battle.enemy.hp -= totalDamage;
         battle.enemy.hp = Math.max(0, Math.floor(battle.enemy.hp));
         
-        // Арсенал - добавить Искру при розыгрыше Атаки
-        if (battle.hasPower('arsenal') && card.type === CARD_TYPES.ATTACK) {
-            battle.hand.push({ ...ENGINEER_CARDS.spark });
+        // Паралич от карты
+        if (card.paralysis) {
+            battle.statusEffects.enemy.paralysis = (battle.statusEffects.enemy.paralysis || 0) + card.paralysis;
+        }
+        
+        // Астральный клинок - даёт эхо
+        if (card.id === 'astralBlade') {
+            battle.echoStacks += 1;
         }
         
         if (card.bleed) battle.statusEffects.enemy.bleed = (battle.statusEffects.enemy.bleed || 0) + card.bleed;
@@ -244,51 +316,12 @@ class BattleCards {
     applySkill(battle, card) {
         if (card.block) {
             let blockAmount = card.block + (battle.statusEffects.player.dexterity || 0);
-            
-            // Энергетический щит - больше блока с конструкцией
-            if (card.id === 'energyShield' && battle.buildings?.getBuildingCount() > 0) {
-                blockAmount = 10;
-            }
-            
             battle.block += Math.floor(blockAmount);
         }
         
-        // Починка - восстановить конструкцию
-        if (card.id === 'repair' && battle.buildings) {
-            const building = battle.buildings.getRandomBuilding();
-            if (building) {
-                battle.buildings.repairBuilding(battle, 0, 3);
-            }
-        }
-        
-        // Ремонтный дрон - восстановить все конструкции
-        if (card.id === 'repairDrone' && battle.buildings) {
-            battle.buildings.buildings.forEach((b, i) => {
-                battle.buildings.repairBuilding(battle, i, 5);
-            });
-        }
-        
-        // Модернизация - улучшить все конструкции
-        if (card.id === 'modernization' && battle.buildings) {
-            battle.buildings.buildings.forEach(b => {
-                b.damage += 2;
-                b.block += 3;
-                b.upgraded = true;
-            });
-        }
-        
-        // Заводской сброс
-        if (card.id === 'factoryReset' && battle.buildings) {
-            const count = battle.buildings.destroyAllBuildings();
-            battle.energy += count;
-            battle.drawCards(count);
-        }
-        
-        // Нанороботы
-        if (card.id === 'nanobots' && battle.buildings) {
-            battle.buildings.buildings.forEach((b, i) => {
-                battle.buildings.repairBuilding(battle, i, 2);
-            });
+        // Паралич от навыка
+        if (card.paralysis) {
+            battle.statusEffects.enemy.paralysis = (battle.statusEffects.enemy.paralysis || 0) + card.paralysis;
         }
         
         if (card.heal) battle.player.hp = Math.min(battle.player.maxHp, Math.floor(battle.player.hp + card.heal));
@@ -310,14 +343,14 @@ class BattleCards {
             battle.statusEffects.player.thorns = (battle.statusEffects.player.thorns || 0) + card.thorns;
         }
         
-        // Реактивный ранец - +1 энергия в начале боя
-        if (card.id === 'jetpack') {
-            battle.energy += 1;
+        // Телепатическая связь - посмотреть 3 карты
+        if (card.id === 'telepathicLink') {
+            battle.scryedThisTurn = true;
         }
         
-        // Резерв - добавить Малую турель в руку
-        if (card.id === 'reserve') {
-            battle.hand.push({ ...ENGINEER_CARDS.smallTurret });
+        // Телепатическое доминирование - украсть карту
+        if (card.id === 'telepathicDomination') {
+            battle.stealEnemyCard();
         }
         
         if (!battle.player.relics) battle.player.relics = [];

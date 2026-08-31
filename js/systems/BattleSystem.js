@@ -22,13 +22,29 @@ class BattleSystem extends BattleCore {
         this.block = 0;
         this.damageTakenThisTurn = 0;
         this.cardsPlayedThisTurn = 0;
-        this.cardsPlayedTypes = { attack: 0, skill: 0, power: 0 };
+        this.cardsPlayedTypes = { attack: 0, skill: 0, power: 0, building: 0 };
+        this.scryedThisTurn = false;
         
         this.effects.applyStartTurnEffects(this);
         
         // Конструкции срабатывают в начале хода
         if (this.buildings) {
             this.buildings.triggerStartOfTurn(this);
+        }
+        
+        // Ментальный фокус - взять карту
+        if (this.hasPower('mentalFocus')) {
+            this.drawCards(1);
+        }
+        
+        // Предсказатель - посмотреть верхнюю карту
+        if (this.hasPower('predictor') && this.drawPile.length > 0) {
+            this.scryedThisTurn = true;
+        }
+        
+        // Пси-вампиризм - лечение при параличе врага
+        if (this.hasPower('psyVampirism') && this.isEnemyParalyzed()) {
+            this.player.hp = Math.min(this.player.maxHp, this.player.hp + 2);
         }
         
         this.drawCards(5);

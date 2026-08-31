@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="ru">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
@@ -7,13 +8,14 @@
     <link rel="stylesheet" href="css/style.css">
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
 </head>
+
 <body>
     <div id="game-container">
         <!-- Экран загрузки -->
         <div id="loading-screen">
             <h1>Загрузка...</h1>
         </div>
-        
+
         <!-- Главное меню -->
         <div id="main-menu" style="display: none;">
             <h1>🗡️ Card Roguelike</h1>
@@ -21,13 +23,13 @@
             <button onclick="continueGame()">Продолжить</button>
             <div id="player-stats"></div>
         </div>
-        
+
         <!-- Экран выбора героя -->
         <div id="hero-select" style="display: none;">
             <h2>Выберите героя</h2>
             <div id="hero-list"></div>
         </div>
-        
+
         <!-- Боевой экран -->
         <div id="battle-screen" style="display: none;">
             <!-- Враг -->
@@ -41,10 +43,10 @@
                     <div id="enemy-effects"></div>
                 </div>
             </div>
-            
+
             <!-- Конструкции (для Инженера) -->
             <div id="buildings-area" style="display: none;"></div>
-            
+
             <!-- Игрок -->
             <div id="player-area">
                 <div id="player-info">
@@ -55,35 +57,36 @@
                     <div id="player-effects"></div>
                 </div>
             </div>
-            
+
             <!-- Рука карт -->
             <div id="hand-area"></div>
-            
+
             <!-- Превью эффектов -->
             <div id="battle-preview"></div>
-            
+
             <!-- Кнопки действий -->
             <div id="action-buttons"></div>
         </div>
-        
+
         <!-- Экран карты мира -->
         <div id="map-screen" style="display: none;">
             <h2>Карта мира</h2>
             <div id="map-nodes"></div>
         </div>
     </div>
-    
+
     <!-- Конфигурация -->
     <script src="js/config/constants.js"></script>
-    
+
     <!-- Данные -->
     <script src="js/data/heroes.js"></script>
     <script src="js/data/cards/common.js"></script>
     <script src="js/data/cards/berserk.js"></script>
     <script src="js/data/cards/engineer.js"></script>
+    <script src="js/data/cards/psyker.js"></script>
     <script src="js/data/cards/index.js"></script>
     <script src="js/data/enemies.js"></script>
-    
+
     <!-- Системы -->
     <script src="js/systems/battle/BattleCore.js"></script>
     <script src="js/systems/battle/BattleEffects.js"></script>
@@ -93,13 +96,14 @@
     <script src="js/systems/MapGenerator.js"></script>
     <script src="js/systems/BattleSystem.js"></script>
     <script src="js/systems/Game.js"></script>
-    
+
     <!-- UI -->
     <script src="js/ui/HeroSelect.js"></script>
     <script src="js/ui/BattleUI.js"></script>
     <script src="js/ui/MapUI.js"></script>
-    
+
     <!-- Точка входа -->
     <script src="js/main.js"></script>
 </body>
+
 </html>

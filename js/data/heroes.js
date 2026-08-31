@@ -25,11 +25,11 @@ const HEROES = {
     psyker: {
         id: 'psyker',
         name: 'Псайкер',
-        title: 'Комбо, Дроу-движок',
+        title: 'Комбо, Контроль разума',
         color: '#a855f7',
         emoji: '🔮',
-        description: 'Манипуляция рукой и колодой.',
-        unlocked: false,
+        description: 'Паралич, предвидение, эхо, манипуляция колодой.',
+        unlocked: true,
         maxHp: 70,
         starterDeck: 'psyker'
     },

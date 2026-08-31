@@ -11,7 +11,11 @@ const CARD_REGISTRY = {
     engineer: {
         cards: { ...COMMON_CARDS, ...ENGINEER_CARDS },
         starterDeck: ENGINEER_STARTER_DECK
-    }
+    },
+    psyker: {
+        cards: { ...COMMON_CARDS, ...PSYKER_CARDS },
+        starterDeck: PSYKER_STARTER_DECK
+    },
 };
 
 // Получить все карты героя
@@ -29,7 +33,7 @@ function getCardsForHero(heroId) {
 function getStarterDeckForHero(heroId) {
     const deck = CARD_REGISTRY[heroId]?.starterDeck;
     if (deck) {
-        return deck.map(card => ({...card}));
+        return deck.map(card => ({ ...card }));
     }
     return [];
 }
@@ -39,11 +43,11 @@ function getRandomRewardCards(heroId, count = 3) {
     const cards = getCardsForHero(heroId);
     const cardIds = Object.keys(cards);
     const rewards = [];
-    
+
     for (let i = 0; i < count; i++) {
         const randomId = cardIds[Math.floor(Math.random() * cardIds.length)];
         rewards.push({ ...cards[randomId] });
     }
-    
+
     return rewards;
 }
