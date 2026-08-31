@@ -144,6 +144,13 @@ class Game {
             } else {
                 BattleUI.hidePreview();
             }
+
+            // Если карта с scry - показываем модальное окно
+            const card = this.currentBattle.hand[index];
+            if (card && card.scry) {
+                const topCards = this.currentBattle.scry(card.scry);
+                BattleUI.showScryModal(this, topCards);
+            }
         } else {
             alert(result.message);
         }
@@ -402,26 +409,30 @@ class Game {
                 name: 'Загадочный фонтан',
                 description: 'Вы нашли древний фонтан.',
                 options: [
-                    { text: 'Испить (Восстановить 25 HP)', action: () => {
-                        this.player.hp = Math.min(this.player.maxHp, this.player.hp + 25);
-                        alert('Вы чувствуете прилив сил!');
-                    }},
-                    { text: 'Уйти', action: () => {} }
+                    {
+                        text: 'Испить (Восстановить 25 HP)', action: () => {
+                            this.player.hp = Math.min(this.player.maxHp, this.player.hp + 25);
+                            alert('Вы чувствуете прилив сил!');
+                        }
+                    },
+                    { text: 'Уйти', action: () => { } }
                 ]
             },
             {
                 name: 'Странный торговец',
                 description: 'Торговец предлагает карты.',
                 options: [
-                    { text: 'Купить карту (50 золота)', action: () => {
-                        if (this.player.gold >= 50) {
-                            this.player.gold -= 50;
-                            this.offerCard();
-                        } else {
-                            alert('Недостаточно золота!');
+                    {
+                        text: 'Купить карту (50 золота)', action: () => {
+                            if (this.player.gold >= 50) {
+                                this.player.gold -= 50;
+                                this.offerCard();
+                            } else {
+                                alert('Недостаточно золота!');
+                            }
                         }
-                    }},
-                    { text: 'Уйти', action: () => {} }
+                    },
+                    { text: 'Уйти', action: () => { } }
                 ]
             }
         ];

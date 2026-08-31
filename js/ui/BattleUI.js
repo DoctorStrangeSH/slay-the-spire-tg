@@ -28,7 +28,11 @@ const BattleUI = {
         const intent = battle.getEnemyIntentInfo();
         const intentEl = document.getElementById('enemy-intent');
         
-        if (intent.type === 'attack') {
+        // Если враг парализован - показываем это
+        if (battle.isEnemyParalyzed()) {
+            intentEl.innerHTML = `🔒 <span class="intent-value">Парализован</span>`;
+            intentEl.className = 'intent intent-paralysis';
+        } else if (intent.type === 'attack') {
             intentEl.innerHTML = `⚔️ <span class="intent-value">${intent.damage}</span>`;
             intentEl.className = 'intent intent-attack';
         } else {
@@ -40,11 +44,12 @@ const BattleUI = {
         effectsEl.innerHTML = '';
         
         const effects = [
-            { icon: '💪', value: battle.statusEffects.enemy.strength, type: 'buff', label: 'Сила', name: 'Сила', description: 'Увеличивает урон атак на указанное значение.' },
-            { icon: '🎯', value: battle.statusEffects.enemy.vulnerable, type: 'debuff', label: 'Уязвимость', name: 'Уязвимость', description: 'Получает на 50% больше урона. Уменьшается на 1 в конце хода.' },
-            { icon: '📉', value: battle.statusEffects.enemy.weak, type: 'debuff', label: 'Слабость', name: 'Слабость', description: 'Наносит на 25% меньше урона. Уменьшается на 1 в конце хода.' },
-            { icon: '🩸', value: battle.statusEffects.enemy.bleed, type: 'debuff', label: 'Кровотечение', name: 'Кровотечение', description: 'Получает урон в конце хода. Уменьшается на 1 каждый ход.' },
-            { icon: '☠️', value: battle.statusEffects.enemy.poison, type: 'debuff', label: 'Яд', name: 'Яд', description: 'Получает урон в конце хода. Уменьшается на 1 каждый ход.' }
+            { icon: '💪', value: battle.statusEffects.enemy.strength, type: 'buff', label: 'Сила', name: 'Сила', description: 'Увеличивает урон атак.' },
+            { icon: '🔒', value: battle.statusEffects.enemy.paralysis, type: 'debuff', label: 'Паралич', name: 'Паралич', description: 'Враг пропускает свой следующий ход. Уменьшается на 1 после пропуска.' },
+            { icon: '🎯', value: battle.statusEffects.enemy.vulnerable, type: 'debuff', label: 'Уязвимость', name: 'Уязвимость', description: 'Получает на 50% больше урона.' },
+            { icon: '📉', value: battle.statusEffects.enemy.weak, type: 'debuff', label: 'Слабость', name: 'Слабость', description: 'Наносит на 25% меньше урона.' },
+            { icon: '🩸', value: battle.statusEffects.enemy.bleed, type: 'debuff', label: 'Кровотечение', name: 'Кровотечение', description: 'Получает урон в конце хода.' },
+            { icon: '☠️', value: battle.statusEffects.enemy.poison, type: 'debuff', label: 'Яд', name: 'Яд', description: 'Получает урон в конце хода.' }
         ];
         
         effects.forEach(effect => {
@@ -137,6 +142,7 @@ const BattleUI = {
         
         const effects = [
             { icon: '💪', value: battle.statusEffects.player.strength, type: 'buff', label: 'Сила', name: 'Сила', description: 'Увеличивает урон ваших атак.' },
+            { icon: '🔁', value: battle.echoStacks, type: 'buff', label: 'Эхо', name: 'Эхо', description: 'Следующая карта сработает дважды.' },
             { icon: '🎯', value: battle.statusEffects.player.vulnerable, type: 'debuff', label: 'Уязвимость', name: 'Уязвимость', description: 'Вы получаете на 50% больше урона.' },
             { icon: '📉', value: battle.statusEffects.player.weak, type: 'debuff', label: 'Слабость', name: 'Слабость', description: 'Вы наносите на 25% меньше урона.' },
             { icon: '🩸', value: battle.statusEffects.player.bleed, type: 'debuff', label: 'Кровотечение', name: 'Кровотечение', description: 'Вы получаете урон в конце хода.' },
@@ -284,5 +290,31 @@ const BattleUI = {
         if (previewEl) {
             previewEl.style.display = 'none';
         }
+    },
+    
+    // Показать модальное окно с просмотром карт (Scry)
+    showScryModal(game, cards) {
+        const modal = document.createElement('div');
+        modal.className = 'modal';
+        modal.id = 'scry-modal';
+        
+        modal.innerHTML = `
+            <div class="modal-content">
+                <h3>🔮 Предвидение</h3>
+                <p>Верхние карты колоды:</p>
+                <div class="pile-cards">
+                    ${cards.map((card, index) => `
+                        <div class="pile-card">
+                            <span>${card.emoji || '🃏'}</span>
+                            <span>${card.name}</span>
+                            <span>${card.cost}⚡</span>
+                        </div>
+                    `).join('')}
+                </div>
+                <button onclick="document.getElementById('scry-modal').remove()">Закрыть</button>
+            </div>
+        `;
+        
+        document.body.appendChild(modal);
     }
 };
