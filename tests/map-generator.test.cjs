@@ -107,8 +107,8 @@ test('event scenes distinguish all choices and preserve failed bargain outcome',
     });
     const game = new Game();
     const events = game.getEventsForAct();
-    assert.equal(events.length, 3);
-    assert.equal(new Set(events.map(event => game.getEventPresentation(event.name).style)).size, 3);
+    assert.equal(events.length, 6);
+    assert.equal(new Set(events.map(event => game.getEventPresentation(event.name).style)).size, 6);
     assert.ok(events.every(event => event.options.length >= 2));
     assert.ok(events.every(event => event.description.length > 75));
     game.player = { hp: 12, maxHp: 50, gold: 0 };
@@ -118,4 +118,34 @@ test('event scenes distinguish all choices and preserve failed bargain outcome',
     assert.equal(game.applyAltarBargain(), true);
     assert.equal(game.player.hp, 18);
     assert.equal(game.player.maxHp, 58);
+});
+
+test('new event risks have defined prices and never kill the player', () => {
+    const source = readFileSync(join(__dirname, '../js/systems/Game.js'), 'utf8');
+    const Game = vm.runInNewContext(source + '\nGame;', {
+        GAME_CONFIG: { maxActs: 3 }, RunSave: class { clear() {} },
+        alert() {}
+    });
+    const game = new Game();
+    game.player = { hp: 9, maxHp: 60, gold: 15 };
+    const get = name => game.getEventsForAct().find(event => event.name === name);
+    const vault = get('Запечатанная Сокровищница');
+    assert.equal(vault.options[0].action(), false);
+    assert.equal(game.player.hp, 9);
+    assert.equal(game.player.gold, 15);
+    game.player.hp = 20;
+    assert.equal(vault.options[0].action(), true);
+    assert.equal(game.player.hp, 11);
+    assert.equal(game.player.gold, 75);
+    const chapel = get('Часовня Последнего Света');
+    assert.equal(chapel.options[1].action(), true);
+    assert.equal(game.player.maxHp, 63);
+    assert.equal(game.player.hp, 14);
+    assert.equal(game.player.gold, 50);
+    game.player.gold = 0;
+    assert.equal(chapel.options[1].action(), false);
+    assert.equal(game.player.maxHp, 63);
+    game.player.hp = 60;
+    assert.equal(get('Библиотека Безымянных').options[1].action(), true);
+    assert.equal(game.player.hp, 63);
 });
