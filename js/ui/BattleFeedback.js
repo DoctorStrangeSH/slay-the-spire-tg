@@ -2,6 +2,28 @@
 const BattleFeedback = Object.freeze({
     timers: new Map(),
     entranceTimers: new Map(),
+    floatTimers: new Map(),
+    floatNodes: new Map(),
+    float(id, amount, kind) {
+        if (!Number.isFinite(amount) || amount <= 0) return;
+        const area = document.getElementById(id);
+        if (!area) return;
+        const previousTimer = this.floatTimers.get(id);
+        if (previousTimer) clearTimeout(previousTimer);
+        this.floatNodes.get(id)?.remove();
+        const marker = document.createElement('span');
+        marker.className = `battle-float battle-float--${kind}`;
+        marker.textContent = kind === 'damage' ? `−${amount}` : `+${amount} 🛡`;
+        marker.setAttribute('aria-hidden', 'true');
+        area.appendChild(marker);
+        this.floatNodes.set(id, marker);
+        const timer = setTimeout(() => {
+            marker.remove();
+            this.floatNodes.delete(id);
+            this.floatTimers.delete(id);
+        }, 950);
+        this.floatTimers.set(id, timer);
+    },
     enter(id) {
         const element = document.getElementById(id);
         if (!element) return;
@@ -43,10 +65,20 @@ const BattleFeedback = Object.freeze({
         if (!before || !battle) return;
         const after = this.snapshot(battle);
         // Урон важнее нового блока, если оба изменения произошли за ход.
-        if (after.enemyHp < before.enemyHp) this.flash('enemy-area', 'fx-damage');
-        else if (after.enemyBlock > before.enemyBlock) this.flash('enemy-area', 'fx-shield');
-        if (after.heroHp < before.heroHp) this.flash('player-area', 'fx-damage');
-        else if (after.heroBlock > before.heroBlock) this.flash('player-area', 'fx-shield');
+        if (after.enemyHp < before.enemyHp) {
+            this.flash('enemy-area', 'fx-damage');
+            this.float('enemy-area', before.enemyHp - after.enemyHp, 'damage');
+        } else if (after.enemyBlock > before.enemyBlock) {
+            this.flash('enemy-area', 'fx-shield');
+            this.float('enemy-area', after.enemyBlock - before.enemyBlock, 'shield');
+        }
+        if (after.heroHp < before.heroHp) {
+            this.flash('player-area', 'fx-damage');
+            this.float('player-area', before.heroHp - after.heroHp, 'damage');
+        } else if (after.heroBlock > before.heroBlock) {
+            this.flash('player-area', 'fx-shield');
+            this.float('player-area', after.heroBlock - before.heroBlock, 'shield');
+        }
     },
     result({ victory, gold = 0, onContinue }) {
         if (document.getElementById('battle-result-modal')) return;

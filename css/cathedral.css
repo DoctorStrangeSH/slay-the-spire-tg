@@ -705,3 +705,29 @@ button:disabled { opacity: .42; filter: grayscale(.5); }
 @media (prefers-reduced-motion: reduce) {
   .effect-badge.status-poison::after, .effect-badge.status-bleed::after { animation: none !important; opacity: .2; }
 }
+
+/* Всплывающие цифры боя: фактически нанесённый урон и полученный блок. */
+.battle-float {
+  position: absolute;
+  z-index: 8;
+  top: 19%;
+  left: 50%;
+  transform: translate(-50%, 0);
+  pointer-events: none;
+  white-space: nowrap;
+  font: 900 clamp(23px, 6vw, 31px)/1 system-ui, sans-serif;
+  letter-spacing: .04em;
+  text-shadow: 0 2px 2px #090b10, 0 5px 15px #000e;
+  animation: cathedral-float-number .9s cubic-bezier(.16,.85,.25,1) both;
+}
+.battle-float--damage { color: #ff9ca1; filter: drop-shadow(0 0 7px #a42f47a8); }
+.battle-float--shield { color: #9ef2df; filter: drop-shadow(0 0 7px #358c88a8); }
+@keyframes cathedral-float-number {
+  0% { opacity: 0; transform: translate(-50%, 16px) scale(.65); }
+  18% { opacity: 1; transform: translate(-50%, -3px) scale(1.12); }
+  66% { opacity: 1; transform: translate(-50%, -25px) scale(1); }
+  100% { opacity: 0; transform: translate(-50%, -48px) scale(.96); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .battle-float { animation: none !important; opacity: 1; transform: translate(-50%, 0); }
+}
