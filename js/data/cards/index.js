@@ -26,6 +26,9 @@ function getCardsForHero(heroId) {
     if (heroId === 'engineer') {
         return { ...COMMON_CARDS, ...ENGINEER_CARDS };
     }
+    if (heroId === 'psyker') {
+        return { ...COMMON_CARDS, ...PSYKER_CARDS };
+    }
     return COMMON_CARDS;
 }
 

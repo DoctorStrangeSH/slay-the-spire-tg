@@ -27,5 +27,6 @@ const NODE_TYPES = {
     REST: 'rest',
     EVENT: 'event',
     SHOP: 'shop',
+    TREASURE: 'treasure',
     BOSS: 'boss'
 };

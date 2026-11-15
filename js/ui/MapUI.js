@@ -214,6 +214,7 @@ const MapUI = {
             case NODE_TYPES.ELITE: return '#ffd700';
             case NODE_TYPES.REST: return '#4ecdc4';
             case NODE_TYPES.EVENT: return '#a855f7';
+            case NODE_TYPES.TREASURE: return '#e8b94c';
             case NODE_TYPES.SHOP: return '#3b82f6';
             case NODE_TYPES.BOSS: return '#ef4444';
             default: return '#666';
@@ -232,6 +233,7 @@ const MapUI = {
             case NODE_TYPES.ELITE: return '👑';
             case NODE_TYPES.REST: return '🏕️';
             case NODE_TYPES.EVENT: return '❓';
+            case NODE_TYPES.TREASURE: return '🎁';
             case NODE_TYPES.SHOP: return '💰';
             case NODE_TYPES.BOSS: return '💀';
             default: return '•';
@@ -245,6 +247,7 @@ const MapUI = {
             case NODE_TYPES.ELITE: return 'Элита';
             case NODE_TYPES.REST: return 'Отдых';
             case NODE_TYPES.EVENT: return 'Событие';
+            case NODE_TYPES.TREASURE: return 'Сокровищница';
             case NODE_TYPES.SHOP: return 'Магазин';
             case NODE_TYPES.BOSS: return 'Босс';
             default: return '';
