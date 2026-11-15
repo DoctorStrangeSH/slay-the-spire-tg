@@ -131,6 +131,9 @@ class Game {
             case NODE_TYPES.EVENT:
                 this.triggerEvent();
                 break;
+            case NODE_TYPES.TREASURE:
+                this.openTreasure();
+                break;
             case NODE_TYPES.SHOP:
                 this.openShop();
                 break;
@@ -471,6 +474,55 @@ class Game {
 
         document.body.appendChild(modal);
         this.currentEvent = event;
+    }
+
+    // Каждая сокровищница предлагает осмысленный выбор одного из трёх ресурсов.
+    applyTreasureReward(type) {
+        if (type === 'gold') {
+            this.player.gold += 75;
+            return true;
+        }
+        if (type === 'heal') {
+            const restored = Math.max(1, Math.floor(this.player.maxHp * 0.35));
+            this.player.hp = Math.min(this.player.maxHp, this.player.hp + restored);
+            return true;
+        }
+        if (type === 'card') {
+            const cards = Object.values(getCardsForHero(this.player.heroId));
+            const rareCards = cards.filter(card => card.rarity === CARD_RARITY.RARE);
+            const pool = rareCards.length ? rareCards : cards;
+            if (!pool.length) return false;
+            this.player.deck.push({ ...pool[Math.floor(Math.random() * pool.length)] });
+            return true;
+        }
+        return false;
+    }
+
+    openTreasure() {
+        const modal = document.createElement('div');
+        modal.className = 'modal';
+        modal.innerHTML = `<div class="modal-content">
+            <h3>🎁 Древняя сокровищница</h3>
+            <p>Магические печати позволяют забрать только одну награду.</p>
+        </div>`;
+        const choices = [
+            { type: 'gold', text: '💰 75 золота' },
+            { type: 'heal', text: '❤️ Восстановить 35% здоровья' },
+            { type: 'card', text: '🃏 Получить редкую карту' }
+        ];
+        let claimed = false;
+        choices.forEach(choice => {
+            const button = document.createElement('button');
+            button.textContent = choice.text;
+            button.onclick = () => {
+                if (claimed || !this.applyTreasureReward(choice.type)) return;
+                claimed = true;
+                modal.remove();
+                this.continueJourney();
+            };
+            modal.querySelector('.modal-content').appendChild(button);
+        });
+        document.body.appendChild(modal);
     }
 
     openShop() {
