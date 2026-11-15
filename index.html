@@ -4,9 +4,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Slay And Spire</title>
-    <meta name="app-version" content="2026.11.15.5">
-    <link rel="stylesheet" href="css/style.css?v=2026.11.15.5">
+    <title>Slay And Spire — Тёмный собор</title>
+    <meta name="theme-color" content="#090b10">
+    <meta name="app-version" content="2026.11.15.6">
+    <link rel="stylesheet" href="css/style.css?v=2026.11.15.6">
+    <link rel="stylesheet" href="css/cathedral.css?v=2026.11.15.6">
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
 </head>
 
@@ -19,7 +21,11 @@
 
         <!-- Главное меню -->
         <div id="main-menu" style="display: none;">
-            <h1>🗡️ Slay And Spire</h1>
+            <div class="brand-sigil" aria-hidden="true"><img src="assets/cathedral-crest.svg" alt=""></div>
+            <p class="brand-kicker">Хроники проклятого шпиля</p>
+            <h1>Slay And Spire</h1>
+            <p class="brand-subtitle">ОДНА ДОРОГА. ТЫСЯЧА СУДЕБ.</p>
+            <div class="brand-divider" aria-hidden="true"></div>
             <button onclick="showHeroSelect()">Новая игра</button>
             <button onclick="continueGame()">Продолжить</button>
             <div id="player-stats"></div>
@@ -28,7 +34,9 @@
 
         <!-- Экран выбора героя -->
         <div id="hero-select" style="display: none;">
+            <p class="brand-kicker">Выбор судьбы</p>
             <h2>Выберите героя</h2>
+            <button id="hero-back-button" onclick="game.showMenu()">← Главное меню</button>
             <div id="hero-list"></div>
         </div>
 
@@ -72,42 +80,42 @@
 
         <!-- Экран карты мира -->
         <div id="map-screen" style="display: none;">
-            <h2>Карта мира</h2>
+            <h2>✦ Карта странствий ✦</h2>
             <div id="map-nodes"></div>
         </div>
     </div>
 
     <!-- Конфигурация -->
-    <script src="js/config/constants.js?v=2026.11.15.5"></script>
+    <script src="js/config/constants.js?v=2026.11.15.6"></script>
 
     <!-- Данные -->
-    <script src="js/data/heroes.js?v=2026.11.15.5"></script>
-    <script src="js/data/cards/common.js?v=2026.11.15.5"></script>
-    <script src="js/data/cards/berserk.js?v=2026.11.15.5"></script>
-    <script src="js/data/cards/engineer.js?v=2026.11.15.5"></script>
-    <script src="js/data/cards/psyker.js?v=2026.11.15.5"></script>
-    <script src="js/data/cards/index.js?v=2026.11.15.5"></script>
-    <script src="js/data/enemies.js?v=2026.11.15.5"></script>
-    <script src="js/data/relics.js?v=2026.11.15.5"></script>
+    <script src="js/data/heroes.js?v=2026.11.15.6"></script>
+    <script src="js/data/cards/common.js?v=2026.11.15.6"></script>
+    <script src="js/data/cards/berserk.js?v=2026.11.15.6"></script>
+    <script src="js/data/cards/engineer.js?v=2026.11.15.6"></script>
+    <script src="js/data/cards/psyker.js?v=2026.11.15.6"></script>
+    <script src="js/data/cards/index.js?v=2026.11.15.6"></script>
+    <script src="js/data/enemies.js?v=2026.11.15.6"></script>
+    <script src="js/data/relics.js?v=2026.11.15.6"></script>
 
     <!-- Системы -->
-    <script src="js/systems/battle/BattleCore.js?v=2026.11.15.5"></script>
-    <script src="js/systems/battle/BattleEffects.js?v=2026.11.15.5"></script>
-    <script src="js/systems/battle/BattleBuildings.js?v=2026.11.15.5"></script>
-    <script src="js/systems/battle/BattleCards.js?v=2026.11.15.5"></script>
-    <script src="js/systems/battle/BattleTurn.js?v=2026.11.15.5"></script>
-    <script src="js/systems/MapGenerator.js?v=2026.11.15.5"></script>
-    <script src="js/systems/BattleSystem.js?v=2026.11.15.5"></script>
-    <script src="js/systems/RunSave.js?v=2026.11.15.5"></script>
-    <script src="js/systems/Game.js?v=2026.11.15.5"></script>
+    <script src="js/systems/battle/BattleCore.js?v=2026.11.15.6"></script>
+    <script src="js/systems/battle/BattleEffects.js?v=2026.11.15.6"></script>
+    <script src="js/systems/battle/BattleBuildings.js?v=2026.11.15.6"></script>
+    <script src="js/systems/battle/BattleCards.js?v=2026.11.15.6"></script>
+    <script src="js/systems/battle/BattleTurn.js?v=2026.11.15.6"></script>
+    <script src="js/systems/MapGenerator.js?v=2026.11.15.6"></script>
+    <script src="js/systems/BattleSystem.js?v=2026.11.15.6"></script>
+    <script src="js/systems/RunSave.js?v=2026.11.15.6"></script>
+    <script src="js/systems/Game.js?v=2026.11.15.6"></script>
 
     <!-- UI -->
-    <script src="js/ui/HeroSelect.js?v=2026.11.15.5"></script>
-    <script src="js/ui/BattleUI.js?v=2026.11.15.5"></script>
-    <script src="js/ui/MapUI.js?v=2026.11.15.5"></script>
+    <script src="js/ui/HeroSelect.js?v=2026.11.15.6"></script>
+    <script src="js/ui/BattleUI.js?v=2026.11.15.6"></script>
+    <script src="js/ui/MapUI.js?v=2026.11.15.6"></script>
 
     <!-- Точка входа -->
-    <script src="js/main.js?v=2026.11.15.5"></script>
+    <script src="js/main.js?v=2026.11.15.6"></script>
 </body>
 
 </html>

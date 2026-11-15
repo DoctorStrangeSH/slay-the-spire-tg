@@ -35,6 +35,8 @@ const MapUI = {
         svg.setAttribute('width', '100%');
         svg.setAttribute('height', height);
         svg.setAttribute('viewBox', `0 0 ${width} ${height}`);
+        svg.setAttribute('role', 'img');
+        svg.setAttribute('aria-label', 'Карта маршрутов с доступными комнатами');
         
         const availableNodes = game.mapGenerator.getAvailableNodes(game.currentNodeId);
         const currentNode = game.mapGenerator.findNodeById(game.currentNodeId);
@@ -81,16 +83,16 @@ const MapUI = {
         const isAvailable = node1.visited && !node2.visited;
         
         if (isVisited) {
-            line.setAttribute('stroke', '#4a4a5a');
+            line.setAttribute('stroke', '#665a54');
             line.setAttribute('stroke-width', '2');
             line.setAttribute('opacity', '0.5');
         } else if (isAvailable) {
-            line.setAttribute('stroke', '#4ecdc4');
+            line.setAttribute('stroke', '#8bbfba');
             line.setAttribute('stroke-width', '3');
             line.setAttribute('opacity', '0.8');
             line.setAttribute('stroke-dasharray', '5,5');
         } else {
-            line.setAttribute('stroke', '#666');
+            line.setAttribute('stroke', '#685f63');
             line.setAttribute('stroke-width', '1');
             line.setAttribute('opacity', '0.3');
         }
@@ -123,7 +125,7 @@ const MapUI = {
         if (isVisited) {
             circle.setAttribute('opacity', '0.6');
         } else if (isAvailable && isFutureFloor) {
-            circle.setAttribute('stroke', '#4ecdc4');
+            circle.setAttribute('stroke', '#8bbfba');
             circle.setAttribute('stroke-width', '3');
             circle.style.cursor = 'pointer';
             circle.style.pointerEvents = 'all';
@@ -186,7 +188,7 @@ const MapUI = {
             label.setAttribute('y', cy - radius - 8);
             label.setAttribute('text-anchor', 'middle');
             label.setAttribute('font-size', '10');
-            label.setAttribute('fill', '#fff');
+            label.setAttribute('fill', '#f2e9d9');
             label.setAttribute('pointer-events', 'none');
             label.textContent = this.getNodeLabel(node.type);
             group.appendChild(label);
@@ -209,21 +211,21 @@ const MapUI = {
     
     getNodeColor(type) {
         switch (type) {
-            case NODE_TYPES.START: return '#4ecdc4';
-            case NODE_TYPES.BATTLE: return '#e94560';
-            case NODE_TYPES.ELITE: return '#ffd700';
-            case NODE_TYPES.REST: return '#4ecdc4';
-            case NODE_TYPES.EVENT: return '#a855f7';
-            case NODE_TYPES.TREASURE: return '#e8b94c';
-            case NODE_TYPES.SHOP: return '#3b82f6';
-            case NODE_TYPES.BOSS: return '#ef4444';
-            default: return '#666';
+            case NODE_TYPES.START: return '#8bbfba';
+            case NODE_TYPES.BATTLE: return '#a95061';
+            case NODE_TYPES.ELITE: return '#d7b17a';
+            case NODE_TYPES.REST: return '#8bbfba';
+            case NODE_TYPES.EVENT: return '#8c6ea8';
+            case NODE_TYPES.TREASURE: return '#d7aa64';
+            case NODE_TYPES.SHOP: return '#668da4';
+            case NODE_TYPES.BOSS: return '#a83848';
+            default: return '#685f63';
         }
     },
     
     getNodeStroke(node) {
         if (node.visited) return '#888';
-        return '#fff';
+        return '#f2e9d9';
     },
     
     getNodeIcon(type) {
@@ -262,6 +264,7 @@ const MapUI = {
             <span>👑 Элита</span>
             <span>🏕️ Отдых</span>
             <span>❓ Событие</span>
+            <span>🎁 Сокровище</span>
             <span>💰 Магазин</span>
             <span>💀 Босс</span>
         `;

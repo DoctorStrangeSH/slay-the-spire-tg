@@ -13,7 +13,7 @@ const HeroSelect = {
         Object.values(HEROES).forEach(hero => {
             const heroCard = document.createElement('div');
             heroCard.className = 'hero-card';
-            heroCard.style.borderColor = hero.unlocked ? hero.color : '#666';
+            heroCard.style.setProperty('--hero-accent', hero.unlocked ? hero.color : '#666');
             
             if (hero.unlocked) {
                 heroCard.innerHTML = `
@@ -23,8 +23,15 @@ const HeroSelect = {
                     <p class="hero-desc">${hero.description}</p>
                     <p>❤️ ${hero.maxHp} HP</p>
                 `;
-                heroCard.onclick = () => {
-                    game.selectHero(hero.id);
+                heroCard.setAttribute('role', 'button');
+                heroCard.setAttribute('tabindex', '0');
+                heroCard.setAttribute('aria-label', `Выбрать героя: ${hero.name}`);
+                heroCard.onclick = () => game.selectHero(hero.id);
+                heroCard.onkeydown = event => {
+                    if (event.key === 'Enter' || event.key === ' ') {
+                        event.preventDefault();
+                        game.selectHero(hero.id);
+                    }
                 };
             } else {
                 heroCard.innerHTML = `
