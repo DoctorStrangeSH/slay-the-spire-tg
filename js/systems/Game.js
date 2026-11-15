@@ -547,6 +547,69 @@ class Game {
                 ]
             },
             {
+                name: 'Библиотека Безымянных',
+                description: 'Пыльные фолианты хранят последние мысли тех, кто никогда не покинул шпиль. Среди стеллажей одна книга сама раскрывается на нужной странице.',
+                options: [
+                    {
+                        text: 'Выкупить тайное знание (35 золота, выбрать карту)',
+                        action: () => {
+                            if (this.player.gold < 35) { alert('Недостаточно золота!'); return false; }
+                            this.player.gold -= 35;
+                            this.offerCard();
+                            return 'deferred';
+                        }
+                    },
+                    {
+                        text: 'Прочесть молитву (+8 HP)',
+                        action: () => {
+                            this.player.hp = Math.min(this.player.maxHp, this.player.hp + 8);
+                            return true;
+                        }
+                    },
+                    { text: 'Уйти', action: () => true }
+                ]
+            },
+            {
+                name: 'Часовня Последнего Света',
+                description: 'В полуразрушенной часовне одна свеча всё ещё горит вопреки сквознякам. Перед алтарём лежат монеты тех, кто надеялся пережить ночь.',
+                options: [
+                    {
+                        text: 'Помолиться (+18 HP)',
+                        action: () => {
+                            this.player.hp = Math.min(this.player.maxHp, this.player.hp + 18);
+                            return true;
+                        }
+                    },
+                    {
+                        text: 'Пожертвовать 25 золота (+3 к максимуму HP)',
+                        action: () => {
+                            if (this.player.gold < 25) { alert('Недостаточно золота!'); return false; }
+                            this.player.gold -= 25;
+                            this.player.maxHp += 3;
+                            this.player.hp += 3;
+                            return true;
+                        }
+                    },
+                    { text: 'Уйти', action: () => true }
+                ]
+            },
+            {
+                name: 'Запечатанная Сокровищница',
+                description: 'За дверью с выцветшим гербом звенят забытые монеты. Но на пороге проступает надпись: богатство достанется лишь тому, кто заплатит болью.',
+                options: [
+                    {
+                        text: 'Вскрыть печать (−9 HP, +60 золота)',
+                        action: () => {
+                            if (this.player.hp <= 9) { alert('Слишком мало здоровья для печати!'); return false; }
+                            this.player.hp -= 9;
+                            this.player.gold += 60;
+                            return true;
+                        }
+                    },
+                    { text: 'Не трогать печать', action: () => true }
+                ]
+            },
+            {
                 name: 'Алтарь Пепельной Клятвы',
                 description: 'Среди остывших свечей возвышается алтарь из чёрного камня. Руны обещают новую силу, но требуют крови того, кто осмелится произнести клятву.',
                 options: [
@@ -570,7 +633,10 @@ class Game {
         const scenes = {
             'Загадочный фонтан': { style: 'fountain', sigil: '♒', caption: 'ЗАБЫТАЯ КУПЕЛЬ', hint: 'Пить из древней воды или оставить её нетронутой?' },
             'Странный торговец': { style: 'merchant', sigil: '◇', caption: 'СДЕЛКА В ТЕНИ', hint: 'У каждой тайны есть цена.' },
-            'Алтарь Пепельной Клятвы': { style: 'altar', sigil: '✥', caption: 'ОБЕТ КРОВИ', hint: 'Сила требует жертвы. Решение за тобой.' }
+            'Алтарь Пепельной Клятвы': { style: 'altar', sigil: '✥', caption: 'ОБЕТ КРОВИ', hint: 'Сила требует жертвы. Решение за тобой.' },
+            'Библиотека Безымянных': { style: 'library', sigil: '✣', caption: 'ШЁПОТ СТРАНИЦ', hint: 'Знание бывает дороже золота.' },
+            'Часовня Последнего Света': { style: 'chapel', sigil: '✟', caption: 'ПОСЛЕДНЯЯ МОЛИТВА', hint: 'Свет не погас, пока есть надежда.' },
+            'Запечатанная Сокровищница': { style: 'vault', sigil: '◈', caption: 'ПЕЧАТЬ ЗАБЫТЫХ', hint: 'Богатство и боль часто идут рядом.' }
         };
         return scenes[name] || { style: 'mystery', sigil: '✦', caption: 'НЕИЗВЕСТНАЯ ВСТРЕЧА', hint: 'Выбери свой путь.' };
     }
@@ -598,7 +664,7 @@ class Game {
         event.options.forEach((option, index) => {
             const button = document.createElement('button');
             button.className = 'cathedral-event-choice';
-            const isExit = /^(Уйти|Не принимать клятву)$/.test(option.text);
+            const isExit = /^(Уйти|Не принимать клятву|Не трогать печать)$/.test(option.text);
             if (isExit) button.classList.add('cathedral-event-choice--exit');
             const number = document.createElement('span');
             number.className = 'cathedral-event-choice-number';
