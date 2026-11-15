@@ -42,6 +42,8 @@ test('available routes come only from current node, never from visited siblings'
     assert.ok(first.length >= 2);
     const current = first[0];
     const sibling = first[1];
+    // Тесту нужны две независимые цели, независимо от случайного заполнения этажа.
+    if (map.paths[2].length < 2) map.createNode(2, 4, 'battle');
     current.connections = [map.paths[2][0].id];
     sibling.connections = [map.paths[2][1].id];
     current.visited = true;
