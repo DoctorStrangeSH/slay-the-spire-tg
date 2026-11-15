@@ -189,7 +189,7 @@ test('cards are captured before play and effects only play for successful card u
     const game = fs.readFileSync(path.join(root, 'js/systems/Game.js'), 'utf8');
     const method = game.split('    playSelectedCards() {')[1].split('    endTurn() {')[0];
     assert.ok(method.indexOf('const playedTypes') < method.indexOf('this.currentBattle.playSelectedCards()'));
-    assert.ok(method.indexOf('BattleFeedback.cardsPlayed(playedTypes)') > method.indexOf('if (result.success)'));
+    assert.ok(method.indexOf('BattleFeedback.cardsPlayed(playedTypes, this.player.heroId, playedCards.map(card => card.id))') > method.indexOf('if (result.success)'));
     const css = fs.readFileSync(path.join(root, 'css/cathedral.css'), 'utf8');
     for (const kind of ['attack', 'skill', 'power', 'building']) assert.ok(css.includes('card-cast-fx--' + kind));
     assert.match(css, /prefers-reduced-motion: reduce/);
