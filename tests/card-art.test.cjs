@@ -34,8 +34,8 @@ test('rendering known card types is safe and unknown old types fall back', () =>
 
 test('CardArt loads before BattleUI and all asset manifests are versioned', () => {
     assert.ok(html.indexOf('js/ui/CardArt.js') < html.indexOf('js/ui/BattleUI.js'));
-    assert.match(html, /js\/ui\/CardArt\.js\?v=2026\.11\.15\.8/);
-    assert.match(html, /css\/cathedral\.css\?v=2026\.11\.15\.8/);
+    assert.match(html, /js\/ui\/CardArt\.js\?v=2026\.11\.15\.9/);
+    assert.match(html, /css\/cathedral\.css\?v=2026\.11\.15\.9/);
 });
 
 test('combat and rewards use illustration registry consistently', () => {
@@ -44,4 +44,23 @@ test('combat and rewards use illustration registry consistently', () => {
     assert.match(battle, /CardArt\.markup\(card\)/);
     assert.match(game, /CardArt\.markup\(card, 'reward-art-image'\)/);
     assert.match(game, /CardArt\.markup\(card, 'detail-art-image'\)/);
+});
+
+test('three Berserk signature cards have distinct artwork in battle, rewards and details', () => {
+    for (const [id, filename] of Object.entries({
+        bloodCut: 'blood-cut.svg',
+        retaliationStrike: 'retaliation-strike.svg',
+        berserkStance: 'berserk-stance.svg'
+    })) {
+        const card = { id, type: id === 'berserkStance' ? 'skill' : 'attack' };
+        const art = CardArt.resolve(card);
+        assert.equal(art.src, 'assets/cards/' + filename);
+        assert.match(CardArt.markup(card, 'detail-art-image'), /detail-art-image/);
+        assert.match(CardArt.markup(card), new RegExp(filename.replace('.', '\\.'), 'i'));
+        const svg = fs.readFileSync(path.join(root, art.src), 'utf8');
+        assert.match(svg, /<title /);
+        assert.doesNotMatch(svg, /<script|onload=|href="https?:/i);
+    }
+    assert.ok(CardArt.markup({ id: 'unpainted', type: 'attack' }).includes('assets/cards/attack.svg'));
+    assert.ok(CardArt.markup({ id: 'bloodCut', type: 'power' }).includes('blood-cut.svg'));
 });
