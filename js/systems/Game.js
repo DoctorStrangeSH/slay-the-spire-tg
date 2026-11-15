@@ -233,10 +233,12 @@ class Game {
     playSelectedCards() {
         if (!this.currentBattle) return;
 
+        const before = BattleFeedback.snapshot(this.currentBattle);
         const result = this.currentBattle.playSelectedCards();
 
         if (result.success) {
             BattleUI.update(this);
+            BattleFeedback.show(before, this.currentBattle);
             BattleUI.hidePreview();
 
             if (this.currentBattle.enemy.hp <= 0) {
@@ -250,8 +252,10 @@ class Game {
     endTurn() {
         if (!this.currentBattle) return;
 
+        const before = BattleFeedback.snapshot(this.currentBattle);
         const result = this.currentBattle.endTurn();
         BattleUI.update(this);
+        BattleFeedback.show(before, this.currentBattle);
 
         if (result.battleEnded) {
             this.endBattle(result.victory);
