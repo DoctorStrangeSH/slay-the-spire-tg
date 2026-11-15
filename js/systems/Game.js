@@ -583,7 +583,7 @@ class Game {
             return true;
         }
         if (type === 'relic') {
-            const relic = chooseRelic(this.player.relics);
+            const relic = chooseRelic(this.player.relics, Math.random, this.player.heroId);
             if (!relic) return false;
             this.player.relics.push(relic.id);
             alert(`${relic.emoji} Получена реликвия «${relic.name}»! ${relic.description}`);
@@ -612,7 +612,7 @@ class Game {
             { type: 'heal', text: '❤️ Восстановить 35% здоровья' },
             { type: 'card', text: '🃏 Получить редкую карту' }
         ];
-        if (getAvailableRelics(this.player.relics).length) {
+        if (getAvailableRelics(this.player.relics, this.player.heroId).length) {
             choices.push({ type: 'relic', text: '💎 Получить новую реликвию' });
         }
         let claimed = false;
