@@ -34,8 +34,8 @@ test('rendering known card types is safe and unknown old types fall back', () =>
 
 test('CardArt loads before BattleUI and all asset manifests are versioned', () => {
     assert.ok(html.indexOf('js/ui/CardArt.js') < html.indexOf('js/ui/BattleUI.js'));
-    assert.match(html, /js\/ui\/CardArt\.js\?v=2026\.11\.15\.20/);
-    assert.match(html, /css\/cathedral\.css\?v=2026\.11\.15\.20/);
+    assert.match(html, /js\/ui\/CardArt\.js\?v=2026\.11\.15\.21/);
+    assert.match(html, /css\/cathedral\.css\?v=2026\.11\.15\.21/);
 });
 
 test('combat and rewards use illustration registry consistently', () => {
@@ -79,7 +79,7 @@ test('rarity is rendered in battle, rewards, and card details', () => {
     const game = fs.readFileSync(path.join(root, 'js/systems/Game.js'), 'utf8');
     const styles = fs.readFileSync(path.join(root, 'css/cathedral.css'), 'utf8');
     assert.ok(battle.includes('card-rarity-${rarity.key}'));
-    assert.ok(game.includes('reward-card card-rarity-${CardArt.rarity(card).key}'));
+    assert.ok(game.includes('reward-card reward-reveal card-rarity-${CardArt.rarity(card).key}'));
     assert.ok(game.includes('reward-card-rarity'));
     assert.ok(styles.includes('.card-rarity-rare'));
     assert.ok(styles.includes('prefers-reduced-motion: reduce'));

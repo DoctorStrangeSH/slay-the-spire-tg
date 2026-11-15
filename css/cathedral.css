@@ -869,3 +869,42 @@ button:disabled { opacity: .42; filter: grayscale(.5); }
 @media (prefers-reduced-motion: reduce) {
   .card.card-rarity-rare, .reward-card.card-rarity-rare { transition: none !important; }
 }
+
+/* Раскрытие наград: последовательное появление без блокировки выбора. */
+#reward-modal .reward-reveal {
+  animation: cathedral-reward-arrival .55s cubic-bezier(.16,.87,.28,1) backwards;
+  animation-delay: calc(var(--reveal-order, 0) * 95ms);
+  transform-origin: 50% 70%;
+}
+#reward-modal .reward-reveal.card-rarity-rare {
+  animation-name: cathedral-reward-rare-arrival;
+  isolation: isolate;
+}
+#reward-modal .reward-rare-crest {
+  position: absolute;
+  top: -11px;
+  right: 14px;
+  z-index: 2;
+  color: #ffe0a4;
+  font: 700 25px/1 Georgia, serif;
+  text-shadow: 0 0 12px #e2a347, 0 0 25px #e2a347;
+  pointer-events: none;
+}
+@keyframes cathedral-reward-arrival {
+  0% { opacity: 0; transform: translateY(15px) scale(.94); filter: brightness(.7); }
+  100% { opacity: 1; transform: translateY(0) scale(1); filter: brightness(1); }
+}
+@keyframes cathedral-reward-rare-arrival {
+  0% { opacity: 0; transform: translateY(19px) scale(.87); filter: brightness(.45); }
+  64% { opacity: 1; transform: translateY(-3px) scale(1.025); filter: brightness(1.38); }
+  100% { opacity: 1; transform: translateY(0) scale(1); filter: brightness(1); }
+}
+@media (prefers-reduced-motion: reduce) {
+  #reward-modal .reward-reveal,
+  #reward-modal .reward-reveal.card-rarity-rare {
+    animation: none !important;
+    opacity: 1;
+    transform: none;
+    filter: none;
+  }
+}
