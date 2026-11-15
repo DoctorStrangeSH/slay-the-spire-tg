@@ -29,16 +29,22 @@ const BattleUI = {
         const intentEl = document.getElementById('enemy-intent');
         
         // Если враг парализован - показываем это
+        let intentLabel;
         if (battle.isEnemyParalyzed()) {
             intentEl.innerHTML = `🔒 <span class="intent-value">Парализован</span>`;
             intentEl.className = 'intent intent-paralysis';
+            intentLabel = 'Паралич: враг пропустит ход';
         } else if (intent.type === 'attack') {
-            intentEl.innerHTML = `⚔️ <span class="intent-value">${intent.damage}</span>`;
+            intentEl.innerHTML = `⚔️ <span class="intent-value">${intent.damage}</span><span class="intent-caption">Урон</span>`;
             intentEl.className = 'intent intent-attack';
+            intentLabel = `Следующее действие: атака на ${intent.damage} урона`;
         } else {
-            intentEl.innerHTML = `🛡️ <span class="intent-value">+${intent.block}</span>`;
+            intentEl.innerHTML = `🛡️ <span class="intent-value">+${intent.block}</span><span class="intent-caption">Блок</span>`;
             intentEl.className = 'intent intent-defend';
+            intentLabel = `Следующее действие: получает ${intent.block} блока`;
         }
+        intentEl.setAttribute('aria-label', intentLabel);
+        intentEl.title = intentLabel;
         
         const effectsEl = document.getElementById('enemy-effects');
         effectsEl.innerHTML = '';
