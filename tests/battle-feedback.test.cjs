@@ -77,7 +77,7 @@ test('game loads feedback before controllers and invokes it after moves', () => 
     const html = fs.readFileSync(path.join(root, 'index.html'), 'utf8');
     const game = fs.readFileSync(path.join(root, 'js/systems/Game.js'), 'utf8');
     const css = fs.readFileSync(path.join(root, 'css/cathedral.css'), 'utf8');
-    assert.match(html, /js\/ui\/BattleFeedback\.js\?v=2026\.11\.15\.17/);
+    assert.match(html, /js\/ui\/BattleFeedback\.js\?v=2026\.11\.15\.18/);
     assert.match(game, /BattleFeedback\.snapshot\(this\.currentBattle\)/);
     assert.match(game, /BattleFeedback\.show\(before, this\.currentBattle\)/);
     assert.match(css, /prefers-reduced-motion: reduce/);
@@ -193,4 +193,39 @@ test('cards are captured before play and effects only play for successful card u
     const css = fs.readFileSync(path.join(root, 'css/cathedral.css'), 'utf8');
     for (const kind of ['attack', 'skill', 'power', 'building']) assert.ok(css.includes('card-cast-fx--' + kind));
     assert.match(css, /prefers-reduced-motion: reduce/);
+});
+
+test('three heroes have class-specific casting signatures', () => {
+    for (const [hero, cardId, className, signature] of [
+        ['berserk', 'bloodCut', 'card-cast-fx--berserk', 'Кровавая клятва'],
+        ['engineer', 'rocket', 'card-cast-fx--engineer', 'Залп'],
+        ['psyker', 'psyStrike', 'card-cast-fx--psyker', 'Пси-удар']
+    ]) {
+        const { feedback, elements } = setup();
+        feedback.cardsPlayed(['attack'], hero, [cardId]);
+        const marker = elements['battle-screen'].children.at(-1);
+        assert.match(marker.className, new RegExp(className));
+        assert.equal(marker.children[1].textContent, signature);
+    }
+});
+
+test('unknown hero or mismatched signature cannot inject styles', () => {
+    const { feedback, elements } = setup();
+    feedback.cardsPlayed(['skill'], 'evil <img>', ['bloodCut']);
+    let marker = elements['battle-screen'].children.at(-1);
+    assert.match(marker.className, /card-cast-fx--neutral/);
+    assert.equal(marker.children.length, 1);
+    feedback.cardsPlayed(['attack'], 'psyker', ['bloodCut']);
+    marker = elements['battle-screen'].children.at(-1);
+    assert.match(marker.className, /card-cast-fx--psyker/);
+    assert.equal(marker.children.length, 1);
+});
+
+test('game captures chosen card identities before resolving selected cards', () => {
+    const game = fs.readFileSync(path.join(root, 'js/systems/Game.js'), 'utf8');
+    const method = game.split('    playSelectedCards() {')[1].split('    endTurn() {')[0];
+    assert.ok(method.indexOf('const playedCards') < method.indexOf('this.currentBattle.playSelectedCards()'));
+    assert.match(method, /BattleFeedback\.cardsPlayed\(playedTypes, this\.player\.heroId, playedCards\.map\(card => card\.id\)\)/);
+    const css = fs.readFileSync(path.join(root, 'css/cathedral.css'), 'utf8');
+    for (const hero of ['berserk', 'engineer', 'psyker']) assert.ok(css.includes('.card-cast-fx--' + hero));
 });
