@@ -497,3 +497,21 @@ button:disabled { opacity: .42; filter: grayscale(.5); }
 @media (max-width: 360px) {
   #enemy-sprite.enemy-has-portrait { height: 177px; }
 }
+
+/* Босс как центральная фигура боя: контрастный ореол и медленное дыхание. */
+#enemy-sprite.enemy-is-boss.enemy-has-portrait {
+  width: min(100%, 350px);
+  height: 232px;
+  filter: drop-shadow(0 7px 22px rgba(181, 92, 114, .3));
+  animation: boss-breathe 5s ease-in-out infinite;
+}
+#enemy-sprite.enemy-is-boss .enemy-portrait {
+  border-color: rgba(225, 177, 107, .74);
+  box-shadow: 0 0 0 3px rgba(188, 137, 77, .12), 0 14px 26px rgba(0,0,0,.46);
+}
+@keyframes boss-breathe {
+  50% { transform: translateY(-4px) scale(1.015); }
+}
+@media (max-width: 360px) {
+  #enemy-sprite.enemy-is-boss.enemy-has-portrait { height: 188px; }
+}
