@@ -73,6 +73,9 @@ class Game {
         this.gameState = 'battle';
         hideAllScreens();
         document.getElementById('battle-screen').style.display = 'block';
+        document.getElementById('enemy-area')?.classList.remove('fx-defeated');
+        document.getElementById('player-area')?.classList.remove('fx-defeated');
+        document.getElementById('battle-result-modal')?.remove();
         BattleUI.update(this);
     }
 
@@ -278,20 +281,25 @@ class Game {
     }
 
     endBattle(victory) {
+        // Только один экран исхода: повторные события не начислят золото второй раз.
+        if (document.getElementById('battle-result-modal')) return;
         if (victory) {
             const goldReward = Math.floor(Math.random() * 20) + 10;
             this.player.gold += goldReward;
-            alert(`Победа! Получено ${goldReward} золота!`);
-
-            if (Math.random() < 0.7) {
-                this.offerCard();
-            } else {
-                this.continueJourney();
-            }
+            BattleFeedback.result({
+                victory: true,
+                gold: goldReward,
+                onContinue: () => {
+                    if (Math.random() < 0.7) this.offerCard();
+                    else this.continueJourney();
+                }
+            });
         } else {
-            alert('Поражение...');
             this.runSave.clear();
-            this.showMenu();
+            BattleFeedback.result({
+                victory: false,
+                onContinue: () => this.showMenu()
+            });
         }
     }
 

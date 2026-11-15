@@ -32,5 +32,52 @@ const BattleFeedback = Object.freeze({
         else if (after.enemyBlock > before.enemyBlock) this.flash('enemy-area', 'fx-shield');
         if (after.heroHp < before.heroHp) this.flash('player-area', 'fx-damage');
         else if (after.heroBlock > before.heroBlock) this.flash('player-area', 'fx-shield');
+    },
+    result({ victory, gold = 0, onContinue }) {
+        if (document.getElementById('battle-result-modal')) return;
+        const defeatedArea = document.getElementById(victory ? 'enemy-area' : 'player-area');
+        defeatedArea?.classList.add('fx-defeated');
+
+        const modal = document.createElement('div');
+        modal.id = 'battle-result-modal';
+        modal.className = 'modal battle-result-modal';
+        modal.setAttribute('role', 'dialog');
+        modal.setAttribute('aria-modal', 'true');
+        modal.setAttribute('aria-labelledby', 'battle-result-heading');
+
+        const content = document.createElement('div');
+        content.className = 'modal-content battle-result-content';
+        const sigil = document.createElement('div');
+        sigil.className = 'battle-result-sigil';
+        sigil.setAttribute('aria-hidden', 'true');
+        sigil.textContent = victory ? '✦' : '✧';
+
+        const title = document.createElement('h3');
+        title.id = 'battle-result-heading';
+        title.textContent = victory ? 'Победа' : 'Поражение';
+        const message = document.createElement('p');
+        message.textContent = victory
+            ? 'Проклятый шпиль уступает дорогу. Впереди новые испытания.'
+            : 'Пепел хранит память о павшем герое. Следующий путь может сложиться иначе.';
+        content.append(sigil, title, message);
+        if (victory) {
+            const reward = document.createElement('p');
+            reward.className = 'battle-result-reward';
+            reward.textContent = '✦ +' + gold + ' золота';
+            content.appendChild(reward);
+        }
+        const continueButton = document.createElement('button');
+        continueButton.type = 'button';
+        continueButton.textContent = victory ? 'Забрать награду →' : 'Вернуться в меню';
+        continueButton.addEventListener('click', () => {
+            if (continueButton.disabled) return;
+            continueButton.disabled = true;
+            modal.remove();
+            onContinue();
+        }, { once: true });
+        content.appendChild(continueButton);
+        modal.appendChild(content);
+        document.body.appendChild(modal);
+        continueButton.focus();
     }
 });

@@ -561,3 +561,60 @@ button:disabled { opacity: .42; filter: grayscale(.5); }
     opacity: .55;
   }
 }
+
+/* Завершение битвы: выбывание персонажа и итоговая печать собора. */
+#enemy-area.fx-defeated #enemy-sprite,
+#player-area.fx-defeated #player-info {
+  animation: cathedral-fall .7s ease-in forwards;
+  transform-origin: center bottom;
+}
+@keyframes cathedral-fall {
+  0% { opacity: 1; transform: translateY(0) scale(1); filter: grayscale(0); }
+  100% { opacity: .22; transform: translateY(13px) scale(.94); filter: grayscale(1); }
+}
+.battle-result-modal { z-index: 1100; }
+.battle-result-content {
+  max-width: 420px;
+  text-align: center;
+  padding: 34px 24px 26px;
+  background: radial-gradient(ellipse at 50% -25%, #79514344, transparent 65%),
+    linear-gradient(160deg, #29232c, #11151d 75%);
+  border: 1px solid #c3a06c;
+  animation: cathedral-finale-enter .4s cubic-bezier(.2,.8,.2,1) both;
+}
+.battle-result-content h3 {
+  font-size: clamp(32px, 7vw, 43px);
+  letter-spacing: .07em;
+  margin: 4px 0 12px;
+  color: #eed2a2;
+}
+.battle-result-content p { line-height: 1.65; }
+.battle-result-sigil {
+  margin: auto;
+  width: 78px;
+  height: 78px;
+  display: grid;
+  place-items: center;
+  border: 1px solid #d1ae70;
+  border-radius: 50%;
+  font-size: 48px;
+  color: #efce8e;
+  box-shadow: inset 0 0 26px #d5a26029, 0 0 37px #b7865233;
+}
+.battle-result-reward {
+  font-size: 21px;
+  font-weight: 700;
+  letter-spacing: .06em;
+  color: #e8c48c !important;
+}
+.battle-result-content button { width: 100%; margin-top: 18px; }
+.battle-result-content button:focus-visible { outline: 3px solid #f9d28e; outline-offset: 3px; }
+@keyframes cathedral-finale-enter {
+  from { opacity: 0; transform: translateY(22px) scale(.96); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+@media (prefers-reduced-motion: reduce) {
+  #enemy-area.fx-defeated #enemy-sprite,
+  #player-area.fx-defeated #player-info,
+  .battle-result-content { animation: none !important; }
+}
