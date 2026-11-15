@@ -77,7 +77,7 @@ class Game {
         document.getElementById('player-area')?.classList.remove('fx-defeated');
         document.getElementById('battle-result-modal')?.remove();
         BattleUI.update(this);
-        BattleFeedback.enter('enemy-area');
+        BattleFeedback.enter('enemy-area', this.currentBattle?.enemy);
     }
 
     showMenu() {
