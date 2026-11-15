@@ -7,6 +7,39 @@ const BattleFeedback = Object.freeze({
     floatNodes: new Map(),
     cardFxState: { timer: null, node: null },
     bossAttackState: { timer: null, node: null },
+    relicState: { timer: null, node: null },
+    relicAcquired(relic) {
+        if (!relic || typeof relic.name !== 'string') return;
+        if (this.relicState.timer) clearTimeout(this.relicState.timer);
+        this.relicState.node?.remove();
+        const overlay = document.createElement('div');
+        overlay.className = 'relic-acquired-toast';
+        overlay.setAttribute('role', 'status');
+        overlay.setAttribute('aria-live', 'polite');
+        const sign = document.createElement('span');
+        sign.className = 'relic-acquired-sigil';
+        sign.setAttribute('aria-hidden', 'true');
+        sign.textContent = relic.emoji || '✦';
+        const words = document.createElement('div');
+        const kicker = document.createElement('small');
+        kicker.textContent = 'НОВАЯ РЕЛИКВИЯ';
+        const title = document.createElement('strong');
+        title.textContent = relic.name;
+        const description = document.createElement('span');
+        description.textContent = relic.description || '';
+        words.appendChild(kicker);
+        words.appendChild(title);
+        words.appendChild(description);
+        overlay.appendChild(sign);
+        overlay.appendChild(words);
+        document.body.appendChild(overlay);
+        this.relicState.node = overlay;
+        this.relicState.timer = setTimeout(() => {
+            overlay.remove();
+            this.relicState.node = null;
+            this.relicState.timer = null;
+        }, 4200);
+    },
     bossAttack(enemyId) {
         const attacks = {
             forestBoss: ['roots', '♣'],

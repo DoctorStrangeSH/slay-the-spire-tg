@@ -135,7 +135,7 @@ class Game {
             const relic = Object.prototype.hasOwnProperty.call(RELIC_CATALOG, id)
                 ? RELIC_CATALOG[id] : null;
             const entry = document.createElement('div');
-            entry.className = 'relic-entry';
+            entry.className = `relic-entry relic-entry--${relic?.heroId || 'shared'}`;
             const name = document.createElement('strong');
             name.textContent = relic ? `${relic.emoji} ${relic.name}` : '💎 Неизвестная реликвия';
             const description = document.createElement('span');
@@ -610,7 +610,11 @@ class Game {
             const relic = chooseRelic(this.player.relics, Math.random, this.player.heroId);
             if (!relic) return false;
             this.player.relics.push(relic.id);
-            alert(`${relic.emoji} Получена реликвия «${relic.name}»! ${relic.description}`);
+            if (typeof BattleFeedback !== 'undefined' && BattleFeedback.relicAcquired) {
+                BattleFeedback.relicAcquired(relic);
+            } else {
+                alert(`${relic.emoji} Получена реликвия «${relic.name}»! ${relic.description}`);
+            }
             return true;
         }
         if (type === 'card') {

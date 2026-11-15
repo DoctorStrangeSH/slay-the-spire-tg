@@ -20,8 +20,10 @@ function setup() {
         children: [],
         appendChild(child) { this.children.push(child); }
     }]));
+    const body = { children: [], appendChild(child) { this.children.push(child); } };
     const context = vm.createContext({
         document: {
+            body,
             getElementById(id) { return elements[id] || null; },
             createElement(tag) {
                 return {
@@ -35,7 +37,7 @@ function setup() {
         setTimeout(callback) { const id = ++timerId; timers.set(id, callback); return id; },
         clearTimeout(id) { timers.delete(id); }
     });
-    return { feedback: vm.runInContext(source + '\nBattleFeedback;', context), elements, timers };
+    return { feedback: vm.runInContext(source + '\nBattleFeedback;', context), elements, timers, body };
 }
 
 test('damage and shield feedback reflect health and block deltas without mutation', () => {
@@ -77,7 +79,7 @@ test('game loads feedback before controllers and invokes it after moves', () => 
     const html = fs.readFileSync(path.join(root, 'index.html'), 'utf8');
     const game = fs.readFileSync(path.join(root, 'js/systems/Game.js'), 'utf8');
     const css = fs.readFileSync(path.join(root, 'css/cathedral.css'), 'utf8');
-    assert.match(html, /js\/ui\/BattleFeedback\.js\?v=2026\.11\.15\.25/);
+    assert.match(html, /js\/ui\/BattleFeedback\.js\?v=2026\.11\.15\.26/);
     assert.match(game, /BattleFeedback\.snapshot\(this\.currentBattle\)/);
     assert.match(game, /BattleFeedback\.show\(before, this\.currentBattle\)/);
     assert.match(css, /prefers-reduced-motion: reduce/);
@@ -274,4 +276,19 @@ test('boss strike requires an actual enemy attack rather than defense or paralys
     assert.ok(game.includes('BattleFeedback.bossAttack(bossId)'));
     assert.ok(css.includes('.boss-attack-fx--curse'));
     assert.ok(css.includes('prefers-reduced-motion: reduce'));
+});
+
+test('relic acquisition toast reads safe text and replaces previous timer', () => {
+    const { feedback, body, timers } = setup();
+    feedback.relicAcquired({ name: 'Угольное сердце', emoji: '🔥', description: '+1 энергия' });
+    const first = body.children.at(-1);
+    assert.equal(first.attrs.role, 'status');
+    assert.equal(first.children[1].children[1].textContent, 'Угольное сердце');
+    feedback.relicAcquired({ name: '<img>', emoji: '✦', description: 'Описание' });
+    assert.equal(first.removed, true);
+    assert.equal(timers.size, 1);
+    const second = body.children.at(-1);
+    assert.equal(second.children[1].children[1].textContent, '<img>');
+    [...timers.values()][0]();
+    assert.equal(second.removed, true);
 });
