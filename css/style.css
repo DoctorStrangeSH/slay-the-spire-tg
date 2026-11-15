@@ -987,3 +987,5 @@ body {
     color: #fff;
     line-height: 1.5;
 }
+/* Ненавязчивый идентификатор сборки для диагностики кеша Telegram. */
+.app-version { margin: 1.25rem 0 0; opacity: .65; font-size: .75rem; letter-spacing: .04em; text-align: center; }
