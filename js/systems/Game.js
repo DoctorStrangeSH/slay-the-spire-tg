@@ -84,6 +84,7 @@ class Game {
             <p>❤️ HP: ${this.player.hp}/${this.player.maxHp}</p>
             <p>💰 Золото: ${this.player.gold}</p>
             <p>🃏 Карт в колоде: ${this.player.deck.length}</p>
+            <p>💎 Реликвий: ${this.player.relics.length}</p>
         ` : '';
     }
 
@@ -520,6 +521,13 @@ class Game {
             this.player.hp = Math.min(this.player.maxHp, this.player.hp + restored);
             return true;
         }
+        if (type === 'relic') {
+            const relic = chooseRelic(this.player.relics);
+            if (!relic) return false;
+            this.player.relics.push(relic.id);
+            alert(`${relic.emoji} Получена реликвия «${relic.name}»! ${relic.description}`);
+            return true;
+        }
         if (type === 'card') {
             const cards = Object.values(getCardsForHero(this.player.heroId));
             const rareCards = cards.filter(card => card.rarity === CARD_RARITY.RARE);
@@ -543,6 +551,9 @@ class Game {
             { type: 'heal', text: '❤️ Восстановить 35% здоровья' },
             { type: 'card', text: '🃏 Получить редкую карту' }
         ];
+        if (getAvailableRelics(this.player.relics).length) {
+            choices.push({ type: 'relic', text: '💎 Получить новую реликвию' });
+        }
         let claimed = false;
         choices.forEach(choice => {
             const button = document.createElement('button');
