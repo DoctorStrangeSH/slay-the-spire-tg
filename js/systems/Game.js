@@ -230,14 +230,7 @@ class Game {
     }
 
     offerCard() {
-        const cards = getCardsForHero(this.player.heroId);
-        const cardIds = Object.keys(cards);
-        this.offeredCards = [];
-
-        for (let i = 0; i < 3; i++) {
-            const randomId = cardIds[Math.floor(Math.random() * cardIds.length)];
-            this.offeredCards.push({ ...cards[randomId] });
-        }
+        this.offeredCards = getRandomRewardCards(this.player.heroId, 3);
 
         const modal = document.createElement('div');
         modal.className = 'modal';
@@ -255,11 +248,19 @@ class Game {
                         </div>
                     `).join('')}
                 </div>
-                <button onclick="document.getElementById('reward-modal').remove(); game.continueJourney();">Пропустить</button>
+                <button onclick="game.skipCardReward()">Пропустить</button>
             </div>
         `;
 
         document.body.appendChild(modal);
+    }
+
+    skipCardReward() {
+        if (!this.offeredCards.length) return;
+        this.offeredCards = [];
+        document.getElementById('reward-modal')?.remove();
+        this.closeCardModal();
+        this.continueJourney();
     }
 
     showCardModalFromReward(index) {
@@ -273,6 +274,7 @@ class Game {
     takeCardFromReward(index) {
         const card = this.offeredCards[index];
         if (card) {
+            this.offeredCards = []; // Защита от повторной выдачи при двойном клике.
             this.player.deck.push({ ...card });
             const modal = document.getElementById('reward-modal');
             if (modal) modal.remove();
