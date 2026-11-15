@@ -516,7 +516,7 @@ class Game {
         return [
             {
                 name: 'Загадочный фонтан',
-                description: 'Вы нашли древний фонтан.',
+                description: 'В треснувшей купели дрожит серебряная вода. На дне мерцают монеты давно погибших путников. Кажется, эта вода ещё помнит, как исцелять раны.',
                 options: [
                     {
                         text: 'Испить (Восстановить 25 HP)', action: () => {
@@ -529,7 +529,7 @@ class Game {
             },
             {
                 name: 'Странный торговец',
-                description: 'Торговец предлагает карты.',
+                description: 'Под погасшим фонарём стоит незнакомец в бархатной маске. Он показывает древние карты, но за каждое откровение назначает свою цену.',
                 options: [
                     {
                         text: 'Купить карту (50 золота)', action: () => {
@@ -548,7 +548,7 @@ class Game {
             },
             {
                 name: 'Алтарь Пепельной Клятвы',
-                description: 'Древний камень обещает укрепить тело в обмен на вашу кровь.',
+                description: 'Среди остывших свечей возвышается алтарь из чёрного камня. Руны обещают новую силу, но требуют крови того, кто осмелится произнести клятву.',
                 options: [
                     {
                         text: 'Принести 12 HP в жертву (+8 к максимуму HP)',
@@ -566,20 +566,47 @@ class Game {
         ];
     }
 
+    getEventPresentation(name) {
+        const scenes = {
+            'Загадочный фонтан': { style: 'fountain', sigil: '♒', caption: 'ЗАБЫТАЯ КУПЕЛЬ', hint: 'Пить из древней воды или оставить её нетронутой?' },
+            'Странный торговец': { style: 'merchant', sigil: '◇', caption: 'СДЕЛКА В ТЕНИ', hint: 'У каждой тайны есть цена.' },
+            'Алтарь Пепельной Клятвы': { style: 'altar', sigil: '✥', caption: 'ОБЕТ КРОВИ', hint: 'Сила требует жертвы. Решение за тобой.' }
+        };
+        return scenes[name] || { style: 'mystery', sigil: '✦', caption: 'НЕИЗВЕСТНАЯ ВСТРЕЧА', hint: 'Выбери свой путь.' };
+    }
+
     showEventModal(event) {
+        const scene = this.getEventPresentation(event.name);
         const modal = document.createElement('div');
-        modal.className = 'modal';
+        modal.className = 'modal cathedral-event-modal';
+        modal.dataset.eventScene = scene.style;
         modal.innerHTML = `
-            <div class="modal-content">
+            <div class="modal-content cathedral-event-content">
+                <p class="cathedral-event-kicker">${scene.caption}</p>
+                <div class="cathedral-event-art" aria-hidden="true">
+                    <div class="cathedral-event-halo"></div>
+                    <span class="cathedral-event-sigil">${scene.sigil}</span>
+                </div>
                 <h3>${event.name}</h3>
-                <p>${event.description}</p>
+                <p class="cathedral-event-story">${event.description}</p>
+                <p class="cathedral-event-hint">${scene.hint}</p>
+                <div class="cathedral-event-choices"></div>
             </div>
         `;
 
         let resolved = false;
-        event.options.forEach((option) => {
+        event.options.forEach((option, index) => {
             const button = document.createElement('button');
-            button.textContent = option.text;
+            button.className = 'cathedral-event-choice';
+            const isExit = /^(Уйти|Не принимать клятву)$/.test(option.text);
+            if (isExit) button.classList.add('cathedral-event-choice--exit');
+            const number = document.createElement('span');
+            number.className = 'cathedral-event-choice-number';
+            number.textContent = String(index + 1).padStart(2, '0');
+            const copy = document.createElement('span');
+            copy.textContent = option.text;
+            button.appendChild(number);
+            button.appendChild(copy);
             button.onclick = () => {
                 if (resolved) return;
                 const result = option.action();
@@ -588,7 +615,7 @@ class Game {
                 modal.remove();
                 if (result !== 'deferred') this.continueJourney();
             };
-            modal.querySelector('.modal-content').appendChild(button);
+            modal.querySelector('.cathedral-event-choices').appendChild(button);
         });
 
         document.body.appendChild(modal);
