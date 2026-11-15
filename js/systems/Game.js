@@ -262,9 +262,16 @@ class Game {
         if (!this.currentBattle) return;
 
         const before = BattleFeedback.snapshot(this.currentBattle);
+        const enemyWasAttacking = this.currentBattle.enemyIntent === 'attack'
+            && !this.currentBattle.isEnemyParalyzed()
+            && this.currentBattle.enemy.hp > 0;
+        const bossId = this.currentBattle.enemy.isBoss ? this.currentBattle.enemy.id : null;
         const result = this.currentBattle.endTurn();
         BattleUI.update(this);
         BattleFeedback.show(before, this.currentBattle);
+        if (enemyWasAttacking && this.currentBattle.enemy.hp > 0) {
+            BattleFeedback.bossAttack(bossId);
+        }
 
         if (result.battleEnded) {
             this.endBattle(result.victory);
