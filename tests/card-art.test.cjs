@@ -61,6 +61,6 @@ test('three Berserk signature cards have distinct artwork in battle, rewards and
         assert.match(svg, /<title /);
         assert.doesNotMatch(svg, /<script|onload=|href="https?:/i);
     }
-    assert.match(CardArt.markup({ id: 'unpainted', type: 'attack' }), /assets\\/cards\\/attack\\.svg/);
-    assert.match(CardArt.markup({ id: 'bloodCut', type: 'power' }), /blood-cut\\.svg/);
+    assert.ok(CardArt.markup({ id: 'unpainted', type: 'attack' }).includes('assets/cards/attack.svg'));
+    assert.ok(CardArt.markup({ id: 'bloodCut', type: 'power' }).includes('blood-cut.svg'));
 });
