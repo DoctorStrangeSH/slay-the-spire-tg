@@ -77,7 +77,7 @@ test('game loads feedback before controllers and invokes it after moves', () => 
     const html = fs.readFileSync(path.join(root, 'index.html'), 'utf8');
     const game = fs.readFileSync(path.join(root, 'js/systems/Game.js'), 'utf8');
     const css = fs.readFileSync(path.join(root, 'css/cathedral.css'), 'utf8');
-    assert.match(html, /js\/ui\/BattleFeedback\.js\?v=2026\.11\.15\.23/);
+    assert.match(html, /js\/ui\/BattleFeedback\.js\?v=2026\.11\.15\.24/);
     assert.match(game, /BattleFeedback\.snapshot\(this\.currentBattle\)/);
     assert.match(game, /BattleFeedback\.show\(before, this\.currentBattle\)/);
     assert.match(css, /prefers-reduced-motion: reduce/);
@@ -228,4 +228,22 @@ test('game captures chosen card identities before resolving selected cards', () 
     assert.match(method, /BattleFeedback\.cardsPlayed\(playedTypes, this\.player\.heroId, playedCards\.map\(card => card\.id\)\)/);
     const css = fs.readFileSync(path.join(root, 'css/cathedral.css'), 'utf8');
     for (const hero of ['berserk', 'engineer', 'psyker']) assert.ok(css.includes('.card-cast-fx--' + hero));
+});
+
+test('boss entrance summons one distinct marker and clears it on completion', () => {
+    const { feedback, elements, timers } = setup();
+    feedback.enter('enemy-area', { id: 'forestBoss', isBoss: true });
+    const marker = elements['enemy-area'].children.at(-1);
+    assert.ok(marker.className.includes('boss-entry-effect--forest'));
+    assert.equal(marker.attrs['aria-hidden'], 'true');
+    assert.equal(marker.children[0].textContent, '♣');
+    feedback.enter('enemy-area', { id: 'caveBoss', isBoss: true });
+    assert.equal(marker.removed, true);
+    const cave = elements['enemy-area'].children.at(-1);
+    assert.ok(cave.className.includes('boss-entry-effect--cave'));
+    assert.equal(timers.size, 1);
+    [...timers.values()][0]();
+    assert.equal(cave.removed, true);
+    feedback.enter('enemy-area', { id: 'customBoss', isBoss: true });
+    assert.equal(feedback.entranceMarks.size, 0);
 });
