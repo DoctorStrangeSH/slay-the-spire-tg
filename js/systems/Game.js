@@ -303,7 +303,7 @@ class Game {
                 <div class="reward-cards">
                     ${this.offeredCards.map((card, index) => `
                         <div class="reward-card" onclick="game.showCardModalFromReward(${index})">
-                            <div class="reward-card-emoji">${card.emoji}</div>
+                            <div class="reward-card-art">${CardArt.markup(card, 'reward-art-image')}</div>
                             <div class="reward-card-name">${card.name}</div>
                             <div class="reward-card-cost">${card.cost}⚡</div>
                             <button onclick="event.stopPropagation(); game.takeCardFromReward(${index})">Взять</button>
@@ -357,7 +357,7 @@ class Game {
             <div class="modal-content card-modal-content">
                 <div class="card-detail">
                     <div class="card-detail-header">
-                        <span class="card-detail-emoji">${card.emoji || '🃏'}</span>
+                        <span class="card-detail-art">${CardArt.markup(card, 'detail-art-image')}</span>
                         <h3>${card.name}</h3>
                     </div>
                     <div class="card-detail-cost">Стоимость: ${card.cost}⚡</div>
