@@ -1,6 +1,10 @@
 // Ходы и завершение (с Параличом)
 class BattleTurn {
     endTurn(battle, effects) {
+        // Эффекты карт и построек могут завершить бой до хода противника.
+        if (battle.enemy.hp <= 0) return { battleEnded: true, victory: true };
+        if (battle.player.hp <= 0) return { battleEnded: true, victory: false };
+
         // ПРОВЕРЯЕМ ПАРАЛИЧ
         const isParalyzed = battle.isEnemyParalyzed();
         
@@ -55,7 +59,8 @@ class BattleTurn {
         
         effects.decreaseStatusEffects(battle);
         
-        if (battle.enemy.hp <= 0) return { battleEnded: true, victory: true };
+        // Сначала разрешаем спасение игрока: одновременная гибель не даёт
+        // победу мёртвому герою без срабатывания защитных эффектов.
         if (battle.player.hp <= 0) {
             // Ментальное бессмертие
             if (battle.hasPower('mentalImmortality')) {
@@ -70,6 +75,8 @@ class BattleTurn {
             }
         }
         
+        if (battle.enemy.hp <= 0) return { battleEnded: true, victory: true };
+
         battle.turn++;
         battle.startTurn();
         
@@ -93,6 +100,9 @@ class BattleTurn {
             battle.enemy.hp = Math.max(0, battle.enemy.hp);
         }
         
+        // Отражение может убить атакующего раньше попадания.
+        if (battle.enemy.hp <= 0) return;
+
         const target = this.chooseTarget(battle);
         
         if (target.type === 'building') {
