@@ -7,6 +7,7 @@ const vm = require('node:vm');
 const gameSource = readFileSync(join(__dirname, '../js/systems/Game.js'), 'utf8');
 const Game = vm.runInNewContext(gameSource + '\nGame;', {
     RunSave: class { clear() {} },
+    GAME_CONFIG: { maxActs: 3 },
     alert() {}
 });
 function game(hp = 30, gold = 0) {
