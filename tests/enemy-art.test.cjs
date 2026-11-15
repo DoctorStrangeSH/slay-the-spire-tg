@@ -49,7 +49,7 @@ test('portrait registry loads before battle UI and battle delegates to renderer'
     const html = fs.readFileSync(path.join(root, 'index.html'), 'utf8');
     const battle = fs.readFileSync(path.join(root, 'js/ui/BattleUI.js'), 'utf8');
     assert.ok(html.indexOf('js/ui/EnemyArt.js') < html.indexOf('js/ui/BattleUI.js'));
-    assert.match(html, /js\/ui\/EnemyArt\.js\?v=2026\.11\.15\.22/);
+    assert.match(html, /js\/ui\/EnemyArt\.js\?v=2026\.11\.15\.23/);
     assert.match(battle, /EnemyArt\.render\(document\.getElementById\('enemy-sprite'\), enemy\)/);
 });
 
@@ -65,4 +65,15 @@ test('all three act bosses have distinct original portraits', () => {
         assert.doesNotMatch(svg, /<script|onload=|href="https?:/i);
     }
     assert.match(source, /enemy-is-boss/);
+});
+
+test('boss encounter heraldry is keyed by actual boss identity and remains safe', () => {
+    const ui = fs.readFileSync(path.join(root, 'js/ui/BattleUI.js'), 'utf8');
+    const styles = fs.readFileSync(path.join(root, 'css/cathedral.css'), 'utf8');
+    for (const id of ['forestBoss', 'caveBoss', 'castleBoss']) assert.ok(ui.includes(id));
+    assert.ok(ui.includes("enemyArea.classList.toggle('boss-encounter'"));
+    assert.ok(ui.includes("enemyArea.classList.toggle('boss-wounded'"));
+    assert.ok(ui.includes("enemyArea.removeAttribute('data-boss-title')"));
+    assert.ok(styles.includes('#enemy-area.boss-encounter::before'));
+    assert.ok(styles.includes('@media (prefers-reduced-motion: reduce)'));
 });
