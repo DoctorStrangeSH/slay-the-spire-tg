@@ -59,7 +59,7 @@ class MapGenerator {
 
         // Сундук (этаж 8)
         const treasureFloor = this.floorRestrictions.treasureFloor;
-        this.createNode(treasureFloor, 0, NODE_TYPES.SHOP, false);
+        this.createNode(treasureFloor, 0, NODE_TYPES.TREASURE, false);
 
         // Босс (этаж 15)
         this.createNode(this.floors - 1, 0, NODE_TYPES.BOSS, false);
@@ -76,7 +76,7 @@ class MapGenerator {
         const targetShops = this.quotas.shops;
         let placed = 0;
 
-        // Считаем сундук
+        // Магазины считаются отдельно от сокровищницы.
         for (let floor = 0; floor < this.floors; floor++) {
             for (const node of this.paths[floor]) {
                 if (node.type === NODE_TYPES.SHOP) placed++;
