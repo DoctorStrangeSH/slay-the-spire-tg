@@ -59,6 +59,7 @@ class Game {
         document.getElementById('map-screen').style.display = 'block';
         window._currentMapPaths = this.mapGenerator.paths;
         MapUI.render(this);
+        this.renderMapRelicButton();
         this.runSave.save(this);
     }
 
@@ -85,7 +86,67 @@ class Game {
             <p>💰 Золото: ${this.player.gold}</p>
             <p>🃏 Карт в колоде: ${this.player.deck.length}</p>
             <p>💎 Реликвий: ${this.player.relics.length}</p>
+            <button onclick="game.showRelics()">💎 Мои реликвии</button>
         ` : '';
+    }
+
+    // Коллекция доступна между комнатами и во время боя; не меняет состояние забега.
+    renderMapRelicButton() {
+        const map = document.getElementById('map-screen');
+        if (!map || !this.player) return;
+        let button = document.getElementById('map-relics-button');
+        if (!button) {
+            button = document.createElement('button');
+            button.id = 'map-relics-button';
+            button.className = 'relic-collection-button';
+            button.onclick = () => this.showRelics();
+            map.insertBefore(button, document.getElementById('map-nodes'));
+        }
+        button.textContent = `💎 Реликвии (${this.player.relics?.length || 0})`;
+    }
+
+    showRelics() {
+        if (!this.player) return;
+        document.getElementById('relics-modal')?.remove();
+
+        const modal = document.createElement('div');
+        modal.className = 'modal';
+        modal.id = 'relics-modal';
+
+        const content = document.createElement('div');
+        content.className = 'modal-content relics-modal-content';
+        const title = document.createElement('h3');
+        title.textContent = '💎 Коллекция реликвий';
+        content.appendChild(title);
+
+        const owned = Array.isArray(this.player.relics) ? this.player.relics : [];
+        if (!owned.length) {
+            const empty = document.createElement('p');
+            empty.textContent = 'Пока нет реликвий. Ищите их в сокровищницах.';
+            content.appendChild(empty);
+        }
+
+        // textContent защищает от разметки из повреждённых/старых сохранений.
+        for (const id of owned) {
+            const relic = Object.prototype.hasOwnProperty.call(RELIC_CATALOG, id)
+                ? RELIC_CATALOG[id] : null;
+            const entry = document.createElement('div');
+            entry.className = 'relic-entry';
+            const name = document.createElement('strong');
+            name.textContent = relic ? `${relic.emoji} ${relic.name}` : '💎 Неизвестная реликвия';
+            const description = document.createElement('span');
+            description.textContent = relic ? relic.description : 'Эффект не найден в текущей версии игры.';
+            entry.appendChild(name);
+            entry.appendChild(description);
+            content.appendChild(entry);
+        }
+
+        const close = document.createElement('button');
+        close.textContent = 'Закрыть';
+        close.onclick = () => modal.remove();
+        content.appendChild(close);
+        modal.appendChild(content);
+        document.body.appendChild(modal);
     }
 
     startBattle(isElite = false) {
