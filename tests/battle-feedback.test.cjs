@@ -106,7 +106,7 @@ test('enemy intent includes readable captions and accessible descriptive labels'
     assert.match(ui, /Следующее действие: атака/);
     assert.match(ui, /Следующее действие: получает/);
     assert.match(ui, /Паралич: враг пропустит ход/);
-    assert.match(game, /BattleFeedback\.enter\('enemy-area'\)/);
+    assert.ok(game.includes("BattleFeedback.enter('enemy-area', this.currentBattle?.enemy)"));
     assert.match(css, /cathedral-enemy-arrival/);
     assert.match(css, /prefers-reduced-motion: reduce/);
 });
