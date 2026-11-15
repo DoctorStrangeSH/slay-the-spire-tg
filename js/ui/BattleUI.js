@@ -210,7 +210,7 @@ const BattleUI = {
         
         cardDiv.innerHTML = `
             <div class="card-cost">${card.cost}</div>
-            <div class="card-emoji">${card.emoji || '🃏'}</div>
+            <div class="card-art-frame">${CardArt.markup(card)}</div>
             <div class="card-name">${card.name}</div>
             <div class="card-description">${card.description}</div>
         `;
