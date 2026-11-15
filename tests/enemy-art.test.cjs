@@ -27,7 +27,8 @@ test('ordinary enemies have four distinct local SVG illustrations', () => {
 test('enemy rendering is DOM-safe and falls back to legacy emoji', () => {
     const container = {
         children: [], textContent: '',
-        classList: { toggle(name, value) { container.hasPortrait = value; } },
+        classList: { toggle(name, value) { container.classes[name] = value; } },
+        classes: {},
         replaceChildren() { this.children = []; this.textContent = ''; },
         appendChild(child) { this.children.push(child); }
     };
@@ -37,11 +38,11 @@ test('enemy rendering is DOM-safe and falls back to legacy emoji', () => {
     renderer.render(container, { id: 'slime', emoji: '🟢' });
     assert.equal(container.children.length, 1);
     assert.equal(container.children[0].src, 'assets/enemies/slime.svg');
-    assert.equal(container.hasPortrait, true);
+    assert.equal(container.classes['enemy-has-portrait'], true);
     renderer.render(container, { id: 'missing', emoji: '👾' });
     assert.equal(container.children.length, 0);
     assert.equal(container.textContent, '👾');
-    assert.equal(container.hasPortrait, false);
+    assert.equal(container.classes['enemy-has-portrait'], false);
 });
 
 test('portrait registry loads before battle UI and battle delegates to renderer', () => {
