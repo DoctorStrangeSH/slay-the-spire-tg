@@ -1161,3 +1161,42 @@ button:disabled { opacity: .42; filter: grayscale(.5); }
 @media (prefers-reduced-motion: reduce) {
   .relic-acquired-toast { animation: none !important; opacity: 1; transform: translateX(-50%); }
 }
+
+/* Восхождение по шпилю: оформление трёх актов. */
+#map-screen { --act-accent: #91bda4; --act-glow: #4b83674d; --act-shadow: #163b2b; }
+#map-screen[data-act-theme="depths"] { --act-accent: #dfb47f; --act-glow: #9462394d; --act-shadow: #422b1b; }
+#map-screen[data-act-theme="citadel"] { --act-accent: #cfaae9; --act-glow: #8651a84d; --act-shadow: #32203d; }
+#map-screen[data-act-theme="unknown"] { --act-accent: #bed4db; --act-glow: #5683914d; --act-shadow: #1b3038; }
+#map-screen #map-nodes {
+  background: radial-gradient(ellipse at 50% 4%, var(--act-glow), transparent 58%),
+    repeating-linear-gradient(90deg, transparent 0 38px, #ffffff04 39px 40px),
+    linear-gradient(180deg, var(--act-shadow), #10141d 65%);
+  border-color: color-mix(in srgb, var(--act-accent) 42%, #2a2e36);
+}
+#map-screen .cathedral-act-banner {
+  display: flex; align-items: center; gap: clamp(12px, 4vw, 22px);
+  margin: 0 0 14px; padding: clamp(16px, 3.6vw, 23px); text-align: left;
+  border: 1px solid var(--act-accent);
+  background: radial-gradient(ellipse at 8% 10%, var(--act-glow), transparent 70%), linear-gradient(125deg, #24212b, #111821);
+  box-shadow: inset 0 0 0 4px #0a0e14aa, 0 12px 33px #0008;
+}
+#map-screen .act-banner-sigil {
+  flex: 0 0 clamp(63px, 17vw, 87px); width: clamp(63px, 17vw, 87px); aspect-ratio: 1;
+  display: grid; place-items: center; border: 2px solid var(--act-accent); border-radius: 50%;
+  background: radial-gradient(circle, var(--act-glow), #11151d 72%);
+  color: var(--act-accent); font: 56px/1 Georgia, serif; text-shadow: 0 0 18px var(--act-accent);
+}
+#map-screen .act-banner-copy { flex: 1; min-width: 0; }
+#map-screen .act-banner-kicker { color: var(--act-accent); font: 800 10px/1.4 system-ui,sans-serif; letter-spacing: .18em; }
+#map-screen .cathedral-act-banner h2 { margin: 5px 0 3px; color: #f4e2bf; font: 700 clamp(20px, 4.8vw, 29px)/1.12 Georgia,serif; }
+#map-screen .cathedral-act-banner .act-banner-subtitle { margin: 0 0 13px; color: #cabeb4; font: italic 12px/1.4 Georgia,serif; }
+#map-screen .act-banner-progress { height: 5px; overflow: hidden; border-radius: 20px; background: #080b11; border: 1px solid #7f7f7f55; }
+#map-screen .act-banner-progress span { display: block; height: 100%; max-width: 100%; background: var(--act-accent); box-shadow: 0 0 10px var(--act-accent); transition: width .4s ease; }
+#map-screen .cathedral-act-banner .act-banner-stats { margin: 9px 0 0; color: #e7d8c6; font: 700 11px/1.5 system-ui,sans-serif; }
+#map-screen .act-banner-stats span { color: var(--act-accent); padding: 0 4px; }
+@media (max-width: 380px) {
+  #map-screen .cathedral-act-banner { gap: 10px; padding: 12px; }
+  #map-screen .act-banner-sigil { flex-basis: 50px; width: 50px; font-size: 34px; }
+  #map-screen .act-banner-stats span { padding: 0 1px; }
+}
+@media (prefers-reduced-motion: reduce) { #map-screen .act-banner-progress span { transition: none; } }

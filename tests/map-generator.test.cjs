@@ -51,3 +51,16 @@ test('available routes come only from current node, never from visited siblings'
     const available = map.getAvailableNodes(current.id);
     assert.deepEqual(Array.from(available, node => node.id), [map.paths[2][0].id]);
 });
+
+test('three acts have distinct visual banners while routes remain unchanged', () => {
+    const ui = readFileSync(join(__dirname, '../js/ui/MapUI.js'), 'utf8');
+    const MapUI = vm.runInNewContext(ui + '\nMapUI;', { window: {} });
+    const themes = [1, 2, 3].map(act => MapUI.getActTheme(act));
+    assert.equal(new Set(themes.map(theme => theme.style)).size, 3);
+    assert.equal(new Set(themes.map(theme => theme.name)).size, 3);
+    assert.ok(themes.every(theme => theme.sigil && theme.subtitle));
+    assert.equal(MapUI.getActTheme(99).style, 'unknown');
+    assert.match(ui, /role="progressbar"/);
+    assert.match(ui, /aria-valuenow=/);
+    assert.match(ui, /game\.mapGenerator\.getAvailableNodes/);
+});
