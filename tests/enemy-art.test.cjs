@@ -48,6 +48,20 @@ test('portrait registry loads before battle UI and battle delegates to renderer'
     const html = fs.readFileSync(path.join(root, 'index.html'), 'utf8');
     const battle = fs.readFileSync(path.join(root, 'js/ui/BattleUI.js'), 'utf8');
     assert.ok(html.indexOf('js/ui/EnemyArt.js') < html.indexOf('js/ui/BattleUI.js'));
-    assert.match(html, /js\/ui\/EnemyArt\.js\?v=2026\.11\.15\.10/);
+    assert.match(html, /js\/ui\/EnemyArt\.js\?v=2026\.11\.15\.11/);
     assert.match(battle, /EnemyArt\.render\(document\.getElementById\('enemy-sprite'\), enemy\)/);
+});
+
+test('all three act bosses have distinct original portraits', () => {
+    const bossIds = ['forestBoss', 'caveBoss', 'castleBoss'];
+    const portraits = bossIds.map(id => EnemyArt.get(id));
+    assert.equal(new Set(portraits.map(p => p.src)).size, 3);
+    for (const portrait of portraits) {
+        assert.ok(portrait.alt.length > 8);
+        const svg = fs.readFileSync(path.join(root, portrait.src), 'utf8');
+        assert.match(svg, /<title /);
+        assert.match(svg, /<\/svg>$/);
+        assert.doesNotMatch(svg, /<script|onload=|href="https?:/i);
+    }
+    assert.match(source, /enemy-is-boss/);
 });
