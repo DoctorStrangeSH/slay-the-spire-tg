@@ -824,3 +824,48 @@ button:disabled { opacity: .42; filter: grayscale(.5); }
   letter-spacing: .07em;
   text-shadow: 0 2px 4px #000;
 }
+
+
+/* Редкость карт — собственная огранка, без изменения боевой механики. */
+.card-rarity-common { --rarity-ink: #89929e; --rarity-halo: #89929e19; }
+.card-rarity-uncommon { --rarity-ink: #80d8c2; --rarity-halo: #49bda02d; }
+.card-rarity-rare { --rarity-ink: #e9be70; --rarity-halo: #daa24442; }
+.card.card-rarity-uncommon, .card.card-rarity-rare,
+.reward-card.card-rarity-uncommon, .reward-card.card-rarity-rare,
+.card-detail.card-rarity-uncommon, .card-detail.card-rarity-rare {
+  position: relative;
+  border: 1px solid var(--rarity-ink);
+  background-image: radial-gradient(ellipse at 50% 0%, var(--rarity-halo), transparent 72%);
+  box-shadow: inset 0 1px 0 #ffffff13, 0 0 16px var(--rarity-halo);
+}
+.card.card-rarity-rare::after, .reward-card.card-rarity-rare::after {
+  content: '';
+  position: absolute;
+  inset: 4px;
+  border: 1px solid #e9be704d;
+  border-radius: inherit;
+  pointer-events: none;
+}
+.card-rarity-mark {
+  position: absolute;
+  top: 6px;
+  right: 7px;
+  z-index: 2;
+  color: var(--rarity-ink);
+  font: 700 12px/1 Georgia, serif;
+  text-shadow: 0 0 9px var(--rarity-ink);
+  pointer-events: none;
+}
+.reward-card-rarity {
+  color: var(--rarity-ink);
+  font: 700 11px/1.25 system-ui, sans-serif;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+}
+.reward-card.card-rarity-rare .reward-card-art, .card-detail.card-rarity-rare .card-detail-art {
+  filter: drop-shadow(0 0 8px #dcb56d55);
+}
+.card.card-rarity-rare.selected { outline-color: #f9dca1; }
+@media (prefers-reduced-motion: reduce) {
+  .card.card-rarity-rare, .reward-card.card-rarity-rare { transition: none !important; }
+}
