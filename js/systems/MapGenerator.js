@@ -1,7 +1,9 @@
 // Система генерации карты мира
 class MapGenerator {
-    constructor(act = 1, seed = null) {
+    constructor(act = 1, seed = null, options = {}) {
         this.act = act;
+        // Совместимость с чекпоинтами до появления отдельных сокровищниц.
+        this.legacyTreasureShop = options.legacyTreasureShop === true;
         // Один seed описывает целую карту; пригодится для повтора забега.
         this.seed = seed === null ? Math.floor(Math.random() * 0x100000000) : seed;
         this.random = createMapRandom(this.seed);
@@ -59,7 +61,8 @@ class MapGenerator {
 
         // Сундук (этаж 8)
         const treasureFloor = this.floorRestrictions.treasureFloor;
-        this.createNode(treasureFloor, 0, NODE_TYPES.TREASURE, false);
+        this.createNode(treasureFloor, 0,
+            this.legacyTreasureShop ? NODE_TYPES.SHOP : NODE_TYPES.TREASURE, false);
 
         // Босс (этаж 15)
         this.createNode(this.floors - 1, 0, NODE_TYPES.BOSS, false);
