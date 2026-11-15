@@ -53,3 +53,15 @@ test('card reward reveal uses finite stagger and honors reduced motion', () => {
     assert.ok(css.includes('prefers-reduced-motion: reduce'));
     assert.ok(css.includes('animation: none !important'));
 });
+
+test('deck and discard use accessible illustrated rarity gallery', () => {
+    const game = fs.readFileSync(path.join(__dirname, '../js/systems/Game.js'), 'utf8');
+    const css = fs.readFileSync(path.join(__dirname, '../css/cathedral.css'), 'utf8');
+    assert.ok(game.includes("this.showPile('draw')"));
+    assert.ok(game.includes("this.showPile('discard')"));
+    assert.ok(game.includes('CardArt.markup(card, \'pile-art-image\')'));
+    assert.ok(game.includes('class="pile-card card-rarity-'));
+    assert.ok(game.includes('class="pile-summary"'));
+    assert.ok(game.includes('type="button" class="pile-card'));
+    assert.ok(css.includes('.pile-gallery-modal .pile-card:focus-visible'));
+});
