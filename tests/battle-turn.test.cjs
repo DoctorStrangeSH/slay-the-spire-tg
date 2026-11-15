@@ -21,7 +21,8 @@ function battle(overrides = {}) {
         hasPower(id) { return player.relics.includes(id); },
         isEnemyParalyzed() { return this.statusEffects.enemy.paralysis > 0; },
         startTurn() { this.started = true; },
-        ...overrides
+        ...overrides,
+        player, enemy
     };
     return state;
 }
