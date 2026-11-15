@@ -70,8 +70,13 @@ class RunSave {
         if (!['string', 'number'].includes(typeof data.map.seed)) return false;
         if (typeof data.currentNodeId !== 'string') return false;
 
-        const map = new MapGenerator(data.act, data.map.seed);
-        if (this.mapSignature(map) !== data.map.signature) return false;
+        let map = new MapGenerator(data.act, data.map.seed);
+        if (this.mapSignature(map) !== data.map.signature) {
+            // Предыдущая версия карты показывала сокровищницу как магазин.
+            // Восстанавливаем исходный граф, чтобы не терять старые забеги.
+            map = new MapGenerator(data.act, data.map.seed, { legacyTreasureShop: true });
+            if (this.mapSignature(map) !== data.map.signature) return false;
+        }
         const current = map.findNodeById(data.currentNodeId);
         if (!current || current.floor !== data.floor ||
             !data.map.visited.includes(data.currentNodeId)) return false;
