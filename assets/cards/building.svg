@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 360 225" role="img" aria-labelledby="title"><title id="title">Орудийная башня инженера</title>
+<defs>
+<linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#524832"/><stop offset=".7" stop-color="#141821"/><stop offset="1" stop-color="#282d37"/></linearGradient>
+<radialGradient id="glow"><stop stop-color="#524832" stop-opacity=".8"/><stop offset=".6" stop-color="#524832" stop-opacity=".24"/><stop offset="1" stop-color="#524832" stop-opacity="0"/></radialGradient>
+<linearGradient id="metal" x1="0" y1="0" x2=".8" y2="1"><stop stop-color="#fff0ce"/><stop offset=".35" stop-color="#bdac93"/><stop offset=".7" stop-color="#7a7780"/><stop offset="1" stop-color="#252b37"/></linearGradient>
+<linearGradient id="gold" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#f0d99c"/><stop offset="1" stop-color="#9d6e39"/></linearGradient></defs>
+<rect width="360" height="225" fill="url(#bg)"/>
+<path d="M15 225V47L180-10 345 47v178M36 225V61L180 10 324 61v164" fill="none" stroke="#b99864" opacity=".3" stroke-width="2"/>
+<path d="M0 186q90-20 180 0t180 0v39H0" fill="#0a0c11" opacity=".42"/>
+<circle cx="180" cy="113" r="128" fill="url(#glow)"/>
+<g opacity=".32" fill="#e6c794"><circle cx="30" cy="33" r="1.5"/><circle cx="85" cy="115" r="2"/><circle cx="290" cy="44" r="1.8"/><circle cx="307" cy="170" r="1.5"/><circle cx="54" cy="190" r="1"/></g>
+
+<path d="M63 215 95 188h170l32 27" fill="#31353a" stroke="#9f8d69" stroke-width="5"/>
+<path d="M115 191V88l65-36 65 36v103" fill="#555258" stroke="#d4b685" stroke-width="5"/>
+<path d="M126 179V94l54-30 54 30v85" fill="#252e3c" stroke="#b29f79" stroke-width="2"/>
+<path d="m109 92 71-41 71 41-13 17-58-33-58 33Z" fill="url(#metal)" stroke="#d0ac7b" stroke-width="3"/>
+<rect x="141" y="107" width="78" height="45" rx="8" fill="#272d31" stroke="#cbab78" stroke-width="4"/>
+<circle cx="180" cy="129" r="23" fill="#665a4c" stroke="#d8b781" stroke-width="6"/>
+<circle cx="180" cy="129" r="11" fill="#9ad8cb"/>
+<path d="M174 111V40h12v71" stroke="#d4b88a" stroke-width="4" fill="#4c5961"/>
+<path d="m158 54 22-27 22 27" fill="url(#metal)" stroke="#e0c18d" stroke-width="3"/>
+<path d="M102 186h155M133 165h95" stroke="#c5a577" stroke-width="6"/>
+<path d="M76 214v-38h30v38m148 0v-38h30v38" fill="#77736c" stroke="#d4b58b" stroke-width="3"/>
+
+<path d="M11 10h32m274 0h32M11 215h32m274 0h32" stroke="#c5a16c" stroke-width="2" opacity=".6"/>
+</svg>

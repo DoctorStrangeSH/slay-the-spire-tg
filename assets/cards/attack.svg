@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 360 225" role="img" aria-labelledby="title"><title id="title">Клинок пепельной клятвы</title>
+<defs>
+<linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#5e252e"/><stop offset=".7" stop-color="#141821"/><stop offset="1" stop-color="#321f29"/></linearGradient>
+<radialGradient id="glow"><stop stop-color="#5e252e" stop-opacity=".8"/><stop offset=".6" stop-color="#5e252e" stop-opacity=".24"/><stop offset="1" stop-color="#5e252e" stop-opacity="0"/></radialGradient>
+<linearGradient id="metal" x1="0" y1="0" x2=".8" y2="1"><stop stop-color="#fff0ce"/><stop offset=".35" stop-color="#bdac93"/><stop offset=".7" stop-color="#7a7780"/><stop offset="1" stop-color="#252b37"/></linearGradient>
+<linearGradient id="gold" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#f0d99c"/><stop offset="1" stop-color="#9d6e39"/></linearGradient></defs>
+<rect width="360" height="225" fill="url(#bg)"/>
+<path d="M15 225V47L180-10 345 47v178M36 225V61L180 10 324 61v164" fill="none" stroke="#b99864" opacity=".3" stroke-width="2"/>
+<path d="M0 186q90-20 180 0t180 0v39H0" fill="#0a0c11" opacity=".42"/>
+<circle cx="180" cy="113" r="128" fill="url(#glow)"/>
+<g opacity=".32" fill="#e6c794"><circle cx="30" cy="33" r="1.5"/><circle cx="85" cy="115" r="2"/><circle cx="290" cy="44" r="1.8"/><circle cx="307" cy="170" r="1.5"/><circle cx="54" cy="190" r="1"/></g>
+
+<path d="M102 205c-16-41-9-75 13-97-8 38 6 52 16 61-5-45 19-70 30-96-3 48 18 68 39 82-6-41 12-63 30-88-4 46 25 70 18 112-7 43-64 67-112 46Z" fill="#c44f40" opacity=".38"/>
+<path d="M135 220c-8-27 1-52 17-71-2 23 7 27 13 31 2-31 17-46 31-61 0 35 24 49 17 74-6 23-39 40-78 27Z" fill="#f3a259" opacity=".34"/>
+<g transform="rotate(39 180 125)">
+<path d="M174 8 194 27l-6 111h-13L169 27Z" fill="url(#metal)" stroke="#e2bc83" stroke-width="3"/>
+<path d="M181 26v113" stroke="#f3e2ce" stroke-width="2"/>
+<path d="m153 135 55 0 10 14-75 0Z" fill="url(#gold)" stroke="#70402d" stroke-width="3"/>
+<path d="M179 149h12v44h-12Z" fill="#514035" stroke="#d2a16f" stroke-width="2"/>
+<circle cx="185" cy="199" r="10" fill="none" stroke="#d9ad67" stroke-width="5"/>
+</g>
+<path d="m75 91 13-23m181 88 28 11m-201 2-19 15" stroke="#ffa979" stroke-width="4" opacity=".65"/>
+
+<path d="M11 10h32m274 0h32M11 215h32m274 0h32" stroke="#c5a16c" stroke-width="2" opacity=".6"/>
+</svg>
