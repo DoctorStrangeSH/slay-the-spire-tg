@@ -42,3 +42,14 @@ test('reward choices are copies, not shared registry objects', () => {
     cards[0].id = 'modified';
     assert.equal(getCardsForHero('unknown').a.id, 'a');
 });
+
+test('card reward reveal uses finite stagger and honors reduced motion', () => {
+    const game = fs.readFileSync(path.join(__dirname, '../js/systems/Game.js'), 'utf8');
+    const css = fs.readFileSync(path.join(__dirname, '../css/cathedral.css'), 'utf8');
+    assert.ok(game.includes('reward-card reward-reveal card-rarity-'));
+    assert.ok(game.includes('style="--reveal-order: ${index}"'));
+    assert.ok(game.includes('reward-rare-crest'));
+    assert.ok(css.includes('cathedral-reward-rare-arrival'));
+    assert.ok(css.includes('prefers-reduced-motion: reduce'));
+    assert.ok(css.includes('animation: none !important'));
+});
