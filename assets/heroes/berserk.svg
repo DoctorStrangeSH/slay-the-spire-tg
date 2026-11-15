@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 220" role="img" aria-labelledby="title"><title id="title">Берсерк — Пепельный каратель</title><defs>
+<linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#151920"/><stop offset=".55" stop-color="#29232b"/><stop offset="1" stop-color="#090d13"/></linearGradient>
+<linearGradient id="steel" x1="0" y1="0" x2=".8" y2="1"><stop stop-color="#d2c1a7"/><stop offset=".32" stop-color="#777e87"/><stop offset=".65" stop-color="#394452"/><stop offset="1" stop-color="#151b27"/></linearGradient>
+<radialGradient id="light"><stop stop-color="#a54853" stop-opacity=".42"/><stop offset="1" stop-color="#a54853" stop-opacity="0"/></radialGradient>
+<linearGradient id="trim" x1="0" y1="0" x2=".9" y2="1"><stop stop-color="#f7d99b"/><stop offset=".6" stop-color="#a97b48"/><stop offset="1" stop-color="#59402b"/></linearGradient></defs>
+<rect width="320" height="220" rx="7" fill="url(#bg)"/><path d="M0 60 160 4 320 60M0 177 160 115 320 177" fill="none" stroke="#ad8950" opacity=".12"/>
+<circle cx="160" cy="98" r="116" fill="url(#light)"/>
+<path d="M25 220V66L160 5 295 66v154" fill="none" stroke="#a98652" opacity=".28" stroke-width="2"/>
+<path d="M42 220V76l118-52 118 52v144" fill="none" stroke="#d9a56d" opacity=".16"/>
+<path d="M8 210H312" stroke="#d2a56b" opacity=".44"/>
+<!-- Axe silhouette and runic edge -->
+<path d="m227 10-73 185" stroke="#483529" stroke-width="13"/><path d="m227 10-73 185" stroke="url(#trim)" stroke-width="3"/>
+<path d="M218 16 258 3 290 45 265 80 234 64 218 43 199 34Z" fill="url(#steel)" stroke="#d7aa7d" stroke-width="3"/>
+<path d="M248 14 274 45l-20 24" fill="none" stroke="#f2b4a3" stroke-width="2" opacity=".5"/>
+<!-- Cloak -->
+<path d="M59 220c7-43 16-67 54-79l27 12 46 1 27-12c43 15 55 41 62 78" fill="#3a2029" stroke="#a15d57" stroke-width="3"/>
+<path d="M66 218 105 167l26 20-4 33M254 218l-41-51-23 19 4 34" fill="#201b22" stroke="#6d4b48" stroke-width="2"/>
+<!-- Armor and pauldrons -->
+<path d="m111 148 48 10 46-10-9 72h-76Z" fill="#31353d" stroke="#b48b65" stroke-width="3"/>
+<path d="m108 144-31 21-13 36 53-13 12-27Z" fill="url(#steel)" stroke="#d3b48a" stroke-width="3"/>
+<path d="m214 144 30 22 12 34-51-13-11-27Z" fill="url(#steel)" stroke="#d3b48a" stroke-width="3"/>
+<path d="m78 161 35 20M244 160l-39 20" stroke="#7a3740" stroke-width="5"/>
+<!-- Helm, horn silhouette and luminous eyes -->
+<path d="M111 89c-23-25-32-40-27-63 11 15 25 26 50 35l27 8 28-8c25-9 39-20 50-35 5 23-4 38-27 63" fill="#31292b" stroke="#bd916d" stroke-width="4"/>
+<path d="M119 82c6-40 67-45 82 0l-2 51-17 23h-46l-17-23Z" fill="url(#steel)" stroke="#d3b58e" stroke-width="4"/>
+<path d="m117 98 43-20 43 20-8 17-35 4-36-4Z" fill="#21252c" stroke="#be906b" stroke-width="2"/>
+<path d="m132 108 24 6-5 5-21-5m59-6-24 6 5 5 21-5" fill="#d94e57" stroke="#ffb2a4" stroke-width="1"/>
+<path d="M148 127h24l11 14-23 14-23-14Z" fill="#29272b" stroke="#a57860"/>
+<path d="m126 184 34 13 34-13" fill="none" stroke="#b48b65" stroke-width="3"/>
+<path d="m160 162v58" stroke="#c29b6b" opacity=".6"/>
+<path d="M18 201h27m232 0h26" stroke="#c88b63" opacity=".5"/>
+</svg>
