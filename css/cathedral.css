@@ -950,3 +950,41 @@ button:disabled { opacity: .42; filter: grayscale(.5); }
 .pile-gallery-modal .card-rarity-uncommon .pile-card-rarity { color: #80d8c2; }
 .pile-gallery-modal .card-rarity-rare .pile-card-rarity { color: #e9be70; }
 .pile-gallery-modal .pile-card-cost { flex: 0 0 auto; color: #f3ce91; font: 700 14px system-ui, sans-serif; }
+
+
+/* Три босса — три герба собора. Только оформление, без скрытых механик. */
+#enemy-area.boss-encounter {
+  --boss-accent: #caa66e;
+  position: relative;
+  padding-top: 45px;
+  border: 2px solid var(--boss-accent);
+  background:
+    radial-gradient(ellipse at 50% 16%, color-mix(in srgb, var(--boss-accent) 24%, transparent), transparent 69%),
+    linear-gradient(180deg, #29242d, #11151c);
+  box-shadow: inset 0 0 47px #000a, 0 0 29px color-mix(in srgb, var(--boss-accent) 19%, transparent);
+}
+#enemy-area.boss-forest { --boss-accent: #8fb99b; }
+#enemy-area.boss-cave { --boss-accent: #d1ad78; }
+#enemy-area.boss-castle { --boss-accent: #c49ae4; }
+#enemy-area.boss-encounter::before {
+  content: '✦  ' attr(data-boss-title) '  ✦';
+  position: absolute;
+  inset: 0 0 auto;
+  min-height: 34px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-bottom: 1px solid var(--boss-accent);
+  background: linear-gradient(90deg, transparent, #0d111bcc 20%, #0d111bcc 80%, transparent);
+  color: var(--boss-accent);
+  font: 800 clamp(10px, 2.6vw, 13px)/1.2 system-ui, sans-serif;
+  letter-spacing: .08em;
+  text-align: center;
+  text-shadow: 0 0 12px currentColor;
+  pointer-events: none;
+}
+#enemy-area.boss-wounded { box-shadow: inset 0 0 57px #68263644, 0 0 28px color-mix(in srgb, var(--boss-accent) 28%, transparent); }
+#enemy-area.boss-wounded #enemy-hp-text .hp-current { color: #ffb4bb; }
+@media (prefers-reduced-motion: reduce) {
+  #enemy-area.boss-encounter #enemy-sprite { animation: none !important; }
+}
