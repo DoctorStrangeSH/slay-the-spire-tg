@@ -419,27 +419,45 @@ class Game {
         }
     }
 
-    viewDrawPile() {
-        if (!this.currentBattle) return;
+    // Единая галерея колоды и сброса: одинаковая редкость и иллюстрации.
+    pileSummary(cards) {
+        const counts = { attack: 0, skill: 0, power: 0, building: 0 };
+        cards.forEach(card => {
+            if (Object.prototype.hasOwnProperty.call(counts, card.type)) counts[card.type]++;
+        });
+        return [
+            ['attack', 'Атаки'],
+            ['skill', 'Навыки'],
+            ['power', 'Силы'],
+            ['building', 'Конструкции']
+        ].filter(([type]) => counts[type] > 0)
+         .map(([type, label]) => `<span class="pile-summary-chip">${label}: ${counts[type]}</span>`).join('');
+    }
 
-        const cards = this.currentBattle.viewDrawPile();
+    showPile(pileType) {
+        if (!this.currentBattle) return;
+        const isDraw = pileType === 'draw';
+        const cards = isDraw ? this.currentBattle.viewDrawPile() : this.currentBattle.viewDiscardPile();
         if (cards.length === 0) {
-            alert('Колода пуста');
+            alert(isDraw ? 'Колода пуста' : 'Сброс пуст');
             return;
         }
-
         const modal = document.createElement('div');
         modal.className = 'modal';
         modal.innerHTML = `
-            <div class="modal-content">
-                <h3>Колода (${cards.length} карт)</h3>
+            <div class="modal-content pile-gallery-modal">
+                <h3>${isDraw ? 'Колода' : 'Сброс'} (${cards.length} карт)</h3>
+                <div class="pile-summary" aria-label="Состав карт">${this.pileSummary(cards)}</div>
                 <div class="pile-cards">
                     ${cards.map((card, index) => `
-                        <div class="pile-card" onclick="game.showCardModalFromPile('draw', ${index})">
-                            <span>${card.emoji || '🃏'}</span>
-                            <span>${card.name}</span>
-                            <span>${card.cost}⚡</span>
-                        </div>
+                        <button type="button" class="pile-card card-rarity-${CardArt.rarity(card).key}" onclick="game.showCardModalFromPile('${pileType}', ${index})">
+                            <span class="pile-card-art">${CardArt.markup(card, 'pile-art-image')}</span>
+                            <span class="pile-card-copy">
+                                <strong class="pile-card-name">${card.name}</strong>
+                                <small class="pile-card-rarity">${CardArt.rarity(card).sigil} ${CardArt.rarity(card).label}</small>
+                            </span>
+                            <span class="pile-card-cost">${card.cost}⚡</span>
+                        </button>
                     `).join('')}
                 </div>
                 <button onclick="this.closest('.modal').remove()">Закрыть</button>
@@ -448,33 +466,12 @@ class Game {
         document.body.appendChild(modal);
     }
 
+    viewDrawPile() {
+        this.showPile('draw');
+    }
+
     viewDiscardPile() {
-        if (!this.currentBattle) return;
-
-        const cards = this.currentBattle.viewDiscardPile();
-        if (cards.length === 0) {
-            alert('Сброс пуст');
-            return;
-        }
-
-        const modal = document.createElement('div');
-        modal.className = 'modal';
-        modal.innerHTML = `
-            <div class="modal-content">
-                <h3>Сброс (${cards.length} карт)</h3>
-                <div class="pile-cards">
-                    ${cards.map((card, index) => `
-                        <div class="pile-card" onclick="game.showCardModalFromPile('discard', ${index})">
-                            <span>${card.emoji || '🃏'}</span>
-                            <span>${card.name}</span>
-                            <span>${card.cost}⚡</span>
-                        </div>
-                    `).join('')}
-                </div>
-                <button onclick="this.closest('.modal').remove()">Закрыть</button>
-            </div>
-        `;
-        document.body.appendChild(modal);
+        this.showPile('discard');
     }
 
     showCardModalFromPile(pileType, index) {
