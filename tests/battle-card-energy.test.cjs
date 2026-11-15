@@ -39,7 +39,7 @@ test('deselecting a card releases its reserved energy', () => {
 
 test('every third card economy discount is included in batch projection', () => {
     const cards = new BattleCards();
-    const battle = state([1, 1, 3], ['economy'], 2);
+    const battle = state([3, 1, 1], ['economy'], 2);
     for (const index of [0, 1, 2]) assert.equal(cards.selectCard(battle, index).success, true);
     assert.equal(cards.calculateSelectedCost(battle, battle.selectedCards), 2);
 });
