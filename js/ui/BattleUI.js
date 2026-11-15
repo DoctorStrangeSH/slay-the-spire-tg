@@ -260,6 +260,12 @@ const BattleUI = {
         endBtn.onclick = () => game.endTurn();
         buttonsArea.appendChild(endBtn);
         
+        const relicBtn = document.createElement('button');
+        relicBtn.className = 'action-btn relic-btn';
+        relicBtn.textContent = `💎 Реликвии (${game.player.relics?.length || 0})`;
+        relicBtn.onclick = () => game.showRelics();
+        buttonsArea.appendChild(relicBtn);
+
         const deckBtn = document.createElement('button');
         deckBtn.className = 'action-btn deck-btn';
         deckBtn.innerHTML = `🃏 Колода (${battle.drawPile.length})`;
