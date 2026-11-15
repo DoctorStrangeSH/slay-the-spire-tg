@@ -16,7 +16,7 @@ const BattleUI = {
     renderEnemy(game, battle) {
         const enemy = battle.enemy;
         
-        document.getElementById('enemy-sprite').textContent = enemy.emoji;
+        EnemyArt.render(document.getElementById('enemy-sprite'), enemy);
         document.getElementById('enemy-name').textContent = enemy.name;
         
         document.getElementById('enemy-hp-text').innerHTML = 
