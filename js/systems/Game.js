@@ -416,6 +416,14 @@ class Game {
         this.showEventModal(event);
     }
 
+    applyAltarBargain() {
+        // Нельзя заплатить жизнью: сделка должна оставлять героя в живых.
+        if (!this.player || this.player.hp <= 12) return false;
+        this.player.hp -= 12;
+        this.player.maxHp += 8;
+        return true;
+    }
+
     getEventsForAct() {
         return [
             {
@@ -440,12 +448,31 @@ class Game {
                             if (this.player.gold >= 50) {
                                 this.player.gold -= 50;
                                 this.offerCard();
+                                return 'deferred';
                             } else {
                                 alert('Недостаточно золота!');
+                                return false;
                             }
                         }
                     },
                     { text: 'Уйти', action: () => { } }
+                ]
+            },
+            {
+                name: 'Алтарь Пепельной Клятвы',
+                description: 'Древний камень обещает укрепить тело в обмен на вашу кровь.',
+                options: [
+                    {
+                        text: 'Принести 12 HP в жертву (+8 к максимуму HP)',
+                        action: () => {
+                            if (!this.applyAltarBargain()) {
+                                alert('Недостаточно здоровья для ритуала!');
+                                return false;
+                            }
+                            return true;
+                        }
+                    },
+                    { text: 'Не принимать клятву', action: () => true }
                 ]
             }
         ];
@@ -461,13 +488,17 @@ class Game {
             </div>
         `;
 
+        let resolved = false;
         event.options.forEach((option) => {
             const button = document.createElement('button');
             button.textContent = option.text;
             button.onclick = () => {
-                option.action();
-                document.body.removeChild(modal);
-                this.continueJourney();
+                if (resolved) return;
+                const result = option.action();
+                if (result === false) return; // Невозможная покупка/сделка не завершает событие.
+                resolved = true;
+                modal.remove();
+                if (result !== 'deferred') this.continueJourney();
             };
             modal.querySelector('.modal-content').appendChild(button);
         });
