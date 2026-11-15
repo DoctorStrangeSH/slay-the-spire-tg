@@ -49,7 +49,7 @@ test('portrait registry loads before battle UI and battle delegates to renderer'
     const html = fs.readFileSync(path.join(root, 'index.html'), 'utf8');
     const battle = fs.readFileSync(path.join(root, 'js/ui/BattleUI.js'), 'utf8');
     assert.ok(html.indexOf('js/ui/EnemyArt.js') < html.indexOf('js/ui/BattleUI.js'));
-    assert.match(html, /js\/ui\/EnemyArt\.js\?v=2026\.11\.15\.29/);
+    assert.match(html, /js\/ui\/EnemyArt\.js\?v=2026\.11\.15\.30/);
     assert.match(battle, /EnemyArt\.render\(document\.getElementById\('enemy-sprite'\), enemy\)/);
 });
 
