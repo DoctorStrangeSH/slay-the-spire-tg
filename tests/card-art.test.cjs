@@ -34,8 +34,8 @@ test('rendering known card types is safe and unknown old types fall back', () =>
 
 test('CardArt loads before BattleUI and all asset manifests are versioned', () => {
     assert.ok(html.indexOf('js/ui/CardArt.js') < html.indexOf('js/ui/BattleUI.js'));
-    assert.match(html, /js\/ui\/CardArt\.js\?v=2026\.11\.15\.18/);
-    assert.match(html, /css\/cathedral\.css\?v=2026\.11\.15\.18/);
+    assert.match(html, /js\/ui\/CardArt\.js\?v=2026\.11\.15\.19/);
+    assert.match(html, /css\/cathedral\.css\?v=2026\.11\.15\.19/);
 });
 
 test('combat and rewards use illustration registry consistently', () => {
@@ -63,4 +63,24 @@ test('three Berserk signature cards have distinct artwork in battle, rewards and
     }
     assert.ok(CardArt.markup({ id: 'unpainted', type: 'attack' }).includes('assets/cards/attack.svg'));
     assert.ok(CardArt.markup({ id: 'bloodCut', type: 'power' }).includes('blood-cut.svg'));
+});
+
+test('rarity descriptors are stable, distinct, and safe for old cards', () => {
+    assert.equal(CardArt.rarity({ rarity: 'rare' }).key, 'rare');
+    assert.equal(CardArt.rarity({ rarity: 'uncommon' }).label, 'Необычная');
+    assert.equal(CardArt.rarity({ rarity: 'common' }).key, 'common');
+    assert.equal(CardArt.rarity({ rarity: 'rare' }).sigil, '✦✦');
+    assert.equal(CardArt.rarity({ rarity: 'rare<script>' }).key, 'common');
+    assert.equal(CardArt.rarity(null).key, 'common');
+});
+
+test('rarity is rendered in battle, rewards, and card details', () => {
+    const battle = fs.readFileSync(path.join(root, 'js/ui/BattleUI.js'), 'utf8');
+    const game = fs.readFileSync(path.join(root, 'js/systems/Game.js'), 'utf8');
+    const styles = fs.readFileSync(path.join(root, 'css/cathedral.css'), 'utf8');
+    assert.ok(battle.includes('card-rarity-${rarity.key}'));
+    assert.ok(game.includes('reward-card card-rarity-${CardArt.rarity(card).key}'));
+    assert.ok(game.includes('reward-card-rarity'));
+    assert.ok(styles.includes('.card-rarity-rare'));
+    assert.ok(styles.includes('prefers-reduced-motion: reduce'));
 });
