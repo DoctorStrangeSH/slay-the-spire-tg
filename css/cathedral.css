@@ -410,3 +410,67 @@ button:disabled { opacity: .42; filter: grayscale(.5); }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; }
 }
+
+/* Иллюстрации карт — единый формат для боя, наград и инспектора. */
+.card-art-frame {
+  overflow: hidden;
+  height: 76px;
+  width: 100%;
+  margin: 8px auto 9px;
+  border: 1px solid rgba(220, 187, 125, .52);
+  border-radius: 6px;
+  background: #11151c;
+  box-shadow: 0 2px 10px rgba(0,0,0,.6);
+}
+.card-art {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.card-art-fallback {
+  display: grid;
+  width: 100%;
+  height: 100%;
+  place-items: center;
+  color: var(--gold);
+  font-size: 26px;
+}
+.card-name { margin-top: 5px; font-size: 13px; }
+.card-description {
+  margin-top: 5px;
+  display: -webkit-box;
+  -webkit-line-clamp: 4;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  font-size: 10px;
+}
+.reward-card-art {
+  width: 80px;
+  height: 64px;
+  flex: none;
+  overflow: hidden;
+  border-radius: 6px;
+  border: 1px solid var(--line);
+}
+.reward-art-image, .detail-art-image {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.card-detail-art {
+  display: block;
+  width: min(100%, 270px);
+  height: 135px;
+  margin: 0 auto 12px;
+  border: 1px solid var(--line-bright);
+  border-radius: 6px;
+  overflow: hidden;
+}
+.card-detail-header { flex-direction: column; }
+@media (max-width: 360px) {
+  .card-art-frame { height: 68px; }
+  .reward-card-art { width: 61px; height: 56px; }
+  .card-description { -webkit-line-clamp: 3; }
+}
