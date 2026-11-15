@@ -1,16 +1,37 @@
 // UI карты мира с SVG-визуализацией
 const MapUI = {
+    getActTheme(act) {
+        const themes = {
+            1: { name: 'Заброшенные сады', subtitle: 'Там, где корни хранят древние клятвы', sigil: '❧', style: 'garden' },
+            2: { name: 'Пепельные глубины', subtitle: 'Под каменными сводами не гаснет жар', sigil: '◆', style: 'depths' },
+            3: { name: 'Проклятая цитадель', subtitle: 'Последняя ступень к сердцу шпиля', sigil: '✧', style: 'citadel' }
+        };
+        return themes[act] || { name: 'Неизведанные пределы', subtitle: 'Путь ещё не окончен', sigil: '✦', style: 'unknown' };
+    },
+
     render(game) {
         const mapContainer = document.getElementById('map-nodes');
         mapContainer.innerHTML = '';
+        const theme = this.getActTheme(game.act);
+        const screen = document.getElementById('map-screen');
+        if (screen) screen.dataset.actTheme = theme.style;
         
         // Заголовок
         const actInfo = document.createElement('div');
-        actInfo.className = 'act-info';
+        actInfo.className = 'act-info cathedral-act-banner';
+        const floor = Math.min(Math.max(Number(game.floor) + 1 || 1, 1), game.mapGenerator.floors);
+        const progress = Math.round((floor / game.mapGenerator.floors) * 100);
         actInfo.innerHTML = `
-            <h2>Акт ${game.act}</h2>
-            <p>Этаж: ${game.floor + 1}/${game.mapGenerator.floors}</p>
-            <p>❤️ HP: ${game.player.hp}/${game.player.maxHp} | 💰 Золото: ${game.player.gold}</p>
+            <div class="act-banner-sigil" aria-hidden="true">${theme.sigil}</div>
+            <div class="act-banner-copy">
+                <span class="act-banner-kicker">АКТ ${game.act} · ВОСХОЖДЕНИЕ</span>
+                <h2>${theme.name}</h2>
+                <p class="act-banner-subtitle">${theme.subtitle}</p>
+                <div class="act-banner-progress" role="progressbar" aria-label="Пройдено этажей акта" aria-valuemin="0" aria-valuemax="${game.mapGenerator.floors}" aria-valuenow="${floor}">
+                    <span style="width: ${progress}%"></span>
+                </div>
+                <p class="act-banner-stats">Этаж ${floor} из ${game.mapGenerator.floors} <span>✦</span> ❤ ${game.player.hp}/${game.player.maxHp} <span>✦</span> ◈ ${game.player.gold}</p>
+            </div>
         `;
         mapContainer.appendChild(actInfo);
         
