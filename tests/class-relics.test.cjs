@@ -47,7 +47,7 @@ const BattleSystem = vm.runInNewContext(battleSource + '\nBattleSystem;', {
     BattleEffects: class { applyStartTurnEffects() {} },
     BattleCards: class {},
     BattleTurn: class {},
-    BattleBuildings: class {}
+    BattleBuildings: class { triggerStartOfTurn() {} }
 });
 function battle(heroId, relics, hp = 50) {
     return new BattleSystem({ heroId, relics, hp, maxHp: 100 }, { hp: 30 });
