@@ -11,6 +11,11 @@ document.addEventListener('DOMContentLoaded', () => {
         document.body.style.color = tg.textColor;
     }
     
+    // Версия сборки видна даже внутри Telegram WebView.
+    const build = document.querySelector('meta[name="app-version"]')?.content;
+    const label = document.getElementById('app-version');
+    if (label) label.textContent = build ? `Версия ${build}` : '';
+
     // Создаём игру
     game = new Game();
     
