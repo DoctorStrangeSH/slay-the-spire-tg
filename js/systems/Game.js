@@ -721,16 +721,48 @@ class Game {
     }
 
     completeAct() {
+        const completedAct = this.act;
         if (this.act < this.maxActs) {
             this.act++;
-            alert(`Акт ${this.act - 1} пройден!`);
+            this.floor = 0;
             this.generateNewMap();
+            // Сохраняем новый акт до показа заставки: повторный вход не переигрывает босса.
             this.showMap();
+            this.showActTransition(completedAct, false);
         } else {
-            alert('Поздравляем! Вы прошли игру!');
             this.runSave.clear();
             this.showMenu();
+            this.showActTransition(completedAct, true);
         }
+    }
+
+    showActTransition(completedAct, isVictory) {
+        document.getElementById('cathedral-act-transition')?.remove();
+        const theme = isVictory
+            ? { name: 'Шпиль покорён', subtitle: 'Сквозь тьму ты пронёс свою судьбу', sigil: '✦', style: 'victory' }
+            : MapUI.getActTheme(this.act);
+        const overlay = document.createElement('div');
+        overlay.id = 'cathedral-act-transition';
+        overlay.className = 'cathedral-act-transition';
+        overlay.dataset.actTheme = theme.style;
+        overlay.setAttribute('role', 'dialog');
+        overlay.setAttribute('aria-modal', 'true');
+        overlay.setAttribute('aria-label', isVictory ? 'Победа в забеге' : 'Новая глава');
+        overlay.innerHTML = `
+            <div class="cathedral-transition-panel">
+                <div class="cathedral-transition-ornament" aria-hidden="true">✧ ─── ✦ ─── ✧</div>
+                <p class="cathedral-transition-kicker">${isVictory ? 'ВОСХОЖДЕНИЕ ЗАВЕРШЕНО' : 'ГЛАВА ЗАВЕРШЕНА · АКТ ' + completedAct}</p>
+                <div class="cathedral-transition-sigil" aria-hidden="true">${theme.sigil}</div>
+                <h2>${theme.name}</h2>
+                <p class="cathedral-transition-subtitle">${theme.subtitle}</p>
+                <p class="cathedral-transition-epilogue">${isVictory ? 'Собор помнит тех, кто достиг вершины.' : 'Новый путь ждёт за порогом.'}</p>
+                <button type="button" class="cathedral-transition-continue">${isVictory ? 'Вернуться в главное меню' : 'Продолжить восхождение'} →</button>
+            </div>
+        `;
+        const continueButton = overlay.querySelector('.cathedral-transition-continue');
+        continueButton.addEventListener('click', () => overlay.remove(), { once: true });
+        document.body.appendChild(overlay);
+        continueButton.focus();
     }
 
     rest() {
