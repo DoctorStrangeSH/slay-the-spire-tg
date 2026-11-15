@@ -88,3 +88,14 @@ test('storage failures do not break gameplay', () => {
     assert.equal(persistence.restore({}), false);
     assert.doesNotThrow(() => persistence.clear());
 });
+
+
+test('legacy treasure-as-shop map checkpoint still restores', () => {
+    const persistence = new RunSave(storage());
+    const previous = game();
+    previous.mapGenerator = new MapGenerator(1, 'checkpoint-seed', { legacyTreasureShop: true });
+    assert.equal(persistence.save(previous), true);
+    const restored = { player: null };
+    assert.equal(persistence.restore(restored), true);
+    assert.equal(restored.mapGenerator.legacyTreasureShop, true);
+});
