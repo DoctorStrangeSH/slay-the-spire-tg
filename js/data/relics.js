@@ -17,16 +17,38 @@ const RELIC_CATALOG = Object.freeze({
         name: 'Хроника предвидения',
         emoji: '📜',
         description: 'В начале каждого хода берёте дополнительную карту.'
+    },
+    bloodFang: {
+        id: 'bloodFang',
+        heroId: 'berserk',
+        name: 'Клык последней ярости',
+        emoji: '🩸',
+        description: 'Если здоровья не больше половины, получаете 5 блока в начале каждого хода.'
+    },
+    ironCog: {
+        id: 'ironCog',
+        heroId: 'engineer',
+        name: 'Заводная броня',
+        emoji: '⚙️',
+        description: 'В начале каждого хода получаете 2 дополнительных блока.'
+    },
+    mindEye: {
+        id: 'mindEye',
+        heroId: 'psyker',
+        name: 'Око безмолвия',
+        emoji: '🔮',
+        description: 'В начале каждого хода берёте 1 дополнительную карту.'
     }
 });
 
-function getAvailableRelics(owned = []) {
+function getAvailableRelics(owned = [], heroId = null) {
     const known = new Set(Array.isArray(owned) ? owned : []);
-    return Object.values(RELIC_CATALOG).filter(relic => !known.has(relic.id));
+    return Object.values(RELIC_CATALOG).filter(relic => !known.has(relic.id) &&
+        (!relic.heroId || relic.heroId === heroId));
 }
 
-function chooseRelic(owned = [], random = Math.random) {
-    const available = getAvailableRelics(owned);
+function chooseRelic(owned = [], random = Math.random, heroId = null) {
+    const available = getAvailableRelics(owned, heroId);
     if (!available.length) return null;
     const roll = Math.min(0.999999999, Math.max(0, Number(random()) || 0));
     return available[Math.floor(roll * available.length)];

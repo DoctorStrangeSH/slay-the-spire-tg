@@ -21,7 +21,11 @@ class BattleSystem extends BattleCore {
     
     startTurn() {
         this.energy = this.maxEnergy;
-        this.block = this.hasPower('stoneguard') ? 4 : 0;
+        this.block = (this.hasPower('stoneguard') ? 4 : 0)
+            + (this.player.heroId === 'engineer' && this.hasPower('ironCog') ? 2 : 0)
+            + (this.player.heroId === 'berserk' && this.hasPower('bloodFang') &&
+                Number.isFinite(this.player.hp) && Number.isFinite(this.player.maxHp) &&
+                this.player.hp <= this.player.maxHp / 2 ? 5 : 0);
         this.damageTakenThisTurn = 0;
         this.cardsPlayedThisTurn = 0;
         this.cardsPlayedTypes = { attack: 0, skill: 0, power: 0, building: 0 };
@@ -49,7 +53,9 @@ class BattleSystem extends BattleCore {
             this.player.hp = Math.min(this.player.maxHp, this.player.hp + 2);
         }
         
-        this.drawCards(this.hasPower('chronicle') ? 6 : 5);
+        const bonusDraw = (this.hasPower('chronicle') ? 1 : 0)
+            + (this.player.heroId === 'psyker' && this.hasPower('mindEye') ? 1 : 0);
+        this.drawCards(5 + bonusDraw);
         this.enemyIntent = this.getEnemyIntent();
     }
     
