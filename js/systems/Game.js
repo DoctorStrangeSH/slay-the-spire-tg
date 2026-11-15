@@ -238,11 +238,15 @@ class Game {
         if (!this.currentBattle) return;
 
         const before = BattleFeedback.snapshot(this.currentBattle);
+        const playedTypes = this.currentBattle.selectedCards
+            .map(index => this.currentBattle.hand[index]?.type)
+            .filter(Boolean);
         const result = this.currentBattle.playSelectedCards();
 
         if (result.success) {
             BattleUI.update(this);
             BattleFeedback.show(before, this.currentBattle);
+            BattleFeedback.cardsPlayed(playedTypes);
             BattleUI.hidePreview();
 
             if (this.currentBattle.enemy.hp <= 0) {

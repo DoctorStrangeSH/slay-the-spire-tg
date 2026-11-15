@@ -10,7 +10,7 @@ function setup() {
     const effects = new Map();
     let timerId = 0;
     const timers = new Map();
-    const elements = Object.fromEntries(['enemy-area', 'player-area'].map(id => [id, {
+    const elements = Object.fromEntries(['enemy-area', 'player-area', 'battle-screen'].map(id => [id, {
         classes: new Set(),
         classList: {
             add(name) { elements[id].classes.add(name); },
@@ -25,7 +25,8 @@ function setup() {
             getElementById(id) { return elements[id] || null; },
             createElement(tag) {
                 return {
-                    tag, removed: false, attrs: {},
+                    tag, removed: false, attrs: {}, children: [],
+                    appendChild(child) { this.children.push(child); },
                     setAttribute(key, value) { this.attrs[key] = value; },
                     remove() { this.removed = true; }
                 };
@@ -76,7 +77,7 @@ test('game loads feedback before controllers and invokes it after moves', () => 
     const html = fs.readFileSync(path.join(root, 'index.html'), 'utf8');
     const game = fs.readFileSync(path.join(root, 'js/systems/Game.js'), 'utf8');
     const css = fs.readFileSync(path.join(root, 'css/cathedral.css'), 'utf8');
-    assert.match(html, /js\/ui\/BattleFeedback\.js\?v=2026\.11\.15\.16/);
+    assert.match(html, /js\/ui\/BattleFeedback\.js\?v=2026\.11\.15\.17/);
     assert.match(game, /BattleFeedback\.snapshot\(this\.currentBattle\)/);
     assert.match(game, /BattleFeedback\.show\(before, this\.currentBattle\)/);
     assert.match(css, /prefers-reduced-motion: reduce/);
@@ -151,5 +152,45 @@ test('floating numbers respect reduced motion', () => {
     assert.match(css, /cathedral-float-number/);
     assert.match(css, /\.battle-float--damage/);
     assert.match(css, /\.battle-float--shield/);
+    assert.match(css, /prefers-reduced-motion: reduce/);
+});
+
+test('card casting effect gives distinct classes and a combination count', () => {
+    const { feedback, elements, timers } = setup();
+    feedback.cardsPlayed(['skill', 'attack', 'skill']);
+    const marker = elements['battle-screen'].children.at(-1);
+    assert.match(marker.className, /card-cast-fx--attack/);
+    assert.equal(marker.attrs['aria-hidden'], 'true');
+    assert.equal(marker.children[0].textContent, '╱');
+    assert.equal(marker.children[1].textContent, '×3');
+    const first = marker;
+    feedback.cardsPlayed(['power']);
+    assert.equal(first.removed, true);
+    const second = elements['battle-screen'].children.at(-1);
+    assert.match(second.className, /card-cast-fx--power/);
+    assert.equal(second.children.length, 1);
+    assert.equal(timers.size, 1);
+    [...timers.values()][0]();
+    assert.equal(second.removed, true);
+    assert.equal(feedback.cardFxState.node, null);
+    assert.equal(feedback.cardFxState.timer, null);
+});
+
+test('unknown cards cannot inject style classes and empty batches have no effect', () => {
+    const { feedback, elements } = setup();
+    feedback.cardsPlayed([]);
+    feedback.cardsPlayed(['<img onerror=alert(1)>']);
+    assert.equal(elements['battle-screen'].children.length, 0);
+    feedback.cardsPlayed(['building']);
+    assert.match(elements['battle-screen'].children[0].className, /card-cast-fx--building/);
+});
+
+test('cards are captured before play and effects only play for successful card use', () => {
+    const game = fs.readFileSync(path.join(root, 'js/systems/Game.js'), 'utf8');
+    const method = game.split('    playSelectedCards() {')[1].split('    endTurn() {')[0];
+    assert.ok(method.indexOf('const playedTypes') < method.indexOf('this.currentBattle.playSelectedCards()'));
+    assert.ok(method.indexOf('BattleFeedback.cardsPlayed(playedTypes)') > method.indexOf('if (result.success)'));
+    const css = fs.readFileSync(path.join(root, 'css/cathedral.css'), 'utf8');
+    for (const kind of ['attack', 'skill', 'power', 'building']) assert.ok(css.includes('card-cast-fx--' + kind));
     assert.match(css, /prefers-reduced-motion: reduce/);
 });

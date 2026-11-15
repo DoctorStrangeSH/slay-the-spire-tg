@@ -4,6 +4,39 @@ const BattleFeedback = Object.freeze({
     entranceTimers: new Map(),
     floatTimers: new Map(),
     floatNodes: new Map(),
+    cardFxState: { timer: null, node: null },
+    cardsPlayed(types) {
+        if (!Array.isArray(types) || !types.length) return;
+        const screen = document.getElementById('battle-screen');
+        if (!screen) return;
+        const known = types.filter(type => ['attack', 'skill', 'power', 'building'].includes(type));
+        if (!known.length) return;
+        const priority = ['attack', 'power', 'building', 'skill'];
+        const style = priority.find(type => known.includes(type));
+        const glyph = { attack: '╱', skill: '◇', power: '✧', building: '⬡' };
+        if (this.cardFxState.timer) clearTimeout(this.cardFxState.timer);
+        this.cardFxState.node?.remove();
+        const marker = document.createElement('div');
+        marker.className = `card-cast-fx card-cast-fx--${style}`;
+        marker.setAttribute('aria-hidden', 'true');
+        const symbol = document.createElement('span');
+        symbol.className = 'card-cast-glyph';
+        symbol.textContent = glyph[style];
+        marker.appendChild(symbol);
+        if (known.length > 1) {
+            const count = document.createElement('span');
+            count.className = 'card-cast-combo';
+            count.textContent = `×${known.length}`;
+            marker.appendChild(count);
+        }
+        screen.appendChild(marker);
+        this.cardFxState.node = marker;
+        this.cardFxState.timer = setTimeout(() => {
+            marker.remove();
+            this.cardFxState.node = null;
+            this.cardFxState.timer = null;
+        }, 850);
+    },
     float(id, amount, kind) {
         if (!Number.isFinite(amount) || amount <= 0) return;
         const area = document.getElementById(id);
