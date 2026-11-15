@@ -99,3 +99,23 @@ test('act completion displays a transition after saving next map', () => {
     element.button.handlers.click();
     assert.equal(element.removed, true);
 });
+
+test('event scenes distinguish all choices and preserve failed bargain outcome', () => {
+    const source = readFileSync(join(__dirname, '../js/systems/Game.js'), 'utf8');
+    const Game = vm.runInNewContext(source + '\nGame;', {
+        GAME_CONFIG: { maxActs: 3 }, RunSave: class { clear() {} }
+    });
+    const game = new Game();
+    const events = game.getEventsForAct();
+    assert.equal(events.length, 3);
+    assert.equal(new Set(events.map(event => game.getEventPresentation(event.name).style)).size, 3);
+    assert.ok(events.every(event => event.options.length >= 2));
+    assert.ok(events.every(event => event.description.length > 75));
+    game.player = { hp: 12, maxHp: 50, gold: 0 };
+    assert.equal(game.applyAltarBargain(), false);
+    assert.equal(game.player.hp, 12);
+    game.player.hp = 30;
+    assert.equal(game.applyAltarBargain(), true);
+    assert.equal(game.player.hp, 18);
+    assert.equal(game.player.maxHp, 58);
+});

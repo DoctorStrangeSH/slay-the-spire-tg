@@ -1247,3 +1247,53 @@ button:disabled { opacity: .42; filter: grayscale(.5); }
 @media (prefers-reduced-motion: reduce) {
   .cathedral-act-transition, .cathedral-transition-panel { animation: none !important; }
 }
+
+/* События собора — три иллюстративные сцены, те же награды и условия. */
+.cathedral-event-modal { --event-accent: #8dc7c6; --event-glow: #347d7e77; }
+.cathedral-event-modal[data-event-scene="merchant"] { --event-accent: #dfb67e; --event-glow: #89603c77; }
+.cathedral-event-modal[data-event-scene="altar"] { --event-accent: #e39ca7; --event-glow: #9b364e77; }
+.cathedral-event-modal[data-event-scene="mystery"] { --event-accent: #c6b0e4; --event-glow: #624b8d77; }
+.cathedral-event-modal .cathedral-event-content {
+  width: min(100%, 490px); max-height: min(90dvh, 800px); overflow-y: auto;
+  padding: clamp(18px, 5vw, 28px); border: 1px solid var(--event-accent);
+  background: radial-gradient(ellipse at 50% 15%, var(--event-glow), transparent 67%),
+    linear-gradient(145deg, #29252e, #10141c 75%);
+  box-shadow: inset 0 0 0 4px #080a10aa, 0 18px 55px #000c;
+}
+.cathedral-event-kicker { text-align: center; color: var(--event-accent); font: 800 10px/1.4 system-ui,sans-serif; letter-spacing: .21em; }
+.cathedral-event-art {
+  position: relative; width: min(100%, 300px); height: clamp(125px, 31vh, 190px); margin: 8px auto 13px;
+  display: grid; place-items: center; overflow: hidden;
+  border-top: 1px solid #e6cda94d; border-bottom: 1px solid #e6cda94d;
+  background:
+    repeating-linear-gradient(90deg, transparent 0 32px, #ffffff08 33px 34px),
+    radial-gradient(ellipse at 50% 95%, var(--event-glow), transparent 75%),
+    linear-gradient(#161d26, #11151e);
+}
+.cathedral-event-art::before, .cathedral-event-art::after {
+  content: ''; position: absolute; bottom: -35px; width: 115px; height: 170px;
+  border: 11px solid #080d14; border-radius: 70px 70px 0 0; opacity: .8;
+}
+.cathedral-event-art::before { left: -63px; transform: rotate(-21deg); }
+.cathedral-event-art::after { right: -63px; transform: rotate(21deg); }
+.cathedral-event-halo {
+  position: absolute; width: 140px; height: 140px; border: 1px solid var(--event-accent);
+  border-radius: 50%; opacity: .5; box-shadow: 0 0 30px var(--event-glow), inset 0 0 26px var(--event-glow);
+}
+.cathedral-event-sigil { position: relative; z-index: 1; color: var(--event-accent); font: 100px/1 Georgia,serif; text-shadow: 0 0 24px var(--event-accent); }
+.cathedral-event-modal[data-event-scene="merchant"] .cathedral-event-halo { border-radius: 5px; transform: rotate(45deg) scale(.73); }
+.cathedral-event-modal[data-event-scene="altar"] .cathedral-event-halo { border-style: dashed; }
+.cathedral-event-content h3 { margin: 0 0 11px; color: #f1dfbe; text-align: center; font: 700 clamp(22px, 5vw, 29px)/1.2 Georgia,serif; }
+.cathedral-event-story { color: #e0d2be; font: 14px/1.65 Georgia,serif; text-align: center; }
+.cathedral-event-hint { margin: 10px 0 18px; color: var(--event-accent); text-align: center; font: italic 12px/1.5 Georgia,serif; }
+.cathedral-event-choices { display: grid; gap: 9px; }
+.cathedral-event-modal .cathedral-event-choice {
+  display: flex; gap: 14px; align-items: center; width: 100%; min-height: 52px;
+  padding: 12px 14px; text-align: left; border: 1px solid color-mix(in srgb,var(--event-accent) 70%,#4a4b53);
+  background: linear-gradient(115deg, #373239, #20242c); color: #faedda;
+  font: 700 13px/1.4 system-ui,sans-serif; cursor: pointer;
+}
+.cathedral-event-choice-number { color: var(--event-accent); font: 700 15px/1 Georgia,serif; }
+.cathedral-event-modal .cathedral-event-choice--exit { border-color: #717580; background: #1c2129; color: #c7c8ca; }
+.cathedral-event-choice:focus-visible { outline: 3px solid #ffe4aa; outline-offset: 3px; }
+@media (max-height: 650px) { .cathedral-event-art { height: 110px; } .cathedral-event-sigil { font-size: 75px; } }
