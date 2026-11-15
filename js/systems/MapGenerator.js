@@ -1,7 +1,10 @@
 // Система генерации карты мира
 class MapGenerator {
-    constructor(act = 1) {
+    constructor(act = 1, seed = null) {
         this.act = act;
+        // Один seed описывает целую карту; пригодится для повтора забега.
+        this.seed = seed === null ? Math.floor(Math.random() * 0x100000000) : seed;
+        this.random = createMapRandom(this.seed);
         this.floors = 16;
 
         this.quotas = {
@@ -82,7 +85,7 @@ class MapGenerator {
 
         // Равномерно по этажам
         const shopFloors = [2, 5, 11, 13];
-        shuffleArray(shopFloors);
+        shuffleArray(shopFloors, this.random);
 
         for (const floor of shopFloors) {
             if (placed >= targetShops) break;
@@ -107,7 +110,7 @@ class MapGenerator {
 
         // Равномерно
         const restFloors = [3, 6, 9, 12];
-        shuffleArray(restFloors);
+        shuffleArray(restFloors, this.random);
 
         for (const floor of restFloors) {
             if (placed >= targetRests) break;
@@ -127,7 +130,7 @@ class MapGenerator {
 
         // Равномерно по этажам 5-13, разные позиции
         const eliteFloors = [5, 7, 9, 11, 13];
-        shuffleArray(eliteFloors);
+        shuffleArray(eliteFloors, this.random);
 
         for (let i = 0; i < eliteFloors.length && placed < targetElites; i++) {
             const floor = eliteFloors[i];
@@ -281,14 +284,14 @@ class MapGenerator {
                 }
 
                 // Иногда с соседним слева
-                if (index > 0 && index - 1 < nextNodes.length && Math.random() < 0.5) {
+                if (index > 0 && index - 1 < nextNodes.length && this.random() < 0.5) {
                     if (nextNodes[index - 1]) {
                         node.connections.push(nextNodes[index - 1].id);
                     }
                 }
 
                 // Иногда с соседним справа
-                if (index + 1 < nextNodes.length && Math.random() < 0.5) {
+                if (index + 1 < nextNodes.length && this.random() < 0.5) {
                     if (nextNodes[index + 1]) {
                         node.connections.push(nextNodes[index + 1].id);
                     }
@@ -340,20 +343,6 @@ class MapGenerator {
             }
         });
 
-        const currentFloorNodes = this.paths[currentNode.floor];
-        if (currentFloorNodes) {
-            currentFloorNodes.forEach(node => {
-                if (node.visited) {
-                    node.connections.forEach(connId => {
-                        const connectedNode = this.findNodeById(connId);
-                        if (connectedNode && !connectedNode.visited) {
-                            available.add(connectedNode);
-                        }
-                    });
-                }
-            });
-        }
-
         return Array.from(available);
     }
 
@@ -382,14 +371,30 @@ class MapGenerator {
     }
 
     randomInt(min, max) {
-        return Math.floor(Math.random() * (max - min + 1)) + min;
+        return Math.floor(this.random() * (max - min + 1)) + min;
     }
 }
 
-function shuffleArray(array) {
+function shuffleArray(array, random = Math.random) {
     for (let i = array.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
+        const j = Math.floor(random() * (i + 1));
         [array[i], array[j]] = [array[j], array[i]];
     }
     return array;
+}
+
+// Детерминированный PRNG: одинаковый seed и версия генератора дают одинаковую карту.
+function createMapRandom(seed) {
+    const value = String(seed);
+    let state = 2166136261;
+    for (let i = 0; i < value.length; i++) {
+        state = Math.imul(state ^ value.charCodeAt(i), 16777619) >>> 0;
+    }
+    return function random() {
+        state = (state + 0x6D2B79F5) >>> 0;
+        let x = state;
+        x = Math.imul(x ^ (x >>> 15), x | 1);
+        x ^= x + Math.imul(x ^ (x >>> 7), x | 61);
+        return ((x ^ (x >>> 14)) >>> 0) / 4294967296;
+    };
 }
