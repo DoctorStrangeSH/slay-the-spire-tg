@@ -784,3 +784,43 @@ button:disabled { opacity: .42; filter: grayscale(.5); }
 @media (prefers-reduced-motion: reduce) {
   .card-cast-fx { animation: none !important; opacity: .65; transform: translateX(-50%); }
 }
+
+/* Классовый язык боевых печатей: кровь, механика и ментальная магия. */
+.card-cast-fx--berserk {
+  border-radius: 48% 52% 43% 57%;
+  border-width: 3px;
+  color: #ff8899;
+  background: radial-gradient(circle, #7c233646 0%, transparent 68%);
+  box-shadow: 0 0 35px #ba244c6b, inset 0 0 26px #aa264b77;
+}
+.card-cast-fx--engineer {
+  border-radius: 15%;
+  border-style: double;
+  border-width: 5px;
+  color: #f4ce82;
+  background: repeating-conic-gradient(from 15deg, #c69b3a1a 0 18deg, transparent 18deg 45deg);
+  box-shadow: 0 0 35px #b7833070, inset 0 0 23px #5cb7a94c;
+}
+.card-cast-fx--engineer::before, .card-cast-fx--engineer::after { border-radius: 15%; }
+.card-cast-fx--psyker {
+  border-radius: 50%;
+  border-style: dashed;
+  color: #d4a8ff;
+  background: radial-gradient(circle, #7543aa44 0%, transparent 70%);
+  box-shadow: 0 0 45px #9368d277, inset 0 0 31px #6a399a77;
+}
+.card-cast-fx--psyker::before { transform: rotate(45deg); }
+.card-cast-signature {
+  position: absolute;
+  left: 50%;
+  bottom: -30px;
+  transform: translateX(-50%);
+  white-space: nowrap;
+  padding: 5px 10px;
+  border: 1px solid currentColor;
+  border-radius: 5px;
+  background: #14171ee8;
+  font: 700 11px/1.2 system-ui, sans-serif;
+  letter-spacing: .07em;
+  text-shadow: 0 2px 4px #000;
+}
