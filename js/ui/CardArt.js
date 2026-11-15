@@ -7,12 +7,24 @@ const CardArt = Object.freeze({
         building: Object.freeze({ src: 'assets/cards/building.svg', alt: 'Орудийная башня' })
     }),
 
+    signature: Object.freeze({
+        bloodCut: Object.freeze({ src: 'assets/cards/blood-cut.svg', alt: 'Кровавый порез — алый росчерк клинка' }),
+        retaliationStrike: Object.freeze({ src: 'assets/cards/retaliation-strike.svg', alt: 'Удар возмездия — клинок в золотой вспышке' }),
+        berserkStance: Object.freeze({ src: 'assets/cards/berserk-stance.svg', alt: 'Стойка берсерка — щит с багровой руной' })
+    }),
+
     get(type) {
         return Object.prototype.hasOwnProperty.call(this.types, type) ? this.types[type] : null;
     },
 
+    resolve(card) {
+        const id = typeof card?.id === 'string' ? card.id : '';
+        return Object.prototype.hasOwnProperty.call(this.signature, id)
+            ? this.signature[id] : this.get(card?.type);
+    },
+
     markup(card, cssClass = 'card-art') {
-        const art = this.get(card?.type);
+        const art = this.resolve(card);
         // Для неизвестных типов из старых сохранений остаётся безопасная нейтральная иконка.
         if (!art) return '<span class="card-art-fallback" aria-hidden="true">✦</span>';
         return `<img class="${cssClass}" src="${art.src}" alt="${art.alt}" loading="lazy" decoding="async">`;
