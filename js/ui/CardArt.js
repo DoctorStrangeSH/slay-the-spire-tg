@@ -13,6 +13,13 @@ const CardArt = Object.freeze({
         berserkStance: Object.freeze({ src: 'assets/cards/berserk-stance.svg', alt: 'Стойка берсерка — щит с багровой руной' })
     }),
 
+    rarity(card) {
+        const rarity = card?.rarity;
+        if (rarity === 'rare') return { key: 'rare', label: 'Редкая', sigil: '✦✦' };
+        if (rarity === 'uncommon') return { key: 'uncommon', label: 'Необычная', sigil: '✦' };
+        return { key: 'common', label: 'Обычная', sigil: '·' };
+    },
+
     get(type) {
         return Object.prototype.hasOwnProperty.call(this.types, type) ? this.types[type] : null;
     },

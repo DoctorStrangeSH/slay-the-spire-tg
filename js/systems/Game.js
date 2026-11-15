@@ -320,9 +320,10 @@ class Game {
                 <h3>Выберите карту:</h3>
                 <div class="reward-cards">
                     ${this.offeredCards.map((card, index) => `
-                        <div class="reward-card" onclick="game.showCardModalFromReward(${index})">
+                        <div class="reward-card card-rarity-${CardArt.rarity(card).key}" onclick="game.showCardModalFromReward(${index})">
                             <div class="reward-card-art">${CardArt.markup(card, 'reward-art-image')}</div>
                             <div class="reward-card-name">${card.name}</div>
+                            <div class="reward-card-rarity"><span aria-hidden="true">${CardArt.rarity(card).sigil}</span> ${CardArt.rarity(card).label}</div>
                             <div class="reward-card-cost">${card.cost}⚡</div>
                             <button onclick="event.stopPropagation(); game.takeCardFromReward(${index})">Взять</button>
                         </div>
@@ -373,7 +374,7 @@ class Game {
 
         modal.innerHTML = `
             <div class="modal-content card-modal-content">
-                <div class="card-detail">
+                <div class="card-detail card-rarity-${CardArt.rarity(card).key}">
                     <div class="card-detail-header">
                         <span class="card-detail-art">${CardArt.markup(card, 'detail-art-image')}</span>
                         <h3>${card.name}</h3>
