@@ -6,6 +6,8 @@ class BattleSystem extends BattleCore {
         this.effects = new BattleEffects();
         this.cards = new BattleCards();
         this.turnManager = new BattleTurn();
+
+        if (this.hasPower('emberBattery')) this.maxEnergy += 1;
         
         // Конструкции для Инженера
         if (player.heroId === 'engineer') {
@@ -19,7 +21,7 @@ class BattleSystem extends BattleCore {
     
     startTurn() {
         this.energy = this.maxEnergy;
-        this.block = 0;
+        this.block = this.hasPower('stoneguard') ? 4 : 0;
         this.damageTakenThisTurn = 0;
         this.cardsPlayedThisTurn = 0;
         this.cardsPlayedTypes = { attack: 0, skill: 0, power: 0, building: 0 };
@@ -47,7 +49,7 @@ class BattleSystem extends BattleCore {
             this.player.hp = Math.min(this.player.maxHp, this.player.hp + 2);
         }
         
-        this.drawCards(5);
+        this.drawCards(this.hasPower('chronicle') ? 6 : 5);
         this.enemyIntent = this.getEnemyIntent();
     }
     
