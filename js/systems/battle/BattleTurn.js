@@ -2,8 +2,8 @@
 class BattleTurn {
     endTurn(battle, effects) {
         // Эффекты карт и построек могут завершить бой до хода противника.
-        if (battle.enemy.hp <= 0) return { battleEnded: true, victory: true };
         if (battle.player.hp <= 0) return { battleEnded: true, victory: false };
+        if (battle.enemy.hp <= 0) return { battleEnded: true, victory: true };
 
         // ПРОВЕРЯЕМ ПАРАЛИЧ
         const isParalyzed = battle.isEnemyParalyzed();
