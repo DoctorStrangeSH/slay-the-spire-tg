@@ -50,24 +50,15 @@ const BattleUI = {
         effectsEl.innerHTML = '';
         
         const effects = [
-            { icon: '💪', value: battle.statusEffects.enemy.strength, type: 'buff', label: 'Сила', name: 'Сила', description: 'Увеличивает урон атак.' },
-            { icon: '🔒', value: battle.statusEffects.enemy.paralysis, type: 'debuff', label: 'Паралич', name: 'Паралич', description: 'Враг пропускает свой следующий ход. Уменьшается на 1 после пропуска.' },
-            { icon: '🎯', value: battle.statusEffects.enemy.vulnerable, type: 'debuff', label: 'Уязвимость', name: 'Уязвимость', description: 'Получает на 50% больше урона.' },
-            { icon: '📉', value: battle.statusEffects.enemy.weak, type: 'debuff', label: 'Слабость', name: 'Слабость', description: 'Наносит на 25% меньше урона.' },
-            { icon: '🩸', value: battle.statusEffects.enemy.bleed, type: 'debuff', label: 'Кровотечение', name: 'Кровотечение', description: 'Получает урон в конце хода.' },
-            { icon: '☠️', value: battle.statusEffects.enemy.poison, type: 'debuff', label: 'Яд', name: 'Яд', description: 'Получает урон в конце хода.' }
+            { icon: '💪', value: battle.statusEffects.enemy.strength, type: 'buff', key: 'strength', label: 'Сила', name: 'Сила', description: 'Увеличивает урон атак.' },
+            { icon: '🔒', value: battle.statusEffects.enemy.paralysis, type: 'debuff', key: 'paralysis', label: 'Паралич', name: 'Паралич', description: 'Враг пропускает свой следующий ход. Уменьшается на 1 после пропуска.' },
+            { icon: '🎯', value: battle.statusEffects.enemy.vulnerable, type: 'debuff', key: 'vulnerable', label: 'Уязвимость', name: 'Уязвимость', description: 'Получает на 50% больше урона.' },
+            { icon: '📉', value: battle.statusEffects.enemy.weak, type: 'debuff', key: 'weak', label: 'Слабость', name: 'Слабость', description: 'Наносит на 25% меньше урона.' },
+            { icon: '🩸', value: battle.statusEffects.enemy.bleed, type: 'debuff', key: 'bleed', label: 'Кровотечение', name: 'Кровотечение', description: 'Получает урон в конце хода.' },
+            { icon: '☠️', value: battle.statusEffects.enemy.poison, type: 'debuff', key: 'poison', label: 'Яд', name: 'Яд', description: 'Получает урон в конце хода.' }
         ];
         
-        effects.forEach(effect => {
-            if (effect.value > 0) {
-                const badge = document.createElement('span');
-                badge.className = `effect-badge ${effect.type}`;
-                badge.innerHTML = `${effect.icon} ${effect.value}`;
-                badge.title = effect.label;
-                badge.onclick = () => this.showStatusModal(effect);
-                effectsEl.appendChild(badge);
-            }
-        });
+        this.renderStatusBadges(effectsEl, effects);
     },
     
     renderBuildings(game, battle) {
@@ -147,28 +138,35 @@ const BattleUI = {
         effectsEl.innerHTML = '';
         
         const effects = [
-            { icon: '💪', value: battle.statusEffects.player.strength, type: 'buff', label: 'Сила', name: 'Сила', description: 'Увеличивает урон ваших атак.' },
-            { icon: '🔁', value: battle.echoStacks, type: 'buff', label: 'Эхо', name: 'Эхо', description: 'Следующая карта сработает дважды.' },
-            { icon: '🎯', value: battle.statusEffects.player.vulnerable, type: 'debuff', label: 'Уязвимость', name: 'Уязвимость', description: 'Вы получаете на 50% больше урона.' },
-            { icon: '📉', value: battle.statusEffects.player.weak, type: 'debuff', label: 'Слабость', name: 'Слабость', description: 'Вы наносите на 25% меньше урона.' },
-            { icon: '🩸', value: battle.statusEffects.player.bleed, type: 'debuff', label: 'Кровотечение', name: 'Кровотечение', description: 'Вы получаете урон в конце хода.' },
-            { icon: '☠️', value: battle.statusEffects.player.poison, type: 'debuff', label: 'Яд', name: 'Яд', description: 'Вы получаете урон в конце хода.' },
-            { icon: '🌵', value: battle.statusEffects.player.thorns, type: 'buff', label: 'Шипы', name: 'Шипы', description: 'Враг получает урон при атаке на вас.' }
+            { icon: '💪', value: battle.statusEffects.player.strength, type: 'buff', key: 'strength', label: 'Сила', name: 'Сила', description: 'Увеличивает урон ваших атак.' },
+            { icon: '🔁', value: battle.echoStacks, type: 'buff', key: 'echo', label: 'Эхо', name: 'Эхо', description: 'Следующая карта сработает дважды.' },
+            { icon: '🎯', value: battle.statusEffects.player.vulnerable, type: 'debuff', key: 'vulnerable', label: 'Уязвимость', name: 'Уязвимость', description: 'Вы получаете на 50% больше урона.' },
+            { icon: '📉', value: battle.statusEffects.player.weak, type: 'debuff', key: 'weak', label: 'Слабость', name: 'Слабость', description: 'Вы наносите на 25% меньше урона.' },
+            { icon: '🩸', value: battle.statusEffects.player.bleed, type: 'debuff', key: 'bleed', label: 'Кровотечение', name: 'Кровотечение', description: 'Вы получаете урон в конце хода.' },
+            { icon: '☠️', value: battle.statusEffects.player.poison, type: 'debuff', key: 'poison', label: 'Яд', name: 'Яд', description: 'Вы получаете урон в конце хода.' },
+            { icon: '🌵', value: battle.statusEffects.player.thorns, type: 'buff', key: 'thorns', label: 'Шипы', name: 'Шипы', description: 'Враг получает урон при атаке на вас.' }
         ];
         
-        effects.forEach(effect => {
-            if (effect.value > 0) {
-                const badge = document.createElement('span');
-                badge.className = `effect-badge ${effect.type}`;
-                badge.innerHTML = `${effect.icon} ${effect.value}`;
-                badge.title = effect.label;
-                badge.onclick = () => this.showStatusModal(effect);
-                effectsEl.appendChild(badge);
-            }
-        });
+        this.renderStatusBadges(effectsEl, effects);
     },
     
+    renderStatusBadges(container, effects) {
+        // Каждое состояние — собственный визуальный знак и доступная кнопка.
+        effects.forEach(effect => {
+            if (!Number.isFinite(effect.value) || effect.value <= 0) return;
+            const badge = document.createElement('button');
+            badge.type = 'button';
+            badge.className = `effect-badge ${effect.type} status-${effect.key}`;
+            badge.textContent = `${effect.icon} ${effect.value}`;
+            badge.title = `${effect.label}: ${effect.value}. ${effect.description}`;
+            badge.setAttribute('aria-label', badge.title);
+            badge.addEventListener('click', () => this.showStatusModal(effect));
+            container.appendChild(badge);
+        });
+    },
+
     showStatusModal(effect) {
+        document.getElementById('status-modal')?.remove();
         const modal = document.createElement('div');
         modal.className = 'modal';
         modal.id = 'status-modal';
