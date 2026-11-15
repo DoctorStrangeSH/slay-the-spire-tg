@@ -659,3 +659,49 @@ button:disabled { opacity: .42; filter: grayscale(.5); }
 @media (prefers-reduced-motion: reduce) {
   #enemy-area.fx-enter #enemy-sprite, #enemy-area.fx-enter::before { animation: none !important; }
 }
+
+/* Статусы в бою: символы проклятий, читаемые на телефоне и управляемые с клавиатуры. */
+#enemy-effects, #player-effects { display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; }
+.effect-badge {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 48px;
+  min-height: 39px;
+  padding: 7px 10px;
+  border: 1px solid var(--line-bright);
+  border-radius: 8px;
+  font: 700 14px/1.2 system-ui, sans-serif;
+  letter-spacing: .025em;
+  box-shadow: inset 0 1px 0 #ffffff1b, 0 4px 12px #0006;
+  cursor: pointer;
+  touch-action: manipulation;
+}
+.effect-badge.status-strength, .effect-badge.status-echo, .effect-badge.status-thorns {
+  border-color: #bd9e67;
+  background: linear-gradient(145deg, #4b3b29, #24241f);
+  color: #ffe2a6;
+}
+.effect-badge.status-paralysis { border-color: #ae8cda; background: linear-gradient(145deg,#4f3565,#251c39); color: #e8d5ff; }
+.effect-badge.status-vulnerable { border-color: #ee927f; background: linear-gradient(145deg,#67392f,#302024); color: #ffd0b7; }
+.effect-badge.status-weak { border-color: #b9a3c8; background: linear-gradient(145deg,#4f4057,#26232e); color: #e8d6ec; }
+.effect-badge.status-poison { border-color: #88ce7d; background: linear-gradient(145deg,#385435,#1b3025); color: #caffb7; }
+.effect-badge.status-bleed { border-color: #d56172; background: linear-gradient(145deg,#672632,#321c26); color: #ffb6c1; }
+.effect-badge.status-poison::after, .effect-badge.status-bleed::after {
+  content: '';
+  position: absolute;
+  inset: -2px;
+  border: 1px solid currentColor;
+  border-radius: inherit;
+  pointer-events: none;
+  animation: cathedral-status-pulse 2.3s ease-in-out infinite;
+}
+@keyframes cathedral-status-pulse {
+  0%, 100% { opacity: .07; transform: scale(1); }
+  50% { opacity: .38; transform: scale(1.045); }
+}
+.effect-badge:focus-visible { outline: 3px solid #ffe4b3; outline-offset: 2px; }
+@media (prefers-reduced-motion: reduce) {
+  .effect-badge.status-poison::after, .effect-badge.status-bleed::after { animation: none !important; opacity: .2; }
+}
