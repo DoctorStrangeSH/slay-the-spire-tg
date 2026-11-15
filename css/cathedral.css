@@ -1047,3 +1047,58 @@ button:disabled { opacity: .42; filter: grayscale(.5); }
 @media (prefers-reduced-motion: reduce) {
   #enemy-area .boss-entry-effect { animation: none !important; opacity: .55; transform: translateX(-50%); }
 }
+
+
+/* Подписи реальных атак боссов: одна визуальная вспышка после хода врага. */
+#battle-screen .boss-attack-fx {
+  position: absolute;
+  z-index: 12;
+  left: 50%;
+  top: clamp(260px, 47vh, 450px);
+  width: 150px;
+  height: 125px;
+  display: grid;
+  place-items: center;
+  transform: translateX(-50%);
+  pointer-events: none;
+  border: 3px solid currentColor;
+  box-shadow: 0 0 35px currentColor;
+  animation: cathedral-boss-strike .68s ease-out both;
+}
+.boss-attack-fx::before, .boss-attack-fx::after {
+  content: '';
+  position: absolute;
+  inset: 14px;
+  border: 2px solid currentColor;
+  transform: rotate(29deg);
+  opacity: .55;
+}
+.boss-attack-fx::after { inset: 28px; transform: rotate(-23deg); opacity: .35; }
+.boss-attack-glyph { font: 700 96px/1 Georgia, serif; text-shadow: 0 0 22px currentColor; }
+#battle-screen .boss-attack-fx--roots {
+  color: #9bd2ac;
+  border-radius: 54% 19% 48% 26%;
+  background: radial-gradient(ellipse, #335e4088, transparent 70%);
+}
+#battle-screen .boss-attack-fx--stone {
+  color: #f0cc91;
+  border-radius: 8px;
+  border-style: double;
+  border-width: 7px;
+  background: radial-gradient(ellipse, #846f4a88, transparent 70%);
+}
+#battle-screen .boss-attack-fx--curse {
+  color: #d7b1ff;
+  border-radius: 50%;
+  border-style: dashed;
+  background: radial-gradient(ellipse, #693d9a99, transparent 70%);
+}
+@keyframes cathedral-boss-strike {
+  0% { opacity: 0; transform: translate(-50%, -40px) scale(.7) rotate(-14deg); filter: blur(7px); }
+  30% { opacity: 1; filter: none; }
+  65% { opacity: .9; transform: translate(-50%, 5px) scale(1.12) rotate(5deg); }
+  100% { opacity: 0; transform: translate(-50%, 35px) scale(1.28) rotate(10deg); }
+}
+@media (prefers-reduced-motion: reduce) {
+  #battle-screen .boss-attack-fx { animation: none !important; opacity: .45; transform: translateX(-50%); }
+}
