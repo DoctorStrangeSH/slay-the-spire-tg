@@ -515,3 +515,49 @@ button:disabled { opacity: .42; filter: grayscale(.5); }
 @media (max-width: 360px) {
   #enemy-sprite.enemy-is-boss.enemy-has-portrait { height: 188px; }
 }
+
+/* Короткая реакция на удар и блок, не меняет размеры интерфейса и игровой тайминг. */
+#enemy-area, #player-area { position: relative; }
+#enemy-area.fx-damage, #player-area.fx-damage { animation: cathedral-hit .44s ease-out both; }
+#enemy-area.fx-shield, #player-area.fx-shield { animation: cathedral-guard .55s ease-out both; }
+#enemy-area.fx-damage::after, #player-area.fx-damage::after,
+#enemy-area.fx-shield::after, #player-area.fx-shield::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  border-radius: 9px;
+  z-index: 3;
+  animation: cathedral-fx-ring .55s ease-out forwards;
+}
+#enemy-area.fx-damage::after, #player-area.fx-damage::after {
+  border: 2px solid #ff8490;
+  box-shadow: inset 0 0 42px #d3485b57, 0 0 25px #cf526855;
+}
+#enemy-area.fx-shield::after, #player-area.fx-shield::after {
+  border: 2px solid #a4e1d7;
+  box-shadow: inset 0 0 42px #60c8ba42, 0 0 24px #60bcb344;
+}
+@keyframes cathedral-hit {
+  0%, 100% { transform: translateX(0); }
+  15% { transform: translateX(-4px); }
+  35% { transform: translateX(4px); }
+  55% { transform: translateX(-2px); }
+}
+@keyframes cathedral-guard {
+  0% { filter: brightness(1.5); }
+  100% { filter: brightness(1); }
+}
+@keyframes cathedral-fx-ring {
+  0% { opacity: .95; transform: scale(.97); }
+  100% { opacity: 0; transform: scale(1.025); }
+}
+@media (prefers-reduced-motion: reduce) {
+  #enemy-area.fx-damage, #player-area.fx-damage,
+  #enemy-area.fx-shield, #player-area.fx-shield { animation: none !important; }
+  #enemy-area.fx-damage::after, #player-area.fx-damage::after,
+  #enemy-area.fx-shield::after, #player-area.fx-shield::after {
+    animation: none !important;
+    opacity: .55;
+  }
+}
