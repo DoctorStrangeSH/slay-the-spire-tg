@@ -16,6 +16,22 @@ const BattleUI = {
     renderEnemy(game, battle) {
         const enemy = battle.enemy;
         
+        const enemyArea = document.getElementById('enemy-area');
+        const bossTitles = {
+            forestBoss: 'I • ХРАНИТЕЛЬ ЧАЩИ',
+            caveBoss: 'II • СЕРДЦЕ СКАЛЫ',
+            castleBoss: 'III • ВЛАДЫКА ШПИЛЯ'
+        };
+        const bossId = enemy.isBoss && Object.prototype.hasOwnProperty.call(bossTitles, enemy.id) ? enemy.id : null;
+        enemyArea.classList.toggle('boss-encounter', Boolean(bossId));
+        enemyArea.classList.toggle('boss-wounded', Boolean(bossId) && enemy.hp <= enemy.maxHp / 2);
+        enemyArea.classList.remove('boss-forest', 'boss-cave', 'boss-castle');
+        if (bossId) {
+            enemyArea.classList.add({ forestBoss: 'boss-forest', caveBoss: 'boss-cave', castleBoss: 'boss-castle' }[bossId]);
+            enemyArea.setAttribute('data-boss-title', bossTitles[bossId]);
+        } else {
+            enemyArea.removeAttribute('data-boss-title');
+        }
         EnemyArt.render(document.getElementById('enemy-sprite'), enemy);
         document.getElementById('enemy-name').textContent = enemy.name;
         
