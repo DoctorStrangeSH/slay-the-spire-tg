@@ -11,24 +11,38 @@ class BattleCards {
             return { success: true, action: 'deselected', preview: totalPreview };
         }
         
-        let cardCost = card.cost;
-        if (battle.hasPower('economy') && (battle.cardsPlayedThisTurn + battle.selectedCards.length + 1) % 3 === 0) {
-            cardCost = 0;
+        // Бронируем энергию для всей пачки, с учётом порядка розыгрыша
+        // и скидок на каждую третью карту.
+        const pendingIndices = [...battle.selectedCards, cardIndex];
+        if (this.calculateSelectedCost(battle, pendingIndices) > battle.energy) {
+            return { success: false, message: 'Недостаточно энергии для выбранных карт!' };
         }
-        if (battle.hasPower('titanRage') && card.type === CARD_TYPES.ATTACK) {
-            cardCost = Math.max(0, cardCost - 1);
-        }
-        
-        if (cardCost > battle.energy) {
-            return { success: false, message: 'Недостаточно энергии!' };
-        }
-        
+
         battle.selectedCards.push(cardIndex);
         const totalPreview = this.calculateTotalPreview(battle);
         
         return { success: true, action: 'selected', preview: totalPreview };
     }
     
+    calculateCardCost(battle, card, playNumber) {
+        let cost = Math.max(0, Number(card.cost) || 0);
+        if (battle.hasPower('economy') && playNumber % 3 === 0) cost = 0;
+        if (battle.hasPower('titanRage') && card.type === CARD_TYPES.ATTACK) {
+            cost = Math.max(0, cost - 1);
+        }
+        return cost;
+    }
+
+    calculateSelectedCost(battle, indices) {
+        // playSelectedCards разыгрывает индексы по убыванию, чтобы splice
+        // не сдвигал ещё не разыгранные позиции.
+        return [...indices].sort((a, b) => b - a).reduce((sum, index, offset) => {
+            const card = battle.hand[index];
+            if (!card) return sum;
+            return sum + this.calculateCardCost(battle, card, battle.cardsPlayedThisTurn + offset + 1);
+        }, 0);
+    }
+
     calculateTotalPreview(battle) {
         const total = {
             damage: 0, block: 0, heal: 0, selfDamage: 0,
@@ -146,15 +160,10 @@ class BattleCards {
     
     playCard(battle, cardIndex) {
         const card = battle.hand[cardIndex];
-        
-        let cardCost = card.cost;
-        if (battle.hasPower('economy') && (battle.cardsPlayedThisTurn + 1) % 3 === 0) {
-            cardCost = 0;
-        }
-        if (battle.hasPower('titanRage') && card.type === CARD_TYPES.ATTACK) {
-            cardCost = Math.max(0, cardCost - 1);
-        }
-        
+        if (!card) return { success: false, message: 'Карта не найдена' };
+
+        const cardCost = this.calculateCardCost(battle, card, battle.cardsPlayedThisTurn + 1);
+
         if (cardCost > battle.energy) {
             return { success: false, message: 'Недостаточно энергии!' };
         }
