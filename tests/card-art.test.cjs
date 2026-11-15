@@ -34,8 +34,8 @@ test('rendering known card types is safe and unknown old types fall back', () =>
 
 test('CardArt loads before BattleUI and all asset manifests are versioned', () => {
     assert.ok(html.indexOf('js/ui/CardArt.js') < html.indexOf('js/ui/BattleUI.js'));
-    assert.match(html, /js\/ui\/CardArt\.js\?v=2026\.11\.15\.19/);
-    assert.match(html, /css\/cathedral\.css\?v=2026\.11\.15\.19/);
+    assert.match(html, /js\/ui\/CardArt\.js\?v=2026\.11\.15\.20/);
+    assert.match(html, /css\/cathedral\.css\?v=2026\.11\.15\.20/);
 });
 
 test('combat and rewards use illustration registry consistently', () => {
@@ -83,4 +83,22 @@ test('rarity is rendered in battle, rewards, and card details', () => {
     assert.ok(game.includes('reward-card-rarity'));
     assert.ok(styles.includes('.card-rarity-rare'));
     assert.ok(styles.includes('prefers-reduced-motion: reduce'));
+});
+
+test('rare signature art distinguishes the three hero identities', () => {
+    const cards = {
+        beheading: ['beheading.svg', 'attack'],
+        totalAutomation: ['total-automation.svg', 'power'],
+        psyExplosion: ['psy-explosion.svg', 'attack']
+    };
+    for (const [id, [filename, type]] of Object.entries(cards)) {
+        const art = CardArt.resolve({ id, type, rarity: 'rare' });
+        assert.ok(art.src.endsWith(filename));
+        assert.match(CardArt.markup({ id, type }), /assets\/cards\//);
+        const svg = fs.readFileSync(path.join(root, art.src), 'utf8');
+        assert.match(svg, /<title /);
+        assert.match(svg, /viewBox="0 0 360 225"/);
+        assert.match(svg, /<\/svg>$/);
+        assert.doesNotMatch(svg, /<script|onload=|href="https?:/i);
+    }
 });
