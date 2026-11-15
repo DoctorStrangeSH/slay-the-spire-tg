@@ -6,6 +6,33 @@ const BattleFeedback = Object.freeze({
     floatTimers: new Map(),
     floatNodes: new Map(),
     cardFxState: { timer: null, node: null },
+    bossAttackState: { timer: null, node: null },
+    bossAttack(enemyId) {
+        const attacks = {
+            forestBoss: ['roots', '♣'],
+            caveBoss: ['stone', '◆'],
+            castleBoss: ['curse', '✶']
+        };
+        if (!Object.prototype.hasOwnProperty.call(attacks, enemyId)) return;
+        const screen = document.getElementById('battle-screen');
+        if (!screen) return;
+        if (this.bossAttackState.timer) clearTimeout(this.bossAttackState.timer);
+        this.bossAttackState.node?.remove();
+        const marker = document.createElement('div');
+        marker.className = `boss-attack-fx boss-attack-fx--${attacks[enemyId][0]}`;
+        marker.setAttribute('aria-hidden', 'true');
+        const glyph = document.createElement('span');
+        glyph.className = 'boss-attack-glyph';
+        glyph.textContent = attacks[enemyId][1];
+        marker.appendChild(glyph);
+        screen.appendChild(marker);
+        this.bossAttackState.node = marker;
+        this.bossAttackState.timer = setTimeout(() => {
+            marker.remove();
+            this.bossAttackState.node = null;
+            this.bossAttackState.timer = null;
+        }, 720);
+    },
     cardsPlayed(types, heroId = null, cardIds = []) {
         if (!Array.isArray(types) || !types.length) return;
         const screen = document.getElementById('battle-screen');

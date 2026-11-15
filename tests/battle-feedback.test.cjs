@@ -77,7 +77,7 @@ test('game loads feedback before controllers and invokes it after moves', () => 
     const html = fs.readFileSync(path.join(root, 'index.html'), 'utf8');
     const game = fs.readFileSync(path.join(root, 'js/systems/Game.js'), 'utf8');
     const css = fs.readFileSync(path.join(root, 'css/cathedral.css'), 'utf8');
-    assert.match(html, /js\/ui\/BattleFeedback\.js\?v=2026\.11\.15\.24/);
+    assert.match(html, /js\/ui\/BattleFeedback\.js\?v=2026\.11\.15\.25/);
     assert.match(game, /BattleFeedback\.snapshot\(this\.currentBattle\)/);
     assert.match(game, /BattleFeedback\.show\(before, this\.currentBattle\)/);
     assert.match(css, /prefers-reduced-motion: reduce/);
@@ -246,4 +246,32 @@ test('boss entrance summons one distinct marker and clears it on completion', ()
     assert.equal(cave.removed, true);
     feedback.enter('enemy-area', { id: 'customBoss', isBoss: true });
     assert.equal(feedback.entranceMarks.size, 0);
+});
+
+test('boss attack markers are isolated, replace previous hits, and reject unknown IDs', () => {
+    const { feedback, elements, timers } = setup();
+    feedback.bossAttack('forestBoss');
+    const first = elements['battle-screen'].children.at(-1);
+    assert.ok(first.className.includes('boss-attack-fx--roots'));
+    assert.equal(first.attrs['aria-hidden'], 'true');
+    feedback.bossAttack('caveBoss');
+    assert.equal(first.removed, true);
+    const second = elements['battle-screen'].children.at(-1);
+    assert.ok(second.className.includes('boss-attack-fx--stone'));
+    assert.equal(timers.size, 1);
+    feedback.bossAttack('unknown');
+    assert.equal(elements['battle-screen'].children.length, 2);
+    [...timers.values()][0]();
+    assert.equal(second.removed, true);
+    assert.equal(feedback.bossAttackState.node, null);
+});
+
+test('boss strike requires an actual enemy attack rather than defense or paralysis', () => {
+    const game = fs.readFileSync(path.join(root, 'js/systems/Game.js'), 'utf8');
+    const css = fs.readFileSync(path.join(root, 'css/cathedral.css'), 'utf8');
+    assert.ok(game.includes("this.currentBattle.enemyIntent === 'attack'"));
+    assert.ok(game.includes('!this.currentBattle.isEnemyParalyzed()'));
+    assert.ok(game.includes('BattleFeedback.bossAttack(bossId)'));
+    assert.ok(css.includes('.boss-attack-fx--curse'));
+    assert.ok(css.includes('prefers-reduced-motion: reduce'));
 });
