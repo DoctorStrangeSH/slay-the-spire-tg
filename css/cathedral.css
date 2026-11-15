@@ -1102,3 +1102,62 @@ button:disabled { opacity: .42; filter: grayscale(.5); }
 @media (prefers-reduced-motion: reduce) {
   #battle-screen .boss-attack-fx { animation: none !important; opacity: .45; transform: translateX(-50%); }
 }
+
+
+/* Реликвии собора: отличимые классовые печати и получение без alert. */
+.relics-modal-content .relic-entry {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+  padding: 13px 15px;
+  border-left: 3px solid #c3a673;
+  background: linear-gradient(110deg, #3f322744, #171b24);
+}
+.relics-modal-content .relic-entry--berserk { border-left-color: #ee8797; background: linear-gradient(110deg, #67313c66, #171b24); }
+.relics-modal-content .relic-entry--engineer { border-left-color: #eac88a; background: linear-gradient(110deg, #69502e66, #171b24); }
+.relics-modal-content .relic-entry--psyker { border-left-color: #c4a4ef; background: linear-gradient(110deg, #573a7666, #171b24); }
+.relics-modal-content .relic-entry span { color: #ddd2bf; font: 400 12px/1.45 system-ui, sans-serif; }
+.relic-acquired-toast {
+  position: fixed;
+  z-index: 2000;
+  left: 50%;
+  top: max(20px, env(safe-area-inset-top));
+  width: min(calc(100vw - 32px), 395px);
+  display: flex;
+  gap: 13px;
+  align-items: center;
+  transform: translateX(-50%);
+  padding: 17px;
+  border: 2px solid #e4c084;
+  border-radius: 12px;
+  background: radial-gradient(ellipse at 15% 0%, #6b4b294b, transparent 75%), #171922;
+  box-shadow: 0 16px 50px #000d, 0 0 22px #d1a05d66;
+  color: #f4e4bf;
+  pointer-events: none;
+  animation: cathedral-relic-rise 4.1s ease-out both;
+}
+.relic-acquired-sigil {
+  flex: 0 0 58px;
+  display: grid;
+  place-items: center;
+  height: 58px;
+  border: 1px solid #f3d9a8;
+  border-radius: 50%;
+  background: #4e3b2d;
+  font-size: 30px;
+  box-shadow: inset 0 0 15px #cba36a55;
+}
+.relic-acquired-toast div { display: flex; flex-direction: column; gap: 5px; min-width: 0; }
+.relic-acquired-toast small { font: 800 10px/1.2 system-ui, sans-serif; letter-spacing: .14em; color: #d9b577; }
+.relic-acquired-toast strong { font: 700 17px/1.2 Georgia, serif; }
+.relic-acquired-toast div span { font: 400 12px/1.35 system-ui, sans-serif; color: #e5d5c1; }
+@keyframes cathedral-relic-rise {
+  0% { opacity: 0; transform: translate(-50%, -25px) scale(.92); }
+  12%, 78% { opacity: 1; transform: translate(-50%, 0) scale(1); }
+  100% { opacity: 0; transform: translate(-50%, -8px) scale(1); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .relic-acquired-toast { animation: none !important; opacity: 1; transform: translateX(-50%); }
+}
