@@ -172,8 +172,8 @@ test('card casting effect gives distinct classes and a combination count', () =>
     assert.equal(timers.size, 1);
     [...timers.values()][0]();
     assert.equal(second.removed, true);
-    assert.equal(feedback.cardFxNode, null);
-    assert.equal(feedback.cardFxTimer, null);
+    assert.equal(feedback.cardFxState.node, null);
+    assert.equal(feedback.cardFxState.timer, null);
 });
 
 test('unknown cards cannot inject style classes and empty batches have no effect', () => {
