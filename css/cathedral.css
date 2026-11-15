@@ -988,3 +988,62 @@ button:disabled { opacity: .42; filter: grayscale(.5); }
 @media (prefers-reduced-motion: reduce) {
   #enemy-area.boss-encounter #enemy-sprite { animation: none !important; }
 }
+
+
+/* Однократные появления стражей актов: корни, осколки и эфирный разлом. */
+#enemy-area .boss-entry-effect {
+  position: absolute;
+  z-index: 4;
+  top: 48px;
+  left: 50%;
+  width: min(82vw, 246px);
+  height: 195px;
+  display: grid;
+  place-items: center;
+  transform: translateX(-50%);
+  border: 3px solid currentColor;
+  border-radius: 50%;
+  pointer-events: none;
+  animation: cathedral-boss-summon .84s ease-out both;
+}
+.boss-entry-effect::before, .boss-entry-effect::after {
+  content: '';
+  position: absolute;
+  inset: 12px;
+  border: 2px dashed currentColor;
+  border-radius: inherit;
+  opacity: .7;
+  transform: rotate(24deg);
+}
+.boss-entry-effect::after { inset: 29px; opacity: .4; transform: rotate(-24deg); }
+.boss-entry-glyph { font: 700 110px/1 Georgia, serif; text-shadow: 0 0 28px currentColor; }
+#enemy-area .boss-entry-effect--forest {
+  color: #a2dbc0;
+  border-radius: 38% 62% 45% 55%;
+  background: radial-gradient(ellipse, #31543c9a, transparent 72%);
+  box-shadow: 0 0 40px #4c8e6088, inset 0 0 34px #58a37277;
+}
+#enemy-area .boss-entry-effect--cave {
+  color: #e4c18b;
+  border-radius: 14%;
+  border-style: double;
+  border-width: 8px;
+  background: radial-gradient(ellipse, #71604d9a, transparent 72%);
+  box-shadow: 0 0 39px #bd966277, inset 0 0 31px #a28f7477;
+}
+#enemy-area .boss-entry-effect--cave::before, #enemy-area .boss-entry-effect--cave::after { border-radius: 14%; }
+#enemy-area .boss-entry-effect--castle {
+  color: #d5b0ff;
+  border-style: dashed;
+  background: radial-gradient(ellipse, #593477aa, transparent 72%);
+  box-shadow: 0 0 48px #a273d988, inset 0 0 36px #7540a077;
+}
+@keyframes cathedral-boss-summon {
+  0% { opacity: 0; transform: translateX(-50%) scale(.5) rotate(-25deg); filter: blur(7px); }
+  35% { opacity: .95; filter: none; }
+  70% { opacity: .9; transform: translateX(-50%) scale(1.08) rotate(9deg); }
+  100% { opacity: 0; transform: translateX(-50%) scale(1.22) rotate(18deg); }
+}
+@media (prefers-reduced-motion: reduce) {
+  #enemy-area .boss-entry-effect { animation: none !important; opacity: .55; transform: translateX(-50%); }
+}

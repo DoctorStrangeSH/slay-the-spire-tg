@@ -2,6 +2,7 @@
 const BattleFeedback = Object.freeze({
     timers: new Map(),
     entranceTimers: new Map(),
+    entranceMarks: new Map(),
     floatTimers: new Map(),
     floatNodes: new Map(),
     cardFxState: { timer: null, node: null },
@@ -83,18 +84,42 @@ const BattleFeedback = Object.freeze({
         }, 950);
         this.floatTimers.set(id, timer);
     },
-    enter(id) {
+    enter(id, enemy = null) {
         const element = document.getElementById(id);
         if (!element) return;
         const previous = this.entranceTimers.get(id);
         if (previous) clearTimeout(previous);
+        this.entranceMarks.get(id)?.remove();
+        this.entranceMarks.delete(id);
         element.classList.remove('fx-enter');
         void element.offsetWidth;
         element.classList.add('fx-enter');
+
+        // Боевой знак возникает один раз при открытии боя, а не при перерисовке HP.
+        const bossGlyphs = {
+            forestBoss: ['forest', '♣'],
+            caveBoss: ['cave', '◆'],
+            castleBoss: ['castle', '✶']
+        };
+        const glyph = enemy?.isBoss && Object.prototype.hasOwnProperty.call(bossGlyphs, enemy.id)
+            ? bossGlyphs[enemy.id] : null;
+        if (id === 'enemy-area' && glyph) {
+            const marker = document.createElement('div');
+            marker.className = `boss-entry-effect boss-entry-effect--${glyph[0]}`;
+            marker.setAttribute('aria-hidden', 'true');
+            const sigil = document.createElement('span');
+            sigil.className = 'boss-entry-glyph';
+            sigil.textContent = glyph[1];
+            marker.appendChild(sigil);
+            element.appendChild(marker);
+            this.entranceMarks.set(id, marker);
+        }
         const timer = setTimeout(() => {
             element.classList.remove('fx-enter');
+            this.entranceMarks.get(id)?.remove();
+            this.entranceMarks.delete(id);
             this.entranceTimers.delete(id);
-        }, 780);
+        }, 900);
         this.entranceTimers.set(id, timer);
     },
     snapshot(battle) {
