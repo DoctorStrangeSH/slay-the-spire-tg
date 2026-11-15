@@ -1297,3 +1297,11 @@ button:disabled { opacity: .42; filter: grayscale(.5); }
 .cathedral-event-modal .cathedral-event-choice--exit { border-color: #717580; background: #1c2129; color: #c7c8ca; }
 .cathedral-event-choice:focus-visible { outline: 3px solid #ffe4aa; outline-offset: 3px; }
 @media (max-height: 650px) { .cathedral-event-art { height: 110px; } .cathedral-event-sigil { font-size: 75px; } }
+
+/* Новые события собора: фолианты, свечи и проклятое золото. */
+.cathedral-event-modal[data-event-scene="library"] { --event-accent: #b5a1e7; --event-glow: #58448d77; }
+.cathedral-event-modal[data-event-scene="chapel"] { --event-accent: #f0d7a1; --event-glow: #a2824777; }
+.cathedral-event-modal[data-event-scene="vault"] { --event-accent: #ddad75; --event-glow: #8d4f3077; }
+.cathedral-event-modal[data-event-scene="library"] .cathedral-event-halo { border-style: double; border-width: 6px; border-radius: 12px; transform: rotate(-11deg); }
+.cathedral-event-modal[data-event-scene="chapel"] .cathedral-event-halo { border-radius: 42% 42% 4px 4px; }
+.cathedral-event-modal[data-event-scene="vault"] .cathedral-event-halo { border-radius: 14px; border-style: dashed; transform: rotate(45deg) scale(.78); }
