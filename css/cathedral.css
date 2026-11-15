@@ -56,6 +56,8 @@ button:focus-visible, .hero-card:focus-visible, .card:focus-visible {
   inset: 0;
   background: radial-gradient(circle at 50% 2%, rgba(243, 203, 133, .07), transparent 40%);
 }
+/* Игровой контроллер показывает меню через inline display:block. */
+#main-menu[style*="display: block"] { display: flex !important; }
 #main-menu {
   min-height: 100dvh;
   padding: max(48px, env(safe-area-inset-top)) 24px 40px;
@@ -161,6 +163,15 @@ button:disabled { opacity: .42; filter: grayscale(.5); }
   font-weight: 700;
 }
 #hero-list { gap: 12px; margin-top: 20px; }
+#hero-back-button {
+  background: none;
+  border: 1px solid var(--line);
+  color: var(--mist);
+  padding: 9px 16px;
+  margin: 10px auto 3px;
+  display: block;
+  border-radius: 6px;
+}
 .hero-card {
   position: relative;
   overflow: hidden;
