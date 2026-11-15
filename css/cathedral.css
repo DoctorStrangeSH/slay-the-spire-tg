@@ -197,6 +197,22 @@ button:disabled { opacity: .42; filter: grayscale(.5); }
   opacity: .07;
   pointer-events: none;
 }
+.hero-portrait {
+  display: block;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 16 / 11;
+  max-height: 230px;
+  object-fit: cover;
+  border: 1px solid rgba(228, 183, 115, .48);
+  border-radius: 6px;
+  background: #141720;
+  margin: 0 auto 16px;
+  box-shadow: inset 0 0 14px #000, 0 8px 20px #0008;
+}
+.hero-card:has(.hero-portrait) { padding: 10px 10px 17px; }
+.hero-card:has(.hero-portrait) .hero-desc { padding: 0 12px; }
+.hero-card:has(.hero-portrait) h3 { margin: 5px 0 7px; }
 .hero-card h3 { color: var(--ivory); font-size: 23px; }
 .hero-card .hero-title { color: var(--gold); }
 .hero-card .hero-desc { color: #c5bfbb; line-height: 1.6; }

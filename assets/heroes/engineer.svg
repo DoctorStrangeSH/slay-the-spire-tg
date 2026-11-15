@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 220" role="img" aria-labelledby="title"><title id="title">Инженер — Хранитель механизмов</title><defs>
+<linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#151920"/><stop offset=".55" stop-color="#29232b"/><stop offset="1" stop-color="#090d13"/></linearGradient>
+<linearGradient id="steel" x1="0" y1="0" x2=".8" y2="1"><stop stop-color="#d2c1a7"/><stop offset=".32" stop-color="#777e87"/><stop offset=".65" stop-color="#394452"/><stop offset="1" stop-color="#151b27"/></linearGradient>
+<radialGradient id="light"><stop stop-color="#b9843a" stop-opacity=".42"/><stop offset="1" stop-color="#b9843a" stop-opacity="0"/></radialGradient>
+<linearGradient id="trim" x1="0" y1="0" x2=".9" y2="1"><stop stop-color="#f7d99b"/><stop offset=".6" stop-color="#a97b48"/><stop offset="1" stop-color="#59402b"/></linearGradient></defs>
+<rect width="320" height="220" rx="7" fill="url(#bg)"/><path d="M0 60 160 4 320 60M0 177 160 115 320 177" fill="none" stroke="#ad8950" opacity=".12"/>
+<circle cx="160" cy="98" r="116" fill="url(#light)"/>
+<path d="M25 220V66L160 5 295 66v154" fill="none" stroke="#a98652" opacity=".28" stroke-width="2"/>
+<path d="M42 220V76l118-52 118 52v144" fill="none" stroke="#d9a56d" opacity=".16"/>
+<path d="M8 210H312" stroke="#d2a56b" opacity=".44"/>
+<!-- Turret and clockwork background -->
+<g fill="none" stroke="#b18a53" opacity=".55"><circle cx="244" cy="82" r="47" stroke-width="4"/><circle cx="244" cy="82" r="27" stroke-width="2"/><path d="M244 27v110M190 82h108m-92-39 76 78m0-78-76 78" stroke-width="5"/></g>
+<circle cx="244" cy="82" r="10" fill="#9d7445" stroke="#ecd29c" stroke-width="3"/>
+<!-- Garment and armored chest -->
+<path d="M58 220c2-45 31-69 77-78l25 13 28-13c46 9 75 33 76 78" fill="#39392f" stroke="#9b7f59" stroke-width="3"/>
+<path d="m92 151 44-13 25 17 25-17 44 13-16 69H109Z" fill="url(#steel)" stroke="#d5b17c" stroke-width="3"/>
+<path d="M126 160h69l-6 49h-55Z" fill="#343e41" stroke="#bf9863" stroke-width="2"/>
+<circle cx="160" cy="186" r="19" fill="#1d272b" stroke="url(#trim)" stroke-width="4"/><circle cx="160" cy="186" r="9" fill="#6fd9ca" opacity=".8"/>
+<path d="M70 165c-24 13-29 39-32 55h58l23-47Z" fill="#52524b" stroke="#bb945e" stroke-width="3"/>
+<path d="M250 165c24 13 29 39 32 55h-58l-23-47Z" fill="#52524b" stroke="#bb945e" stroke-width="3"/>
+<!-- Face and welding mask -->
+<path d="M118 83c0-43 84-43 84 0v50l-22 27h-40l-22-27Z" fill="#b6a28d" stroke="#463a35" stroke-width="3"/>
+<path d="M109 88c1-61 99-65 102 0l-5 28h-92Z" fill="#424c51" stroke="url(#trim)" stroke-width="4"/>
+<path d="M116 78h88l-9 36h-70Z" fill="#192a2b" stroke="#c89a61" stroke-width="3"/>
+<path d="M126 89h29v10h-29m39-10h29v10h-29" fill="#7fd3cb" opacity=".75"/>
+<path d="m151 131 9 5 9-5" fill="none" stroke="#4c3935" stroke-width="3"/>
+<path d="M129 50c14-23 49-25 64 0" fill="none" stroke="#d9b77e" stroke-width="6"/>
+<path d="M160 16v22m-10-13h20" stroke="#ad8954" stroke-width="4"/>
+<path d="M10 200h40m220 0h40" stroke="#c49a61" opacity=".55"/>
+</svg>

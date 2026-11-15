@@ -16,8 +16,11 @@ const HeroSelect = {
             heroCard.style.setProperty('--hero-accent', hero.unlocked ? hero.color : '#666');
             
             if (hero.unlocked) {
+                const portrait = ['berserk', 'engineer', 'psyker'].includes(hero.id)
+                    ? `<img class="hero-portrait" src="assets/heroes/${hero.id}.svg" alt="Портрет: ${hero.name}" loading="lazy">`
+                    : `<div class="hero-emoji">${hero.emoji}</div>`;
                 heroCard.innerHTML = `
-                    <div class="hero-emoji">${hero.emoji}</div>
+                    ${portrait}
                     <h3>${hero.name}</h3>
                     <p class="hero-title">${hero.title}</p>
                     <p class="hero-desc">${hero.description}</p>

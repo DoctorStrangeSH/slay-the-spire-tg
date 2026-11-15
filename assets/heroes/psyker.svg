@@ -1,0 +1,35 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 220" role="img" aria-labelledby="title"><title id="title">Псайкер — Провидица бездны</title><defs>
+<linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#151920"/><stop offset=".55" stop-color="#29232b"/><stop offset="1" stop-color="#090d13"/></linearGradient>
+<linearGradient id="steel" x1="0" y1="0" x2=".8" y2="1"><stop stop-color="#d2c1a7"/><stop offset=".32" stop-color="#777e87"/><stop offset=".65" stop-color="#394452"/><stop offset="1" stop-color="#151b27"/></linearGradient>
+<radialGradient id="light"><stop stop-color="#8e72c4" stop-opacity=".42"/><stop offset="1" stop-color="#8e72c4" stop-opacity="0"/></radialGradient>
+<linearGradient id="trim" x1="0" y1="0" x2=".9" y2="1"><stop stop-color="#f7d99b"/><stop offset=".6" stop-color="#a97b48"/><stop offset="1" stop-color="#59402b"/></linearGradient></defs>
+<rect width="320" height="220" rx="7" fill="url(#bg)"/><path d="M0 60 160 4 320 60M0 177 160 115 320 177" fill="none" stroke="#ad8950" opacity=".12"/>
+<circle cx="160" cy="98" r="116" fill="url(#light)"/>
+<path d="M25 220V66L160 5 295 66v154" fill="none" stroke="#a98652" opacity=".28" stroke-width="2"/>
+<path d="M42 220V76l118-52 118 52v144" fill="none" stroke="#d9a56d" opacity=".16"/>
+<path d="M8 210H312" stroke="#d2a56b" opacity=".44"/>
+<!-- Arcane halo and star geometry -->
+<circle cx="160" cy="84" r="73" fill="none" stroke="#a795db" stroke-width="2" opacity=".55"/>
+<circle cx="160" cy="84" r="60" fill="none" stroke="#a795db" stroke-width="1" opacity=".35" stroke-dasharray="4 7"/>
+<path d="m160 8 43 76-43 75-43-75Z" fill="none" stroke="#b7a4e1" stroke-width="2" opacity=".7"/>
+<path d="m95 84 65-38 65 38-65 38Z" fill="none" stroke="#b7a4e1" opacity=".45"/>
+<circle cx="160" cy="84" r="16" fill="#8660b4" opacity=".26"/>
+<!-- Floating magical blades -->
+<path d="m64 63 9-33 7 32-8 36Z" fill="#a8cbd5" stroke="#d7c1fa" stroke-width="2"/>
+<path d="m250 63-9-33-7 32 8 36Z" fill="#a8cbd5" stroke="#d7c1fa" stroke-width="2"/>
+<!-- Hood / mantle -->
+<path d="M60 220c9-39 25-66 65-83l35 14 35-14c40 17 56 44 65 83" fill="#2e243c" stroke="#9581b9" stroke-width="3"/>
+<path d="m63 220 60-64 37 21 37-21 60 64" fill="#30263d" stroke="#746393" stroke-width="2"/>
+<path d="M95 113c-4-43 17-79 65-88 48 9 69 45 65 88l-29 40-36 9-36-9Z" fill="#35283d" stroke="#a28dba" stroke-width="3"/>
+<path d="M120 79c5-45 75-45 80 0l-10 57-30 21-30-21Z" fill="#b79f9b" stroke="#654e66" stroke-width="2"/>
+<!-- Mask and shining mind-eye -->
+<path d="M120 103c25-12 55-12 80 0l-12 34-28 22-28-22Z" fill="#211d30" stroke="#a98ecd" stroke-width="3"/>
+<path d="M133 111h21l-12 8m45-8h-21l12 8" fill="#b7a4f7" stroke="#e4d9ff" stroke-width="1"/>
+<path d="M147 88q13-15 26 0-13 18-26 0Z" fill="#9c7fdd" stroke="#e5d0ff" stroke-width="2"/>
+<circle cx="160" cy="88" r="5" fill="#f7e3ff"/>
+<path d="m120 72 40-25 40 25" fill="none" stroke="#9b87bf" stroke-width="3"/>
+<!-- Arcane crystal -->
+<path d="m160 166 14 17-14 27-14-27Z" fill="#ab8ee8" stroke="#f6e2ff" stroke-width="2"/>
+<path d="M160 166v44" stroke="#e3cbff" opacity=".75"/>
+<path d="m30 183 14-14 8 24m216-10-14-14-8 24" fill="none" stroke="#baa1e0" stroke-width="2" opacity=".75"/>
+</svg>
