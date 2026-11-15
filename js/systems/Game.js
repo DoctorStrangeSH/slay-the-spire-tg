@@ -12,6 +12,7 @@ class Game {
         this.currentEvent = null;
         this.offeredCards = [];
         this.currentRewardIndex = -1;
+        this.runSave = new RunSave();
     }
 
     selectHero(heroId) {
@@ -33,6 +34,7 @@ class Game {
 
     startNewGame() {
         if (!this.player) return;
+        this.runSave.clear();
 
         this.player.hp = this.player.maxHp;
         this.player.gold = 0;
@@ -57,6 +59,13 @@ class Game {
         document.getElementById('map-screen').style.display = 'block';
         window._currentMapPaths = this.mapGenerator.paths;
         MapUI.render(this);
+        this.runSave.save(this);
+    }
+
+    continueSavedGame() {
+        if (!this.runSave.restore(this)) return false;
+        this.showMap();
+        return true;
     }
 
     showBattle() {
@@ -212,6 +221,7 @@ class Game {
             }
         } else {
             alert('Поражение...');
+            this.runSave.clear();
             this.showMenu();
         }
     }
@@ -533,6 +543,7 @@ class Game {
             this.showMap();
         } else {
             alert('Поздравляем! Вы прошли игру!');
+            this.runSave.clear();
             this.showMenu();
         }
     }
