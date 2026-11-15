@@ -1,6 +1,21 @@
 // Визуальная реакция боя. Никаких изменений урона, статусов или очередности ходов.
 const BattleFeedback = Object.freeze({
     timers: new Map(),
+    entranceTimers: new Map(),
+    enter(id) {
+        const element = document.getElementById(id);
+        if (!element) return;
+        const previous = this.entranceTimers.get(id);
+        if (previous) clearTimeout(previous);
+        element.classList.remove('fx-enter');
+        void element.offsetWidth;
+        element.classList.add('fx-enter');
+        const timer = setTimeout(() => {
+            element.classList.remove('fx-enter');
+            this.entranceTimers.delete(id);
+        }, 780);
+        this.entranceTimers.set(id, timer);
+    },
     snapshot(battle) {
         return {
             enemyHp: battle?.enemy?.hp ?? 0,

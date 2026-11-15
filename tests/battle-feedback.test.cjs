@@ -65,8 +65,36 @@ test('game loads feedback before controllers and invokes it after moves', () => 
     const html = fs.readFileSync(path.join(root, 'index.html'), 'utf8');
     const game = fs.readFileSync(path.join(root, 'js/systems/Game.js'), 'utf8');
     const css = fs.readFileSync(path.join(root, 'css/cathedral.css'), 'utf8');
-    assert.match(html, /js\/ui\/BattleFeedback\.js\?v=2026\.11\.15\.13/);
+    assert.match(html, /js\/ui\/BattleFeedback\.js\?v=2026\.11\.15\.14/);
     assert.match(game, /BattleFeedback\.snapshot\(this\.currentBattle\)/);
     assert.match(game, /BattleFeedback\.show\(before, this\.currentBattle\)/);
+    assert.match(css, /prefers-reduced-motion: reduce/);
+});
+
+test('enemy arrival replays without stacking timers or changing combat values', () => {
+    const { feedback, elements, timers } = setup();
+    const battle = { enemy: { hp: 19 }, enemyBlock: 0, player: { hp: 40 }, block: 0 };
+    const before = feedback.snapshot(battle);
+    feedback.enter('enemy-area');
+    feedback.enter('enemy-area');
+    assert.equal(timers.size, 1);
+    assert.ok(elements['enemy-area'].classes.has('fx-enter'));
+    [...timers.values()][0]();
+    assert.ok(!elements['enemy-area'].classes.has('fx-enter'));
+    assert.equal(battle.enemy.hp, before.enemyHp);
+    feedback.enter('unknown-area');
+});
+
+test('enemy intent includes readable captions and accessible descriptive labels', () => {
+    const ui = fs.readFileSync(path.join(root, 'js/ui/BattleUI.js'), 'utf8');
+    const game = fs.readFileSync(path.join(root, 'js/systems/Game.js'), 'utf8');
+    const css = fs.readFileSync(path.join(root, 'css/cathedral.css'), 'utf8');
+    assert.match(ui, /intentEl\.setAttribute\('aria-label', intentLabel\)/);
+    assert.match(ui, /intent-caption/);
+    assert.match(ui, /Следующее действие: атака/);
+    assert.match(ui, /Следующее действие: получает/);
+    assert.match(ui, /Паралич: враг пропустит ход/);
+    assert.match(game, /BattleFeedback\.enter\('enemy-area'\)/);
+    assert.match(css, /cathedral-enemy-arrival/);
     assert.match(css, /prefers-reduced-motion: reduce/);
 });

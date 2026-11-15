@@ -618,3 +618,44 @@ button:disabled { opacity: .42; filter: grayscale(.5); }
   #player-area.fx-defeated #player-info,
   .battle-result-content { animation: none !important; }
 }
+
+/* Появление врага: пепельная завеса и поднятие портрета из тени. */
+#enemy-area.fx-enter #enemy-sprite { animation: cathedral-enemy-arrival .72s cubic-bezier(.22,.85,.2,1) both; }
+#enemy-area.fx-enter::before {
+  content: '';
+  position: absolute;
+  inset: 8px;
+  border-radius: 8px;
+  pointer-events: none;
+  z-index: 2;
+  background: radial-gradient(ellipse at center, rgba(200,143,99,.21), transparent 72%);
+  animation: cathedral-ash-glow .72s ease-out forwards;
+}
+@keyframes cathedral-enemy-arrival {
+  from { opacity: .05; transform: translateY(19px) scale(.95); filter: blur(3px) grayscale(.6); }
+  65% { opacity: 1; filter: blur(0) grayscale(0); }
+  to { transform: translateY(0) scale(1); filter: none; }
+}
+@keyframes cathedral-ash-glow {
+  from { opacity: 0; transform: scale(.93); }
+  45% { opacity: 1; }
+  to { opacity: 0; transform: scale(1.04); }
+}
+/* Намерение: крупная цифра, короткая подпись, различимые цвета и контуры. */
+#enemy-intent.intent {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  min-height: 42px;
+  font-weight: 700;
+  box-shadow: inset 0 1px 0 #ffffff20, 0 3px 12px #0006;
+}
+#enemy-intent .intent-value { font-size: 21px; line-height: 1; }
+#enemy-intent .intent-caption { font: 700 10px/1.2 system-ui, sans-serif; letter-spacing: .09em; text-transform: uppercase; }
+#enemy-intent.intent-attack { border-left: 4px solid #ff9d93; }
+#enemy-intent.intent-defend { border-left: 4px solid #8ce0d0; }
+#enemy-intent.intent-paralysis { border-left: 4px solid #c2a2f4; }
+@media (prefers-reduced-motion: reduce) {
+  #enemy-area.fx-enter #enemy-sprite, #enemy-area.fx-enter::before { animation: none !important; }
+}
