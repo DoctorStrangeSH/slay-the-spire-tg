@@ -64,3 +64,38 @@ test('three acts have distinct visual banners while routes remain unchanged', ()
     assert.match(ui, /aria-valuenow=/);
     assert.match(ui, /game\.mapGenerator\.getAvailableNodes/);
 });
+
+test('act completion displays a transition after saving next map', () => {
+    const gameSource = readFileSync(join(__dirname, '../js/systems/Game.js'), 'utf8');
+    const uiSource = readFileSync(join(__dirname, '../js/ui/MapUI.js'), 'utf8');
+    const element = {
+        dataset: {}, attributes: {}, button: { focused: false, handlers: {},
+            addEventListener(type, handler) { this.handlers[type] = handler; },
+            focus() { this.focused = true; } },
+        setAttribute(key, value) { this.attributes[key] = value; },
+        querySelector() { return this.button; },
+        remove() { this.removed = true; }
+    };
+    const document = {
+        body: { appendChild(node) { this.current = node; } },
+        getElementById() { return null; },
+        createElement() { return element; }
+    };
+    const context = { document, window: {}, GAME_CONFIG: { maxActs: 3 },
+        RunSave: class { clear() {} }, MapGenerator: class {} };
+    const Game = vm.runInNewContext(uiSource + '\n' + gameSource + '\nGame;', context);
+    const game = new Game();
+    game.act = 1;
+    game.floor = 14;
+    game.generateNewMap = () => { game.generated = true; };
+    game.showMap = () => { assert.ok(game.generated); game.saved = true; };
+    game.completeAct();
+    assert.equal(game.act, 2);
+    assert.equal(game.floor, 0);
+    assert.ok(game.saved);
+    assert.equal(document.body.current.id, 'cathedral-act-transition');
+    assert.equal(document.body.current.dataset.actTheme, 'depths');
+    assert.ok(element.button.focused);
+    element.button.handlers.click();
+    assert.equal(element.removed, true);
+});
