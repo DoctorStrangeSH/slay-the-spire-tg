@@ -5,7 +5,7 @@ const BattleFeedback = Object.freeze({
     floatTimers: new Map(),
     floatNodes: new Map(),
     cardFxState: { timer: null, node: null },
-    cardsPlayed(types) {
+    cardsPlayed(types, heroId = null, cardIds = []) {
         if (!Array.isArray(types) || !types.length) return;
         const screen = document.getElementById('battle-screen');
         if (!screen) return;
@@ -14,15 +14,41 @@ const BattleFeedback = Object.freeze({
         const priority = ['attack', 'power', 'building', 'skill'];
         const style = priority.find(type => known.includes(type));
         const glyph = { attack: '╱', skill: '◇', power: '✧', building: '⬡' };
+        const hero = ['berserk', 'engineer', 'psyker'].includes(heroId) ? heroId : 'neutral';
+        const signatureIds = {
+            berserk: ['bloodCut', 'retaliationStrike', 'berserkStance'],
+            engineer: ['rocket', 'flamethrower', 'blueprints'],
+            psyker: ['psyStrike', 'mindDestruction', 'mentalRift']
+        };
+        const signatures = {
+            bloodCut: ['🩸', 'Кровавая клятва'],
+            retaliationStrike: ['⚔', 'Возмездие'],
+            berserkStance: ['✹', 'Ярость'],
+            rocket: ['✦', 'Залп'],
+            flamethrower: ['🔥', 'Пламя'],
+            blueprints: ['⬡', 'Чертежи'],
+            psyStrike: ['✧', 'Пси-удар'],
+            mindDestruction: ['☽', 'Разлом разума'],
+            mentalRift: ['◇', 'Ментальный разлом']
+        };
+        const signatureId = Array.isArray(cardIds)
+            ? (signatureIds[hero] || []).find(id => cardIds.includes(id)) : null;
+        const signature = signatureId ? signatures[signatureId] : null;
         if (this.cardFxState.timer) clearTimeout(this.cardFxState.timer);
         this.cardFxState.node?.remove();
         const marker = document.createElement('div');
-        marker.className = `card-cast-fx card-cast-fx--${style}`;
+        marker.className = `card-cast-fx card-cast-fx--${style} card-cast-fx--${hero}`;
         marker.setAttribute('aria-hidden', 'true');
         const symbol = document.createElement('span');
         symbol.className = 'card-cast-glyph';
-        symbol.textContent = glyph[style];
+        symbol.textContent = signature ? signature[0] : glyph[style];
         marker.appendChild(symbol);
+        if (signature) {
+            const caption = document.createElement('span');
+            caption.className = 'card-cast-signature';
+            caption.textContent = signature[1];
+            marker.appendChild(caption);
+        }
         if (known.length > 1) {
             const count = document.createElement('span');
             count.className = 'card-cast-combo';
