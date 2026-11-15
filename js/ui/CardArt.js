@@ -10,7 +10,10 @@ const CardArt = Object.freeze({
     signature: Object.freeze({
         bloodCut: Object.freeze({ src: 'assets/cards/blood-cut.svg', alt: 'Кровавый порез — алый росчерк клинка' }),
         retaliationStrike: Object.freeze({ src: 'assets/cards/retaliation-strike.svg', alt: 'Удар возмездия — клинок в золотой вспышке' }),
-        berserkStance: Object.freeze({ src: 'assets/cards/berserk-stance.svg', alt: 'Стойка берсерка — щит с багровой руной' })
+        berserkStance: Object.freeze({ src: 'assets/cards/berserk-stance.svg', alt: 'Стойка берсерка — щит с багровой руной' }),
+        beheading: Object.freeze({ src: 'assets/cards/beheading.svg', alt: 'Последний приговор — двуручный меч и сломанная корона' }),
+        totalAutomation: Object.freeze({ src: 'assets/cards/total-automation.svg', alt: 'Тотальная автоматизация — часы механического собора' }),
+        psyExplosion: Object.freeze({ src: 'assets/cards/psy-explosion.svg', alt: 'Пси-взрыв — расколотая ментальная сфера' })
     }),
 
     rarity(card) {
