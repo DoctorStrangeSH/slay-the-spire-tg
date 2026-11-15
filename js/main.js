@@ -32,7 +32,9 @@ function startNewGame() {
 }
 
 function continueGame() {
-    alert('Функция сохранения появится позже!');
+    if (!game.continueSavedGame()) {
+        alert('Сохранённый забег не найден или несовместим с текущей версией игры.');
+    }
 }
 
 function endTurn() {
