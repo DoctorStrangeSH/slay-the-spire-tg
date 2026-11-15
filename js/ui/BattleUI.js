@@ -202,7 +202,9 @@ const BattleUI = {
     
     createCardElement(card, index, battle) {
         const cardDiv = document.createElement('div');
-        cardDiv.className = `card card-type-${card.type}`;
+        const rarity = CardArt.rarity(card);
+        cardDiv.className = `card card-type-${card.type} card-rarity-${rarity.key}`;
+        cardDiv.setAttribute('aria-label', `${card.name}, ${rarity.label}, стоимость ${card.cost}`);
         
         if (battle.selectedCards.includes(index)) {
             cardDiv.classList.add('selected');
@@ -214,6 +216,7 @@ const BattleUI = {
         
         cardDiv.innerHTML = `
             <div class="card-cost">${card.cost}</div>
+            <span class="card-rarity-mark" aria-hidden="true">${rarity.sigil}</span>
             <div class="card-art-frame">${CardArt.markup(card)}</div>
             <div class="card-name">${card.name}</div>
             <div class="card-description">${card.description}</div>
