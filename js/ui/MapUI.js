@@ -61,6 +61,15 @@ const MapUI = {
             mapContainer.appendChild(oath);
         }
 
+        if ((Number(game.player.bloodMarkBattles) || 0) > 0) {
+            const bloodMark = document.createElement('button');
+            bloodMark.className = 'cathedral-map-curse';
+            bloodMark.type = 'button';
+            bloodMark.onclick = () => game.showConditions();
+            bloodMark.textContent = `♥ Кровавая метка · −4 HP в начале следующих ${game.player.bloodMarkBattles} боёв`;
+            mapContainer.appendChild(bloodMark);
+        }
+
         if ((Number(game.player.exhaustionBattles) || 0) > 0) {
             const exhaustion = document.createElement('button');
             exhaustion.className = 'cathedral-map-curse';
