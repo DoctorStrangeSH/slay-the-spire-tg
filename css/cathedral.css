@@ -1313,3 +1313,15 @@ button:disabled { opacity: .42; filter: grayscale(.5); }
 .cathedral-event-modal[data-event-scene="thorns"] .cathedral-event-halo { border-style: dashed; border-radius: 30% 70% 35% 65%; transform: rotate(-20deg); }
 .cathedral-event-modal[data-event-scene="forge"] .cathedral-event-halo { border: 5px double var(--event-accent); border-radius: 10px; transform: rotate(45deg) scale(.75); }
 .cathedral-event-modal[data-event-scene="mirror"] .cathedral-event-halo { border: 3px solid var(--event-accent); border-radius: 45% 45% 10% 10%; }
+
+/* Редкий договор: отдельный цвет и знак исключительной встречи. */
+.cathedral-event-modal[data-event-scene="covenant"] { --event-accent: #ee9aaf; --event-glow: #8b304b99; }
+.cathedral-event-modal[data-event-scene="covenant"] .cathedral-event-halo {
+  border: 3px double var(--event-accent); border-radius: 23%;
+  transform: rotate(45deg) scale(.74);
+}
+.cathedral-event-modal.cathedral-event--rare .cathedral-event-content {
+  border-width: 2px;
+  box-shadow: inset 0 0 0 4px #080a10aa, 0 16px 65px #000d, 0 0 31px var(--event-glow);
+}
+.cathedral-event-modal.cathedral-event--rare .cathedral-event-kicker { text-shadow: 0 0 14px var(--event-accent); }
