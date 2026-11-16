@@ -161,13 +161,22 @@ class Game {
             enemy.damage = Math.floor(enemy.damage * 1.3);
         }
 
-        this.currentBattle = new BattleSystem(this.player, enemy);
-        this.showBattle();
+        this.beginEncounter(enemy);
     }
 
     startBossBattle() {
         const boss = getBossForAct(this.act);
-        this.currentBattle = new BattleSystem(this.player, boss);
+        this.beginEncounter(boss);
+    }
+
+    beginEncounter(enemy) {
+        this.currentBattle = new BattleSystem(this.player, enemy);
+        // Благословение срабатывает только в первый ход боя, до появления экрана.
+        const charges = Number(this.player?.blessingBattles) || 0;
+        if (Number.isInteger(charges) && charges > 0) {
+            this.currentBattle.block += 5;
+            this.player.blessingBattles = charges - 1;
+        }
         this.showBattle();
     }
 
@@ -508,6 +517,22 @@ class Game {
 
     getRareEventsForAct() {
         return [{
+            name: 'Оракул Золотого Пламени',
+            description: 'За полупрозрачной завесой горит пламя, которое не обжигает. Оракул обещает защиту в двух грядущих схватках, если ты оставишь дар у подножия чаши.',
+            rare: true,
+            options: [
+                {
+                    text: 'Принести 30 золота (+5 блока в начале 2 следующих боёв)',
+                    action: () => {
+                        if (this.player.gold < 30) { alert('Недостаточно золота!'); return false; }
+                        this.player.gold -= 30;
+                        this.player.blessingBattles = (Math.max(0, Number(this.player.blessingBattles) || 0)) + 2;
+                        return true;
+                    }
+                },
+                { text: 'Не принимать благословение', action: () => true }
+            ]
+        }, {
             name: 'Договор с Хранителем Печатей',
             description: 'В тайном приделе собора сидит безликий хранитель. Он протягивает печать, в которой заключена сила прошлых паломников. За дар он требует твою кровь.',
             rare: true,
@@ -731,7 +756,8 @@ class Game {
             'Сердце Терновника': { style: 'thorns', sigil: '❦', caption: 'ШЁПОТ САДОВ', hint: 'Не всякое сокровище достаётся без боли.' },
             'Кузница Погасших Звёзд': { style: 'forge', sigil: '⚒', caption: 'ЗАКАЛКА В ПЕПЛЕ', hint: 'Пламя куёт новую судьбу.' },
             'Зеркало Забытой Короны': { style: 'mirror', sigil: '◉', caption: 'ГРАНЬ ВЛАСТИ', hint: 'Какую цену ты заплатишь за власть?' },
-            'Договор с Хранителем Печатей': { style: 'covenant', sigil: '✺', caption: 'РЕДКАЯ ВСТРЕЧА · КРОВАВАЯ ПЕЧАТЬ', hint: 'Чужое наследие не достаётся бесплатно.' }
+            'Договор с Хранителем Печатей': { style: 'covenant', sigil: '✺', caption: 'РЕДКАЯ ВСТРЕЧА · КРОВАВАЯ ПЕЧАТЬ', hint: 'Чужое наследие не достаётся бесплатно.' },
+            'Оракул Золотого Пламени': { style: 'oracle', sigil: '☼', caption: 'РЕДКАЯ ВСТРЕЧА · ЗОЛОТОЕ ПЛАМЯ', hint: 'Этот огонь защитит тебя, когда придёт час.' }
         };
         return scenes[name] || { style: 'mystery', sigil: '✦', caption: 'НЕИЗВЕСТНАЯ ВСТРЕЧА', hint: 'Выбери свой путь.' };
     }
@@ -760,7 +786,7 @@ class Game {
         event.options.forEach((option, index) => {
             const button = document.createElement('button');
             button.className = 'cathedral-event-choice';
-            const isExit = /^(Уйти|Не принимать клятву|Не трогать печать|Отказаться от клейма|Отвергнуть печать)$/.test(option.text);
+            const isExit = /^(Уйти|Не принимать клятву|Не трогать печать|Отказаться от клейма|Отвергнуть печать|Не принимать благословение)$/.test(option.text);
             if (isExit) button.classList.add('cathedral-event-choice--exit');
             const number = document.createElement('span');
             number.className = 'cathedral-event-choice-number';
