@@ -165,7 +165,7 @@ class Game {
 
     getTotalCurseBattles() {
         if (!this.player) return 0;
-        return ['curseBattles', 'exhaustionBattles'].reduce((total, key) => {
+        return ['curseBattles', 'exhaustionBattles', 'bloodMarkBattles'].reduce((total, key) => {
             const value = Number(this.player[key]);
             return total + (Number.isInteger(value) && value > 0 ? value : 0);
         }, 0);
@@ -174,6 +174,7 @@ class Game {
     clearTemporaryCurses() {
         this.player.curseBattles = 0;
         this.player.exhaustionBattles = 0;
+        this.player.bloodMarkBattles = 0;
     }
 
     getTemporaryConditions() {
@@ -185,6 +186,8 @@ class Game {
               name: 'Пепельная печать', description: '+2 силы на всё время каждого следующего боя.' },
             { key: 'oathBattles', kind: 'blessing', icon: '☾',
               name: 'Лунная клятва', description: '+1 энергия в начале первого хода каждого следующего боя.' },
+            { key: 'bloodMarkBattles', kind: 'curse', icon: '♥',
+              name: 'Кровавая метка', description: '−4 HP в начале каждого следующего боя (но не ниже 1 HP).' },
             { key: 'exhaustionBattles', kind: 'curse', icon: '♜',
               name: 'Истощение', description: '−2 силы на всё время каждого следующего боя.' },
             { key: 'curseBattles', kind: 'curse', icon: '☷',
@@ -283,9 +286,15 @@ class Game {
             this.currentBattle.statusEffects.player.strength -= 2;
             this.player.exhaustionBattles = exhaustionCharges - 1;
         }
+        const bloodMarkCharges = Number(this.player?.bloodMarkBattles) || 0;
+        if (Number.isInteger(bloodMarkCharges) && bloodMarkCharges > 0) {
+            this.player.hp = Math.max(1, this.player.hp - 4);
+            this.player.bloodMarkBattles = bloodMarkCharges - 1;
+        }
         // Условие проверяется до завершения боевого заряда: последний бой тоже усилен.
         if (((Number.isInteger(curseCharges) && curseCharges > 0) ||
-             (Number.isInteger(exhaustionCharges) && exhaustionCharges > 0)) &&
+             (Number.isInteger(exhaustionCharges) && exhaustionCharges > 0) ||
+             (Number.isInteger(bloodMarkCharges) && bloodMarkCharges > 0)) &&
             Array.isArray(this.player.relics) && this.player.relics.includes('bloodPact')) {
             this.currentBattle.statusEffects.player.strength += 2;
         }
@@ -629,6 +638,22 @@ class Game {
 
     getRareEventsForAct() {
         return [{
+            name: 'Кровавый Алтарь',
+            description: 'На алтаре стоит золотая чаша, полная тёмно-красного света. Она отдаст сокровища сейчас, но потребует кровь в начале двух будущих битв.',
+            rare: true,
+            options: [
+                {
+                    text: 'Принять метку (+70 золота, −4 HP в начале 2 боёв)',
+                    action: () => {
+                        this.player.gold += 70;
+                        this.player.bloodMarkBattles = Math.min(99,
+                            Math.max(0, Number(this.player.bloodMarkBattles) || 0) + 2);
+                        return true;
+                    }
+                },
+                { text: 'Отвернуться от алтаря', action: () => true }
+            ]
+        }, {
             name: 'Чаша Истощения',
             description: 'В пустой часовне стоит чаша с серебристой пылью. Она обещает богатство, но на два следующих боя заберёт часть твоей силы.',
             rare: true,
