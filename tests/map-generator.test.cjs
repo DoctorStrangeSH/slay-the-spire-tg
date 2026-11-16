@@ -175,3 +175,45 @@ test('each act has its own encounter and risky choices cannot be lethal', () => 
     assert.equal(game.getEventsForAct().find(e => e.name === names[2]).options[0].action(), false);
     assert.equal(game.player.hp, 6);
 });
+
+test('rare relic contract never charges an impossible or lethal bargain', () => {
+    const source = readFileSync(join(__dirname, '../js/systems/Game.js'), 'utf8');
+    let available = [{ id: 'stoneguard' }];
+    const Game = vm.runInNewContext(source + '\nGame;', {
+        GAME_CONFIG: { maxActs: 3 }, RunSave: class { clear() {} }, alert() {},
+        getAvailableRelics: () => available
+    });
+    const game = new Game();
+    const event = game.getRareEventsForAct()[0];
+    assert.equal(event.rare, true);
+    assert.equal(game.getEventPresentation(event.name).style, 'covenant');
+    game.player = { hp: 15, maxHp: 50, gold: 0, relics: [], heroId: 'berserk' };
+    assert.equal(event.options[0].action(), false);
+    assert.equal(game.player.hp, 15);
+    game.player.hp = 30;
+    available = [];
+    assert.equal(event.options[0].action(), false);
+    assert.equal(game.player.hp, 30);
+    available = [{ id: 'stoneguard' }];
+    game.applyTreasureReward = () => { game.player.relics.push('stoneguard'); return true; };
+    assert.equal(event.options[0].action(), true);
+    assert.equal(game.player.hp, 15);
+    assert.deepEqual(Array.from(game.player.relics), ['stoneguard']);
+});
+test('rare room selection uses a twelve-percent independent roll', () => {
+    const source = readFileSync(join(__dirname, '../js/systems/Game.js'), 'utf8');
+    let value = 0;
+    const random = () => value;
+    const context = { GAME_CONFIG: { maxActs: 3 }, RunSave: class { clear() {} },
+        Math: Object.assign(Object.create(Math), { random }) };
+    const Game = vm.runInNewContext(source + '\nGame;', context);
+    const game = new Game();
+    let selected = null;
+    game.showEventModal = event => { selected = event; };
+    value = 0.05;
+    game.triggerEvent();
+    assert.equal(selected.rare, true);
+    value = 0.50;
+    game.triggerEvent();
+    assert.notEqual(selected.rare, true);
+});
