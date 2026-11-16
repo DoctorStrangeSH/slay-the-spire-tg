@@ -491,3 +491,43 @@ test('exhaustion curse stacks with coin, powers blood pact and can be cleansed o
     assert.equal(cleanse.action(), false);
     assert.equal(game.player.gold, 15);
 });
+
+test('blood mark takes health on each battle, cannot kill, and powers curse relic on last charge', () => {
+    const source = readFileSync(join(__dirname, '../js/systems/Game.js'), 'utf8');
+    const Game = vm.runInNewContext(source + '\nGame;', {
+        GAME_CONFIG: { maxActs: 3 }, RunSave: class { clear() {} },
+        BattleSystem: class {
+            constructor() { this.energy = 3; this.block = 0; this.statusEffects = { player: { strength: 0 } }; }
+        }
+    });
+    const game = new Game();
+    game.showBattle = () => {};
+    game.player = { hp: 7, gold: 0, relics: ['bloodPact'], bloodMarkBattles: 0 };
+    const altar = game.getRareEventsForAct().find(e => e.name === 'Кровавый Алтарь');
+    assert.equal(altar.options[0].action(), true);
+    assert.equal(game.player.gold, 70);
+    assert.equal(game.player.bloodMarkBattles, 2);
+    game.beginEncounter({});
+    assert.equal(game.player.hp, 3);
+    assert.equal(game.currentBattle.statusEffects.player.strength, 2);
+    game.beginEncounter({});
+    assert.equal(game.player.hp, 1);
+    assert.equal(game.currentBattle.statusEffects.player.strength, 2);
+    game.beginEncounter({});
+    assert.equal(game.player.hp, 1);
+    assert.equal(game.currentBattle.statusEffects.player.strength, 0);
+    game.player.bloodMarkBattles = 2;
+    game.player.curseBattles = 1;
+    assert.equal(game.getTotalCurseBattles(), 3);
+    const forge = game.getRareEventsForAct().find(e => e.name === 'Кузница Судеб');
+    assert.equal(forge.options[0].action(), true);
+    assert.equal(game.player.blessingBattles, 3);
+    assert.equal(game.player.bloodMarkBattles, 0);
+    assert.equal(game.player.curseBattles, 0);
+    game.player.bloodMarkBattles = 1;
+    const chapel = game.getEventsForAct().find(e => e.name === 'Часовня Последнего Света');
+    const cleanse = chapel.options.find(o => o.text.includes('Очистить проклятие'));
+    assert.equal(cleanse.action(), true);
+    assert.equal(game.player.bloodMarkBattles, 0);
+    assert.equal(game.player.gold, 20);
+});
