@@ -153,6 +153,16 @@ class Game {
         document.body.appendChild(modal);
     }
 
+    grantTemporaryBlessing(key, battles) {
+        if (!this.player || !['blessingBattles', 'oathBattles', 'ashBattles'].includes(key)) return 0;
+        const current = Number(this.player[key]);
+        const existing = Number.isInteger(current) && current > 0 ? current : 0;
+        const extra = Array.isArray(this.player.relics) && this.player.relics.includes('eternityShard') ? 1 : 0;
+        const awarded = Math.max(0, Number.isInteger(battles) ? battles : 0) + extra;
+        this.player[key] = Math.min(99, existing + awarded);
+        return this.player[key] - existing;
+    }
+
     getTemporaryConditions() {
         if (!this.player) return [];
         const effects = [
@@ -607,7 +617,7 @@ class Game {
                         if (this.player.gold < 30) { alert('Недостаточно золота!'); return false; }
                         this.player.gold -= 30;
                         this.player.curseBattles = 0;
-                        this.player.blessingBattles = Math.min(99, Math.max(0, Number(this.player.blessingBattles) || 0) + remaining);
+                        this.grantTemporaryBlessing('blessingBattles', remaining);
                         return true;
                     }
                 },
@@ -621,7 +631,7 @@ class Game {
                         if (this.player.hp <= 8) { alert('Недостаточно здоровья!'); return false; }
                         this.player.hp -= 8;
                         this.player.curseBattles = 0;
-                        this.player.ashBattles = Math.min(99, Math.max(0, Number(this.player.ashBattles) || 0) + remaining);
+                        this.grantTemporaryBlessing('ashBattles', remaining);
                         return true;
                     }
                 },
@@ -637,7 +647,7 @@ class Game {
                     action: () => {
                         if (this.player.hp <= 10) { alert('Недостаточно здоровья для печати!'); return false; }
                         this.player.hp -= 10;
-                        this.player.ashBattles = Math.min(99, Math.max(0, Number(this.player.ashBattles) || 0) + 2);
+                        this.grantTemporaryBlessing('ashBattles', 2);
                         return true;
                     }
                 },
@@ -653,7 +663,7 @@ class Game {
                     action: () => {
                         if (this.player.hp <= 12) { alert('Недостаточно здоровья для клятвы!'); return false; }
                         this.player.hp -= 12;
-                        this.player.oathBattles = Math.min(99, Math.max(0, Number(this.player.oathBattles) || 0) + 2);
+                        this.grantTemporaryBlessing('oathBattles', 2);
                         return true;
                     }
                 },
@@ -684,7 +694,7 @@ class Game {
                     action: () => {
                         if (this.player.gold < 30) { alert('Недостаточно золота!'); return false; }
                         this.player.gold -= 30;
-                        this.player.blessingBattles = (Math.max(0, Number(this.player.blessingBattles) || 0)) + 2;
+                        this.grantTemporaryBlessing('blessingBattles', 2);
                         return true;
                     }
                 },

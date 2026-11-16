@@ -14,19 +14,19 @@ function vmRelics() {
 
 test('three relics are unique and never offered twice', () => {
     const owned = [];
-    for (let i = 0; i < 3; i++) {
+    for (let i = 0; i < 4; i++) {
         const relic = chooseRelic(owned, () => 0);
         assert.ok(relic);
         owned.push(relic.id);
     }
-    assert.equal(new Set(owned).size, 3);
+    assert.equal(new Set(owned).size, 4);
     assert.equal(chooseRelic(owned, () => 0), null);
     assert.equal(getAvailableRelics(owned).length, 0);
 });
 
 test('relic selection can reach the last available item', () => {
     const relic = chooseRelic([], () => 0.999);
-    assert.equal(relic.id, 'chronicle');
+    assert.equal(relic.id, 'eternityShard');
 });
 
 const vm = require('node:vm');

@@ -18,6 +18,12 @@ const RELIC_CATALOG = Object.freeze({
         emoji: '📜',
         description: 'В начале каждого хода берёте дополнительную карту.'
     },
+    eternityShard: {
+        id: 'eternityShard',
+        name: 'Осколок вечности',
+        emoji: '💎',
+        description: 'Каждое новое благословение длится на один бой дольше (до 99 боёв).'
+    },
     bloodFang: {
         id: 'bloodFang',
         heroId: 'berserk',
