@@ -16,18 +16,18 @@ test('class relics are restricted to their own hero', () => {
         ['psyker', 'mindEye']
     ]) {
         const offered = getAvailableRelics([], hero);
-        assert.equal(offered.length, 5);
+        assert.equal(offered.length, 6);
         assert.equal(offered.filter(r => r.heroId).length, 1);
         assert.equal(offered.find(r => r.heroId).id, expected);
     }
-    assert.equal(getAvailableRelics([]).length, 4);
+    assert.equal(getAvailableRelics([]).length, 5);
 });
 
 test('hero can obtain the class relic, but never twice', () => {
     const relic = chooseRelic([], () => 0.999999, 'engineer');
     assert.equal(relic.id, 'ironCog');
-    assert.equal(getAvailableRelics([relic.id], 'engineer').length, 4);
-    assert.equal(chooseRelic(['emberBattery', 'stoneguard', 'chronicle', 'eternityShard', 'ironCog'], () => 0.5, 'engineer'), null);
+    assert.equal(getAvailableRelics([relic.id], 'engineer').length, 5);
+    assert.equal(chooseRelic(['emberBattery', 'stoneguard', 'chronicle', 'eternityShard', 'bloodPact', 'ironCog'], () => 0.5, 'engineer'), null);
 });
 
 const battleSource = fs.readFileSync(path.join(__dirname, '../js/systems/BattleSystem.js'), 'utf8');
