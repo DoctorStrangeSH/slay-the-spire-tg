@@ -452,3 +452,42 @@ test('blood pact gives strength in each cursed battle, including final charge, a
     game.beginEncounter({});
     assert.equal(game.currentBattle.statusEffects.player.strength, 5);
 });
+
+test('exhaustion curse stacks with coin, powers blood pact and can be cleansed or forged', () => {
+    const source = readFileSync(join(__dirname, '../js/systems/Game.js'), 'utf8');
+    const Game = vm.runInNewContext(source + '\nGame;', {
+        GAME_CONFIG: { maxActs: 3 }, RunSave: class { clear() {} }, alert() {},
+        BattleSystem: class {
+            constructor() { this.energy = 3; this.block = 0; this.statusEffects = { player: { strength: 0 } }; }
+        }
+    });
+    const game = new Game();
+    game.showBattle = () => {};
+    game.player = { hp: 40, gold: 0, relics: ['bloodPact'],
+        curseBattles: 0, exhaustionBattles: 0, blessingBattles: 0, ashBattles: 0 };
+    const bowl = game.getRareEventsForAct().find(e => e.name === 'Чаша Истощения');
+    assert.equal(bowl.options[0].action(), true);
+    assert.equal(game.player.gold, 65);
+    assert.equal(game.player.exhaustionBattles, 2);
+    game.beginEncounter({});
+    assert.equal(game.currentBattle.statusEffects.player.strength, 0);
+    assert.equal(game.currentBattle.energy, 3);
+    assert.equal(game.player.exhaustionBattles, 1);
+    game.player.curseBattles = 2;
+    assert.equal(game.getTotalCurseBattles(), 3);
+    const forge = game.getRareEventsForAct().find(e => e.name === 'Кузница Судеб');
+    assert.equal(forge.options[0].action(), true);
+    assert.equal(game.player.gold, 35);
+    assert.equal(game.player.blessingBattles, 3);
+    assert.equal(game.getTotalCurseBattles(), 0);
+    game.beginEncounter({});
+    assert.equal(game.currentBattle.statusEffects.player.strength, 0);
+    game.player.exhaustionBattles = 2;
+    const chapel = game.getEventsForAct().find(e => e.name === 'Часовня Последнего Света');
+    const cleanse = chapel.options.find(o => o.text.includes('Очистить проклятие'));
+    assert.equal(cleanse.action(), true);
+    assert.equal(game.player.gold, 15);
+    assert.equal(game.player.exhaustionBattles, 0);
+    assert.equal(cleanse.action(), false);
+    assert.equal(game.player.gold, 15);
+});
