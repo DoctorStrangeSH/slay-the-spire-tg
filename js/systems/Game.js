@@ -163,6 +163,19 @@ class Game {
         return this.player[key] - existing;
     }
 
+    getTotalCurseBattles() {
+        if (!this.player) return 0;
+        return ['curseBattles', 'exhaustionBattles'].reduce((total, key) => {
+            const value = Number(this.player[key]);
+            return total + (Number.isInteger(value) && value > 0 ? value : 0);
+        }, 0);
+    }
+
+    clearTemporaryCurses() {
+        this.player.curseBattles = 0;
+        this.player.exhaustionBattles = 0;
+    }
+
     getTemporaryConditions() {
         if (!this.player) return [];
         const effects = [
@@ -172,6 +185,8 @@ class Game {
               name: 'Пепельная печать', description: '+2 силы на всё время каждого следующего боя.' },
             { key: 'oathBattles', kind: 'blessing', icon: '☾',
               name: 'Лунная клятва', description: '+1 энергия в начале первого хода каждого следующего боя.' },
+            { key: 'exhaustionBattles', kind: 'curse', icon: '♜',
+              name: 'Истощение', description: '−2 силы на всё время каждого следующего боя.' },
             { key: 'curseBattles', kind: 'curse', icon: '☷',
               name: 'Монета Забытого Долга', description: '−1 энергия в начале первого хода каждого следующего боя.' }
         ];
@@ -263,8 +278,14 @@ class Game {
             this.currentBattle.statusEffects.player.strength += 2;
             this.player.ashBattles = ashCharges - 1;
         }
+        const exhaustionCharges = Number(this.player?.exhaustionBattles) || 0;
+        if (Number.isInteger(exhaustionCharges) && exhaustionCharges > 0) {
+            this.currentBattle.statusEffects.player.strength -= 2;
+            this.player.exhaustionBattles = exhaustionCharges - 1;
+        }
         // Условие проверяется до завершения боевого заряда: последний бой тоже усилен.
-        if (Number.isInteger(curseCharges) && curseCharges > 0 &&
+        if (((Number.isInteger(curseCharges) && curseCharges > 0) ||
+             (Number.isInteger(exhaustionCharges) && exhaustionCharges > 0)) &&
             Array.isArray(this.player.relics) && this.player.relics.includes('bloodPact')) {
             this.currentBattle.statusEffects.player.strength += 2;
         }
@@ -608,6 +629,22 @@ class Game {
 
     getRareEventsForAct() {
         return [{
+            name: 'Чаша Истощения',
+            description: 'В пустой часовне стоит чаша с серебристой пылью. Она обещает богатство, но на два следующих боя заберёт часть твоей силы.',
+            rare: true,
+            options: [
+                {
+                    text: 'Вдохнуть пепел (+65 золота, −2 силы на 2 боя)',
+                    action: () => {
+                        this.player.gold += 65;
+                        this.player.exhaustionBattles = Math.min(99,
+                            Math.max(0, Number(this.player.exhaustionBattles) || 0) + 2);
+                        return true;
+                    }
+                },
+                { text: 'Отойти от чаши', action: () => true }
+            ]
+        }, {
             name: 'Кузница Судеб',
             description: 'В глубине собора кузнец без лица предлагает переплавить бремя проклятия в дар. Золотая сталь принесёт защиту, кровавая — силу. Без проклятия кузница молчит.',
             rare: true,
@@ -615,13 +652,13 @@ class Game {
                 {
                     text: 'Перековать в защиту (30 золота, проклятие → Золотое пламя)',
                     action: () => {
-                        const remaining = Number(this.player.curseBattles);
+                        const remaining = this.getTotalCurseBattles();
                         if (!Number.isInteger(remaining) || remaining <= 0) {
                             alert('Нет активного проклятия для перековки!'); return false;
                         }
                         if (this.player.gold < 30) { alert('Недостаточно золота!'); return false; }
                         this.player.gold -= 30;
-                        this.player.curseBattles = 0;
+                        this.clearTemporaryCurses();
                         this.grantTemporaryBlessing('blessingBattles', remaining);
                         return true;
                     }
@@ -629,13 +666,13 @@ class Game {
                 {
                     text: 'Перековать в силу (−8 HP, проклятие → Пепельная печать)',
                     action: () => {
-                        const remaining = Number(this.player.curseBattles);
+                        const remaining = this.getTotalCurseBattles();
                         if (!Number.isInteger(remaining) || remaining <= 0) {
                             alert('Нет активного проклятия для перековки!'); return false;
                         }
                         if (this.player.hp <= 8) { alert('Недостаточно здоровья!'); return false; }
                         this.player.hp -= 8;
-                        this.player.curseBattles = 0;
+                        this.clearTemporaryCurses();
                         this.grantTemporaryBlessing('ashBattles', remaining);
                         return true;
                     }
@@ -821,7 +858,7 @@ class Game {
                     {
                         text: 'Очистить проклятие (20 золота)',
                         action: () => {
-                            if (!(Number(this.player.curseBattles) > 0)) {
+                            if (this.getTotalCurseBattles() <= 0) {
                                 alert('На вас нет проклятия!');
                                 return false;
                             }
@@ -830,7 +867,7 @@ class Game {
                                 return false;
                             }
                             this.player.gold -= 20;
-                            this.player.curseBattles = 0;
+                            this.clearTemporaryCurses();
                             return true;
                         }
                     },
