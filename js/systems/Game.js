@@ -499,9 +499,39 @@ class Game {
     }
 
     triggerEvent() {
-        const events = this.getEventsForAct();
+        const rareEvents = this.getRareEventsForAct();
+        const isRare = rareEvents.length > 0 && Math.random() < 0.12;
+        const events = isRare ? rareEvents : this.getEventsForAct();
         const event = events[Math.floor(Math.random() * events.length)];
         this.showEventModal(event);
+    }
+
+    getRareEventsForAct() {
+        return [{
+            name: 'Договор с Хранителем Печатей',
+            description: 'В тайном приделе собора сидит безликий хранитель. Он протягивает печать, в которой заключена сила прошлых паломников. За дар он требует твою кровь.',
+            rare: true,
+            options: [
+                {
+                    text: 'Подписать договор (−15 HP, случайная реликвия)',
+                    action: () => {
+                        if (this.player.hp <= 15) {
+                            alert('Недостаточно здоровья для договора!');
+                            return false;
+                        }
+                        // Не взимать плату, если все реликвии уже получены.
+                        if (!getAvailableRelics(this.player.relics, this.player.heroId).length) {
+                            alert('Хранителю больше нечего предложить!');
+                            return false;
+                        }
+                        if (!this.applyTreasureReward('relic')) return false;
+                        this.player.hp -= 15;
+                        return true;
+                    }
+                },
+                { text: 'Отвергнуть печать', action: () => true }
+            ]
+        }];
     }
 
     applyAltarBargain() {
@@ -700,7 +730,8 @@ class Game {
             'Запечатанная Сокровищница': { style: 'vault', sigil: '◈', caption: 'ПЕЧАТЬ ЗАБЫТЫХ', hint: 'Богатство и боль часто идут рядом.' },
             'Сердце Терновника': { style: 'thorns', sigil: '❦', caption: 'ШЁПОТ САДОВ', hint: 'Не всякое сокровище достаётся без боли.' },
             'Кузница Погасших Звёзд': { style: 'forge', sigil: '⚒', caption: 'ЗАКАЛКА В ПЕПЛЕ', hint: 'Пламя куёт новую судьбу.' },
-            'Зеркало Забытой Короны': { style: 'mirror', sigil: '◉', caption: 'ГРАНЬ ВЛАСТИ', hint: 'Какую цену ты заплатишь за власть?' }
+            'Зеркало Забытой Короны': { style: 'mirror', sigil: '◉', caption: 'ГРАНЬ ВЛАСТИ', hint: 'Какую цену ты заплатишь за власть?' },
+            'Договор с Хранителем Печатей': { style: 'covenant', sigil: '✺', caption: 'РЕДКАЯ ВСТРЕЧА · КРОВАВАЯ ПЕЧАТЬ', hint: 'Чужое наследие не достаётся бесплатно.' }
         };
         return scenes[name] || { style: 'mystery', sigil: '✦', caption: 'НЕИЗВЕСТНАЯ ВСТРЕЧА', hint: 'Выбери свой путь.' };
     }
@@ -710,6 +741,7 @@ class Game {
         const modal = document.createElement('div');
         modal.className = 'modal cathedral-event-modal';
         modal.dataset.eventScene = scene.style;
+        if (event.rare) modal.classList.add('cathedral-event--rare');
         modal.innerHTML = `
             <div class="modal-content cathedral-event-content">
                 <p class="cathedral-event-kicker">${scene.caption}</p>
@@ -728,7 +760,7 @@ class Game {
         event.options.forEach((option, index) => {
             const button = document.createElement('button');
             button.className = 'cathedral-event-choice';
-            const isExit = /^(Уйти|Не принимать клятву|Не трогать печать|Отказаться от клейма)$/.test(option.text);
+            const isExit = /^(Уйти|Не принимать клятву|Не трогать печать|Отказаться от клейма|Отвергнуть печать)$/.test(option.text);
             if (isExit) button.classList.add('cathedral-event-choice--exit');
             const number = document.createElement('span');
             number.className = 'cathedral-event-choice-number';
