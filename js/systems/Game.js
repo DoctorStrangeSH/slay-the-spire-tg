@@ -263,6 +263,11 @@ class Game {
             this.currentBattle.statusEffects.player.strength += 2;
             this.player.ashBattles = ashCharges - 1;
         }
+        // Условие проверяется до завершения боевого заряда: последний бой тоже усилен.
+        if (Number.isInteger(curseCharges) && curseCharges > 0 &&
+            Array.isArray(this.player.relics) && this.player.relics.includes('bloodPact')) {
+            this.currentBattle.statusEffects.player.strength += 2;
+        }
         this.showBattle();
     }
 
