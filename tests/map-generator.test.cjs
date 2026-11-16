@@ -326,3 +326,35 @@ test('lunar oath trades health for two first-turn energy bonuses and stacks with
     game.beginEncounter({});
     assert.equal(game.currentBattle.energy, 3);
 });
+
+test('ash seal trades health for two encounters of strength, without changing other buffs', () => {
+    const source = readFileSync(join(__dirname, '../js/systems/Game.js'), 'utf8');
+    const Game = vm.runInNewContext(source + '\nGame;', {
+        GAME_CONFIG: { maxActs: 3 }, RunSave: class { clear() {} }, alert() {},
+        BattleSystem: class {
+            constructor() { this.block = 0; this.energy = 3; this.statusEffects = { player: { strength: 1 } }; }
+        }
+    });
+    const game = new Game();
+    const seal = game.getRareEventsForAct().find(event => event.name === 'Пепельная Печать');
+    game.player = { hp: 10, ashBattles: 0, oathBattles: 1 };
+    assert.equal(seal.options[0].action(), false);
+    assert.equal(game.player.hp, 10);
+    game.player.hp = 30;
+    assert.equal(seal.options[0].action(), true);
+    assert.equal(game.player.hp, 20);
+    assert.equal(game.player.ashBattles, 2);
+    assert.deepEqual(Array.from(game.getTemporaryConditions().map(effect => effect.name)),
+        ['Пепельная печать', 'Лунная клятва']);
+    game.showBattle = () => {};
+    game.beginEncounter({});
+    assert.equal(game.currentBattle.statusEffects.player.strength, 3);
+    assert.equal(game.currentBattle.energy, 4);
+    assert.equal(game.player.ashBattles, 1);
+    game.beginEncounter({});
+    assert.equal(game.currentBattle.statusEffects.player.strength, 3);
+    assert.equal(game.currentBattle.energy, 3);
+    assert.equal(game.player.ashBattles, 0);
+    game.beginEncounter({});
+    assert.equal(game.currentBattle.statusEffects.player.strength, 1);
+});
