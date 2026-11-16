@@ -1336,3 +1336,14 @@ button:disabled { opacity: .42; filter: grayscale(.5); }
   color: #fbe5ae; font: 700 12px/1.5 system-ui,sans-serif;
   text-align: center; box-shadow: 0 0 20px #a7773544;
 }
+
+/* Отложенная расплата за проклятую монету. */
+.cathedral-event-modal[data-event-scene="curse"] { --event-accent: #c6a0dc; --event-glow: #5e357caa; }
+.cathedral-event-modal[data-event-scene="curse"] .cathedral-event-halo { border: 3px dashed var(--event-accent); border-radius: 16px; transform: rotate(22deg); }
+.cathedral-map-curse {
+  margin: 7px 0 12px; padding: 10px 13px;
+  border: 1px solid #b28dce; border-radius: 7px;
+  background: linear-gradient(90deg, #47334f, #1c1b2b);
+  color: #e8c3ff; font: 700 12px/1.5 system-ui,sans-serif;
+  text-align: center; box-shadow: 0 0 20px #6d399944;
+}
