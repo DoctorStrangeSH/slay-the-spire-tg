@@ -158,6 +158,8 @@ class Game {
         const effects = [
             { key: 'blessingBattles', kind: 'blessing', icon: '☼',
               name: 'Золотое пламя', description: '+5 блока в начале первого хода каждого следующего боя.' },
+            { key: 'ashBattles', kind: 'blessing', icon: '✹',
+              name: 'Пепельная печать', description: '+2 силы на всё время каждого следующего боя.' },
             { key: 'oathBattles', kind: 'blessing', icon: '☾',
               name: 'Лунная клятва', description: '+1 энергия в начале первого хода каждого следующего боя.' },
             { key: 'curseBattles', kind: 'curse', icon: '☷',
@@ -245,6 +247,11 @@ class Game {
         if (Number.isInteger(oathCharges) && oathCharges > 0) {
             this.currentBattle.energy += 1;
             this.player.oathBattles = oathCharges - 1;
+        }
+        const ashCharges = Number(this.player?.ashBattles) || 0;
+        if (Number.isInteger(ashCharges) && ashCharges > 0) {
+            this.currentBattle.statusEffects.player.strength += 2;
+            this.player.ashBattles = ashCharges - 1;
         }
         this.showBattle();
     }
@@ -586,6 +593,22 @@ class Game {
 
     getRareEventsForAct() {
         return [{
+            name: 'Пепельная Печать',
+            description: 'Из потухшего алтаря поднимаются красные искры. Печать даст тебе силу на две битвы, но заберёт часть жизненной энергии прямо сейчас.',
+            rare: true,
+            options: [
+                {
+                    text: 'Принять печать (−10 HP, +2 силы на 2 следующих боя)',
+                    action: () => {
+                        if (this.player.hp <= 10) { alert('Недостаточно здоровья для печати!'); return false; }
+                        this.player.hp -= 10;
+                        this.player.ashBattles = Math.min(99, Math.max(0, Number(this.player.ashBattles) || 0) + 2);
+                        return true;
+                    }
+                },
+                { text: 'Погасить искры', action: () => true }
+            ]
+        }, {
             name: 'Лунная Клятва',
             description: 'Среди осколков витража лунный свет складывается в письмена. За каплю жизненной силы он обещает ускорить два грядущих сражения.',
             rare: true,
