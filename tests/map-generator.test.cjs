@@ -184,7 +184,7 @@ test('rare relic contract never charges an impossible or lethal bargain', () => 
         getAvailableRelics: () => available
     });
     const game = new Game();
-    const event = game.getRareEventsForAct()[0];
+    const event = game.getRareEventsForAct().find(item => item.name === 'Договор с Хранителем Печатей');
     assert.equal(event.rare, true);
     assert.equal(game.getEventPresentation(event.name).style, 'covenant');
     game.player = { hp: 15, maxHp: 50, gold: 0, relics: [], heroId: 'berserk' };
@@ -216,4 +216,29 @@ test('rare room selection uses a twelve-percent independent roll', () => {
     value = 0.50;
     game.triggerEvent();
     assert.notEqual(selected.rare, true);
+});
+
+test('oracle blessing persists on player and expires after two battle openings', () => {
+    const source = readFileSync(join(__dirname, '../js/systems/Game.js'), 'utf8');
+    const context = { GAME_CONFIG: { maxActs: 3 }, RunSave: class { clear() {} },
+        BattleSystem: class { constructor() { this.block = 0; } }, alert() {} };
+    const Game = vm.runInNewContext(source + '\nGame;', context);
+    const game = new Game();
+    const oracle = game.getRareEventsForAct().find(event => event.name === 'Оракул Золотого Пламени');
+    game.player = { gold: 20, blessingBattles: 0 };
+    assert.equal(oracle.options[0].action(), false);
+    assert.equal(game.player.gold, 20);
+    game.player.gold = 50;
+    assert.equal(oracle.options[0].action(), true);
+    assert.equal(game.player.gold, 20);
+    assert.equal(game.player.blessingBattles, 2);
+    game.showBattle = () => {};
+    game.beginEncounter({});
+    assert.equal(game.currentBattle.block, 5);
+    assert.equal(game.player.blessingBattles, 1);
+    game.beginEncounter({});
+    assert.equal(game.currentBattle.block, 5);
+    assert.equal(game.player.blessingBattles, 0);
+    game.beginEncounter({});
+    assert.equal(game.currentBattle.block, 0);
 });

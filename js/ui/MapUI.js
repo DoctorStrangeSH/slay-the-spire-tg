@@ -34,6 +34,12 @@ const MapUI = {
             </div>
         `;
         mapContainer.appendChild(actInfo);
+        if ((Number(game.player.blessingBattles) || 0) > 0) {
+            const blessing = document.createElement('div');
+            blessing.className = 'cathedral-map-blessing';
+            blessing.textContent = `☼ Золотое пламя · +5 блока в начале следующих ${game.player.blessingBattles} боёв`;
+            mapContainer.appendChild(blessing);
+        }
         
         // Создаём SVG для карты
         const svg = this.createSVG(game);

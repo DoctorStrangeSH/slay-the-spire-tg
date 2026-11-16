@@ -1325,3 +1325,14 @@ button:disabled { opacity: .42; filter: grayscale(.5); }
   box-shadow: inset 0 0 0 4px #080a10aa, 0 16px 65px #000d, 0 0 31px var(--event-glow);
 }
 .cathedral-event-modal.cathedral-event--rare .cathedral-event-kicker { text-shadow: 0 0 14px var(--event-accent); }
+
+/* Благословение, сохраняемое между комнатами, и редкий Оракул. */
+.cathedral-event-modal[data-event-scene="oracle"] { --event-accent: #ffdb9c; --event-glow: #bb803eaa; }
+.cathedral-event-modal[data-event-scene="oracle"] .cathedral-event-halo { border: 3px double var(--event-accent); box-shadow: 0 0 34px var(--event-glow); }
+.cathedral-map-blessing {
+  margin: 7px 0 12px; padding: 10px 13px;
+  border: 1px solid #dec386; border-radius: 7px;
+  background: linear-gradient(90deg, #50402f, #1d212a);
+  color: #fbe5ae; font: 700 12px/1.5 system-ui,sans-serif;
+  text-align: center; box-shadow: 0 0 20px #a7773544;
+}
