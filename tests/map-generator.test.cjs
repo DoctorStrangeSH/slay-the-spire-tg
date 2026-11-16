@@ -107,8 +107,8 @@ test('event scenes distinguish all choices and preserve failed bargain outcome',
     });
     const game = new Game();
     const events = game.getEventsForAct();
-    assert.equal(events.length, 6);
-    assert.equal(new Set(events.map(event => game.getEventPresentation(event.name).style)).size, 6);
+    assert.equal(events.length, 7);
+    assert.equal(new Set(events.map(event => game.getEventPresentation(event.name).style )).size, 7);
     assert.ok(events.every(event => event.options.length >= 2));
     assert.ok(events.every(event => event.description.length > 75));
     game.player = { hp: 12, maxHp: 50, gold: 0 };
@@ -148,4 +148,30 @@ test('new event risks have defined prices and never kill the player', () => {
     game.player.hp = 60;
     assert.equal(get('Библиотека Безымянных').options[1].action(), true);
     assert.equal(game.player.hp, 63);
+});
+
+test('each act has its own encounter and risky choices cannot be lethal', () => {
+    const source = readFileSync(join(__dirname, '../js/systems/Game.js'), 'utf8');
+    const Game = vm.runInNewContext(source + '\nGame;', {
+        GAME_CONFIG: { maxActs: 3 }, RunSave: class { clear() {} }, alert() {}
+    });
+    const game = new Game();
+    const names = ['Сердце Терновника', 'Кузница Погасших Звёзд', 'Зеркало Забытой Короны'];
+    for (let act = 1; act <= 3; act++) {
+        game.act = act;
+        const events = game.getEventsForAct();
+        assert.equal(events.length, 7);
+        assert.ok(events.some(event => event.name === names[act - 1]));
+        assert.ok(events.every(event => !names.some(name => name !== names[act - 1] && event.name === name)));
+    }
+    game.player = { hp: 6, maxHp: 40, gold: 0 };
+    game.act = 1;
+    assert.equal(game.getEventsForAct().find(e => e.name === names[0]).options[0].action(), false);
+    assert.equal(game.player.hp, 6);
+    game.act = 2;
+    assert.equal(game.getEventsForAct().find(e => e.name === names[1]).options[0].action(), false);
+    assert.equal(game.player.gold, 0);
+    game.act = 3;
+    assert.equal(game.getEventsForAct().find(e => e.name === names[2]).options[0].action(), false);
+    assert.equal(game.player.hp, 6);
 });
