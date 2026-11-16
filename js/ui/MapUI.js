@@ -43,6 +43,15 @@ const MapUI = {
             mapContainer.appendChild(blessing);
         }
         
+        if ((Number(game.player.oathBattles) || 0) > 0) {
+            const oath = document.createElement('button');
+            oath.className = 'cathedral-map-blessing';
+            oath.type = 'button';
+            oath.onclick = () => game.showConditions();
+            oath.textContent = `☾ Лунная клятва · +1 энергия в начале следующих ${game.player.oathBattles} боёв`;
+            mapContainer.appendChild(oath);
+        }
+
         if ((Number(game.player.curseBattles) || 0) > 0) {
             const curse = document.createElement('button');
             curse.className = 'cathedral-map-curse';
