@@ -395,3 +395,28 @@ test('forge converts only an active curse, preserving charges and avoiding doubl
     assert.equal(forge.options[1].action(), false);
     assert.equal(game.player.hp, 22);
 });
+
+test('eternity shard adds exactly one battle to newly gained blessings, not existing charges', () => {
+    const source = readFileSync(join(__dirname, '../js/systems/Game.js'), 'utf8');
+    const Game = vm.runInNewContext(source + '\nGame;', {
+        GAME_CONFIG: { maxActs: 3 }, RunSave: class { clear() {} }, alert() {}
+    });
+    const game = new Game();
+    game.player = { hp: 50, gold: 50, relics: ['eternityShard'],
+        blessingBattles: 1, ashBattles: 0, oathBattles: 0, curseBattles: 2 };
+    const oracle = game.getRareEventsForAct().find(e => e.name === 'Оракул Золотого Пламени');
+    assert.equal(oracle.options[0].action(), true);
+    assert.equal(game.player.blessingBattles, 4);
+    const forge = game.getRareEventsForAct().find(e => e.name === 'Кузница Судеб');
+    assert.equal(forge.options[1].action(), true);
+    assert.equal(game.player.hp, 42);
+    assert.equal(game.player.curseBattles, 0);
+    assert.equal(game.player.ashBattles, 3);
+    assert.equal(game.grantTemporaryBlessing('oathBattles', 2), 3);
+    game.player.blessingBattles = 98;
+    assert.equal(game.grantTemporaryBlessing('blessingBattles', 2), 1);
+    assert.equal(game.player.blessingBattles, 99);
+    assert.equal(game.grantTemporaryBlessing('curseBattles', 2), 0);
+    game.player.relics = [];
+    assert.equal(game.grantTemporaryBlessing('oathBattles', 2), 2);
+});
