@@ -242,3 +242,33 @@ test('oracle blessing persists on player and expires after two battle openings',
     game.beginEncounter({});
     assert.equal(game.currentBattle.block, 0);
 });
+
+test('cursed coin grants gold now and reduces first-turn energy in two battles', () => {
+    const source = readFileSync(join(__dirname, '../js/systems/Game.js'), 'utf8');
+    const context = {
+        GAME_CONFIG: { maxActs: 3 }, RunSave: class { clear() {} },
+        BattleSystem: class { constructor() { this.block = 0; this.energy = 3; } }
+    };
+    const Game = vm.runInNewContext(source + '\nGame;', context);
+    const game = new Game();
+    const coin = game.getRareEventsForAct().find(e => e.name === 'Монета Забытого Долга');
+    assert.equal(coin.rare, true);
+    game.player = { gold: 10, curseBattles: 0, blessingBattles: 0 };
+    assert.equal(coin.options[0].action(), true);
+    assert.equal(game.player.gold, 85);
+    assert.equal(game.player.curseBattles, 2);
+    game.showBattle = () => {};
+    game.beginEncounter({});
+    assert.equal(game.currentBattle.energy, 2);
+    assert.equal(game.player.curseBattles, 1);
+    game.beginEncounter({});
+    assert.equal(game.currentBattle.energy, 2);
+    assert.equal(game.player.curseBattles, 0);
+    game.beginEncounter({});
+    assert.equal(game.currentBattle.energy, 3);
+    game.player.curseBattles = 1;
+    game.player.blessingBattles = 1;
+    game.beginEncounter({});
+    assert.equal(game.currentBattle.block, 5);
+    assert.equal(game.currentBattle.energy, 2);
+});
