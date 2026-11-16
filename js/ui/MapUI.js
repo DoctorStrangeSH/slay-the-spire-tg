@@ -43,6 +43,15 @@ const MapUI = {
             mapContainer.appendChild(blessing);
         }
         
+        if ((Number(game.player.ashBattles) || 0) > 0) {
+            const ash = document.createElement('button');
+            ash.className = 'cathedral-map-blessing';
+            ash.type = 'button';
+            ash.onclick = () => game.showConditions();
+            ash.textContent = `✹ Пепельная печать · +2 силы в следующих ${game.player.ashBattles} боях`;
+            mapContainer.appendChild(ash);
+        }
+
         if ((Number(game.player.oathBattles) || 0) > 0) {
             const oath = document.createElement('button');
             oath.className = 'cathedral-map-blessing';
