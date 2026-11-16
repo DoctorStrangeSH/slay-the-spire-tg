@@ -513,7 +513,7 @@ class Game {
     }
 
     getEventsForAct() {
-        return [
+        const commonEvents = [
             {
                 name: 'Загадочный фонтан',
                 description: 'В треснувшей купели дрожит серебряная вода. На дне мерцают монеты давно погибших путников. Кажется, эта вода ещё помнит, как исцелять раны.',
@@ -627,6 +627,67 @@ class Game {
                 ]
             }
         ];
+        const actEvents = {
+            1: {
+                name: 'Сердце Терновника',
+                description: 'В глубине заброшенных садов бьётся сердце из колючих лоз. Его шипы блестят от росы, а под корнями темнеют кошельки прежних искателей.',
+                options: [
+                    {
+                        text: 'Пройти сквозь шипы (−6 HP, +45 золота)',
+                        action: () => {
+                            if (this.player.hp <= 6) { alert('Вы слишком слабы для терновника!'); return false; }
+                            this.player.hp -= 6;
+                            this.player.gold += 45;
+                            return true;
+                        }
+                    },
+                    {
+                        text: 'Прилечь у корней (+10 HP)',
+                        action: () => {
+                            this.player.hp = Math.min(this.player.maxHp, this.player.hp + 10);
+                            return true;
+                        }
+                    },
+                    { text: 'Уйти', action: () => true }
+                ]
+            },
+            2: {
+                name: 'Кузница Погасших Звёзд',
+                description: 'Под пепельными сводами до сих пор дышит древняя кузница. Слепой мастер предлагает укрепить твоё тело раскалённым клеймом.',
+                options: [
+                    {
+                        text: 'Заплатить кузнецу (40 золота, +5 к максимуму HP)',
+                        action: () => {
+                            if (this.player.gold < 40) { alert('Недостаточно золота!'); return false; }
+                            this.player.gold -= 40;
+                            this.player.maxHp += 5;
+                            this.player.hp += 5;
+                            return true;
+                        }
+                    },
+                    { text: 'Отказаться от клейма', action: () => true }
+                ]
+            },
+            3: {
+                name: 'Зеркало Забытой Короны',
+                description: 'В цитадели стоит зеркало, которое не отражает лицо. Вместо него ты видишь себя на троне, но каждое видение высасывает жизненную силу.',
+                options: [
+                    {
+                        text: 'Принять отражение (−10 HP, +7 к максимуму HP)',
+                        action: () => {
+                            if (this.player.hp <= 10) { alert('Отражение заберёт последнюю жизнь!'); return false; }
+                            this.player.hp -= 10;
+                            this.player.maxHp += 7;
+                            return true;
+                        }
+                    },
+                    { text: 'Разбить отражение (+20 золота)',
+                      action: () => { this.player.gold += 20; return true; } },
+                    { text: 'Уйти', action: () => true }
+                ]
+            }
+        };
+        return actEvents[this.act] ? [...commonEvents, actEvents[this.act]] : commonEvents;
     }
 
     getEventPresentation(name) {
@@ -636,7 +697,10 @@ class Game {
             'Алтарь Пепельной Клятвы': { style: 'altar', sigil: '✥', caption: 'ОБЕТ КРОВИ', hint: 'Сила требует жертвы. Решение за тобой.' },
             'Библиотека Безымянных': { style: 'library', sigil: '✣', caption: 'ШЁПОТ СТРАНИЦ', hint: 'Знание бывает дороже золота.' },
             'Часовня Последнего Света': { style: 'chapel', sigil: '✟', caption: 'ПОСЛЕДНЯЯ МОЛИТВА', hint: 'Свет не погас, пока есть надежда.' },
-            'Запечатанная Сокровищница': { style: 'vault', sigil: '◈', caption: 'ПЕЧАТЬ ЗАБЫТЫХ', hint: 'Богатство и боль часто идут рядом.' }
+            'Запечатанная Сокровищница': { style: 'vault', sigil: '◈', caption: 'ПЕЧАТЬ ЗАБЫТЫХ', hint: 'Богатство и боль часто идут рядом.' },
+            'Сердце Терновника': { style: 'thorns', sigil: '❦', caption: 'ШЁПОТ САДОВ', hint: 'Не всякое сокровище достаётся без боли.' },
+            'Кузница Погасших Звёзд': { style: 'forge', sigil: '⚒', caption: 'ЗАКАЛКА В ПЕПЛЕ', hint: 'Пламя куёт новую судьбу.' },
+            'Зеркало Забытой Короны': { style: 'mirror', sigil: '◉', caption: 'ГРАНЬ ВЛАСТИ', hint: 'Какую цену ты заплатишь за власть?' }
         };
         return scenes[name] || { style: 'mystery', sigil: '✦', caption: 'НЕИЗВЕСТНАЯ ВСТРЕЧА', hint: 'Выбери свой путь.' };
     }
@@ -664,7 +728,7 @@ class Game {
         event.options.forEach((option, index) => {
             const button = document.createElement('button');
             button.className = 'cathedral-event-choice';
-            const isExit = /^(Уйти|Не принимать клятву|Не трогать печать)$/.test(option.text);
+            const isExit = /^(Уйти|Не принимать клятву|Не трогать печать|Отказаться от клейма)$/.test(option.text);
             if (isExit) button.classList.add('cathedral-event-choice--exit');
             const number = document.createElement('span');
             number.className = 'cathedral-event-choice-number';
