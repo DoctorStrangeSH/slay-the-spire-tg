@@ -593,6 +593,41 @@ class Game {
 
     getRareEventsForAct() {
         return [{
+            name: 'Кузница Судеб',
+            description: 'В глубине собора кузнец без лица предлагает переплавить бремя проклятия в дар. Золотая сталь принесёт защиту, кровавая — силу. Без проклятия кузница молчит.',
+            rare: true,
+            options: [
+                {
+                    text: 'Перековать в защиту (30 золота, проклятие → Золотое пламя)',
+                    action: () => {
+                        const remaining = Number(this.player.curseBattles);
+                        if (!Number.isInteger(remaining) || remaining <= 0) {
+                            alert('Нет активного проклятия для перековки!'); return false;
+                        }
+                        if (this.player.gold < 30) { alert('Недостаточно золота!'); return false; }
+                        this.player.gold -= 30;
+                        this.player.curseBattles = 0;
+                        this.player.blessingBattles = Math.min(99, Math.max(0, Number(this.player.blessingBattles) || 0) + remaining);
+                        return true;
+                    }
+                },
+                {
+                    text: 'Перековать в силу (−8 HP, проклятие → Пепельная печать)',
+                    action: () => {
+                        const remaining = Number(this.player.curseBattles);
+                        if (!Number.isInteger(remaining) || remaining <= 0) {
+                            alert('Нет активного проклятия для перековки!'); return false;
+                        }
+                        if (this.player.hp <= 8) { alert('Недостаточно здоровья!'); return false; }
+                        this.player.hp -= 8;
+                        this.player.curseBattles = 0;
+                        this.player.ashBattles = Math.min(99, Math.max(0, Number(this.player.ashBattles) || 0) + remaining);
+                        return true;
+                    }
+                },
+                { text: 'Не доверять кузнецу', action: () => true }
+            ]
+        }, {
             name: 'Пепельная Печать',
             description: 'Из потухшего алтаря поднимаются красные искры. Печать даст тебе силу на две битвы, но заберёт часть жизненной энергии прямо сейчас.',
             rare: true,
