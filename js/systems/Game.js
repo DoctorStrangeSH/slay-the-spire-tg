@@ -158,6 +158,8 @@ class Game {
         const effects = [
             { key: 'blessingBattles', kind: 'blessing', icon: '☼',
               name: 'Золотое пламя', description: '+5 блока в начале первого хода каждого следующего боя.' },
+            { key: 'oathBattles', kind: 'blessing', icon: '☾',
+              name: 'Лунная клятва', description: '+1 энергия в начале первого хода каждого следующего боя.' },
             { key: 'curseBattles', kind: 'curse', icon: '☷',
               name: 'Монета Забытого Долга', description: '−1 энергия в начале первого хода каждого следующего боя.' }
         ];
@@ -238,6 +240,11 @@ class Game {
         if (Number.isInteger(curseCharges) && curseCharges > 0) {
             this.currentBattle.energy = Math.max(0, this.currentBattle.energy - 1);
             this.player.curseBattles = curseCharges - 1;
+        }
+        const oathCharges = Number(this.player?.oathBattles) || 0;
+        if (Number.isInteger(oathCharges) && oathCharges > 0) {
+            this.currentBattle.energy += 1;
+            this.player.oathBattles = oathCharges - 1;
         }
         this.showBattle();
     }
@@ -579,6 +586,22 @@ class Game {
 
     getRareEventsForAct() {
         return [{
+            name: 'Лунная Клятва',
+            description: 'Среди осколков витража лунный свет складывается в письмена. За каплю жизненной силы он обещает ускорить два грядущих сражения.',
+            rare: true,
+            options: [
+                {
+                    text: 'Принять клятву (−12 HP, +1 энергия в начале 2 следующих боёв)',
+                    action: () => {
+                        if (this.player.hp <= 12) { alert('Недостаточно здоровья для клятвы!'); return false; }
+                        this.player.hp -= 12;
+                        this.player.oathBattles = Math.min(99, Math.max(0, Number(this.player.oathBattles) || 0) + 2);
+                        return true;
+                    }
+                },
+                { text: 'Оставить витраж нетронутым', action: () => true }
+            ]
+        }, {
             name: 'Монета Забытого Долга',
             description: 'У сломанного трона лежит тяжёлая монета с лицом безымянного короля. Она обещает золото сейчас, но заберёт часть твоих сил в двух грядущих схватках.',
             rare: true,

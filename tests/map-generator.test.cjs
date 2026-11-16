@@ -297,3 +297,32 @@ test('chapel only charges for cleansing an active curse and preserves blessing',
     assert.equal(cleanse.action(), false);
     assert.equal(game.player.gold, 30);
 });
+
+test('lunar oath trades health for two first-turn energy bonuses and stacks with curse', () => {
+    const source = readFileSync(join(__dirname, '../js/systems/Game.js'), 'utf8');
+    const Game = vm.runInNewContext(source + '\nGame;', {
+        GAME_CONFIG: { maxActs: 3 }, RunSave: class { clear() {} }, alert() {},
+        BattleSystem: class { constructor() { this.block = 0; this.energy = 3; } }
+    });
+    const game = new Game();
+    const oath = game.getRareEventsForAct().find(event => event.name === 'Лунная Клятва');
+    assert.equal(oath.rare, true);
+    game.player = { hp: 12, oathBattles: 0, curseBattles: 0 };
+    assert.equal(oath.options[0].action(), false);
+    assert.equal(game.player.hp, 12);
+    game.player.hp = 30;
+    assert.equal(oath.options[0].action(), true);
+    assert.equal(game.player.hp, 18);
+    assert.equal(game.player.oathBattles, 2);
+    assert.deepEqual(Array.from(game.getTemporaryConditions().map(effect => effect.name)), ['Лунная клятва']);
+    game.showBattle = () => {};
+    game.player.curseBattles = 1;
+    game.beginEncounter({});
+    assert.equal(game.currentBattle.energy, 3);
+    assert.equal(game.player.oathBattles, 1);
+    game.beginEncounter({});
+    assert.equal(game.currentBattle.energy, 4);
+    assert.equal(game.player.oathBattles, 0);
+    game.beginEncounter({});
+    assert.equal(game.currentBattle.energy, 3);
+});
