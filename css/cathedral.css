@@ -1347,3 +1347,24 @@ button:disabled { opacity: .42; filter: grayscale(.5); }
   color: #e8c3ff; font: 700 12px/1.5 system-ui,sans-serif;
   text-align: center; box-shadow: 0 0 20px #6d399944;
 }
+
+/* Состояния героя: читаемые карточки и кликабельные метки карты. */
+#map-screen .cathedral-map-blessing, #map-screen .cathedral-map-curse {
+  display: block; width: 100%; cursor: pointer; min-height: 42px;
+}
+#map-screen .cathedral-map-blessing:focus-visible, #map-screen .cathedral-map-curse:focus-visible {
+  outline: 3px solid #fff0c4; outline-offset: 3px;
+}
+.cathedral-conditions-content { width: min(92vw, 450px); }
+.cathedral-conditions-content h3 { color: #f2d5a4; margin-bottom: 17px; }
+.cathedral-condition-entry {
+  display: grid; gap: 6px; margin: 10px 0; padding: 13px 15px;
+  text-align: left; border: 1px solid #b4a281; border-left-width: 4px;
+  background: linear-gradient(120deg, #3b3430, #161c24);
+}
+.cathedral-condition-entry--blessing { border-left-color: #f2d78d; }
+.cathedral-condition-entry--curse { border-left-color: #bf8cdb; background: linear-gradient(120deg, #44304e, #161c24); }
+.cathedral-condition-entry strong { color: #ffe4ad; font: 700 16px/1.3 Georgia,serif; }
+.cathedral-condition-entry--curse strong { color: #e0b8f4; }
+.cathedral-condition-entry span { color: #e4d9c9; font: 12px/1.5 system-ui,sans-serif; }
+.cathedral-condition-entry small { color: #adbac4; font: 800 11px/1.3 system-ui,sans-serif; }
