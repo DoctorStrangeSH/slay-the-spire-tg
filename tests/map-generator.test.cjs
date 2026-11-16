@@ -420,3 +420,35 @@ test('eternity shard adds exactly one battle to newly gained blessings, not exis
     game.player.relics = [];
     assert.equal(game.grantTemporaryBlessing('oathBattles', 2), 2);
 });
+
+test('blood pact gives strength in each cursed battle, including final charge, and never otherwise', () => {
+    const source = readFileSync(join(__dirname, '../js/systems/Game.js'), 'utf8');
+    const Game = vm.runInNewContext(source + '\nGame;', {
+        GAME_CONFIG: { maxActs: 3 }, RunSave: class { clear() {} },
+        BattleSystem: class {
+            constructor() { this.energy = 3; this.block = 0; this.statusEffects = { player: { strength: 1 } }; }
+        }
+    });
+    const game = new Game();
+    game.showBattle = () => {};
+    game.player = { relics: ['bloodPact'], curseBattles: 2, ashBattles: 0 };
+    game.beginEncounter({});
+    assert.equal(game.currentBattle.energy, 2);
+    assert.equal(game.currentBattle.statusEffects.player.strength, 3);
+    assert.equal(game.player.curseBattles, 1);
+    game.beginEncounter({});
+    assert.equal(game.currentBattle.statusEffects.player.strength, 3);
+    assert.equal(game.player.curseBattles, 0);
+    game.beginEncounter({});
+    assert.equal(game.currentBattle.energy, 3);
+    assert.equal(game.currentBattle.statusEffects.player.strength, 1);
+    game.player.curseBattles = 1;
+    game.player.relics = [];
+    game.beginEncounter({});
+    assert.equal(game.currentBattle.statusEffects.player.strength, 1);
+    game.player.relics = ['bloodPact'];
+    game.player.curseBattles = 1;
+    game.player.ashBattles = 1;
+    game.beginEncounter({});
+    assert.equal(game.currentBattle.statusEffects.player.strength, 5);
+});
