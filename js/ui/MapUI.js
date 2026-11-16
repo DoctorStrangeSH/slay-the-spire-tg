@@ -41,6 +41,13 @@ const MapUI = {
             mapContainer.appendChild(blessing);
         }
         
+        if ((Number(game.player.curseBattles) || 0) > 0) {
+            const curse = document.createElement('div');
+            curse.className = 'cathedral-map-curse';
+            curse.textContent = `☷ Монета Забытого Долга · −1 энергия в начале следующих ${game.player.curseBattles} боёв`;
+            mapContainer.appendChild(curse);
+        }
+
         // Создаём SVG для карты
         const svg = this.createSVG(game);
         mapContainer.appendChild(svg);
