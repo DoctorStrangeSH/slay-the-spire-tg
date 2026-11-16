@@ -358,3 +358,40 @@ test('ash seal trades health for two encounters of strength, without changing ot
     game.beginEncounter({});
     assert.equal(game.currentBattle.statusEffects.player.strength, 1);
 });
+
+test('forge converts only an active curse, preserving charges and avoiding double payment', () => {
+    const source = readFileSync(join(__dirname, '../js/systems/Game.js'), 'utf8');
+    const Game = vm.runInNewContext(source + '\nGame;', {
+        GAME_CONFIG: { maxActs: 3 }, RunSave: class { clear() {} }, alert() {}
+    });
+    const game = new Game();
+    const forge = game.getRareEventsForAct().find(event => event.name === 'Кузница Судеб');
+    assert.equal(forge.rare, true);
+    game.player = { gold: 50, hp: 30, curseBattles: 0, blessingBattles: 1, ashBattles: 1 };
+    assert.equal(forge.options[0].action(), false);
+    assert.equal(forge.options[1].action(), false);
+    assert.equal(game.player.gold, 50);
+    assert.equal(game.player.hp, 30);
+    game.player.curseBattles = 2;
+    game.player.gold = 29;
+    assert.equal(forge.options[0].action(), false);
+    assert.equal(game.player.curseBattles, 2);
+    game.player.gold = 50;
+    assert.equal(forge.options[0].action(), true);
+    assert.equal(game.player.gold, 20);
+    assert.equal(game.player.curseBattles, 0);
+    assert.equal(game.player.blessingBattles, 3);
+    assert.equal(forge.options[0].action(), false);
+    assert.equal(game.player.gold, 20);
+    game.player.curseBattles = 3;
+    game.player.hp = 8;
+    assert.equal(forge.options[1].action(), false);
+    assert.equal(game.player.curseBattles, 3);
+    game.player.hp = 30;
+    assert.equal(forge.options[1].action(), true);
+    assert.equal(game.player.hp, 22);
+    assert.equal(game.player.ashBattles, 4);
+    assert.equal(game.player.curseBattles, 0);
+    assert.equal(forge.options[1].action(), false);
+    assert.equal(game.player.hp, 22);
+});
