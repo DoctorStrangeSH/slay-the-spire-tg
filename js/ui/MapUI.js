@@ -61,6 +61,15 @@ const MapUI = {
             mapContainer.appendChild(oath);
         }
 
+        if ((Number(game.player.exhaustionBattles) || 0) > 0) {
+            const exhaustion = document.createElement('button');
+            exhaustion.className = 'cathedral-map-curse';
+            exhaustion.type = 'button';
+            exhaustion.onclick = () => game.showConditions();
+            exhaustion.textContent = `♜ Истощение · −2 силы в следующих ${game.player.exhaustionBattles} боях`;
+            mapContainer.appendChild(exhaustion);
+        }
+
         if ((Number(game.player.curseBattles) || 0) > 0) {
             const curse = document.createElement('button');
             curse.className = 'cathedral-map-curse';
