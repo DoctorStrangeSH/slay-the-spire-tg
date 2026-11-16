@@ -177,6 +177,11 @@ class Game {
             this.currentBattle.block += 5;
             this.player.blessingBattles = charges - 1;
         }
+        const curseCharges = Number(this.player?.curseBattles) || 0;
+        if (Number.isInteger(curseCharges) && curseCharges > 0) {
+            this.currentBattle.energy = Math.max(0, this.currentBattle.energy - 1);
+            this.player.curseBattles = curseCharges - 1;
+        }
         this.showBattle();
     }
 
@@ -517,6 +522,21 @@ class Game {
 
     getRareEventsForAct() {
         return [{
+            name: 'Монета Забытого Долга',
+            description: 'У сломанного трона лежит тяжёлая монета с лицом безымянного короля. Она обещает золото сейчас, но заберёт часть твоих сил в двух грядущих схватках.',
+            rare: true,
+            options: [
+                {
+                    text: 'Взять монету (+75 золота, −1 энергия в начале 2 следующих боёв)',
+                    action: () => {
+                        this.player.gold += 75;
+                        this.player.curseBattles = Math.min(99, Math.max(0, Number(this.player.curseBattles) || 0) + 2);
+                        return true;
+                    }
+                },
+                { text: 'Оставить проклятие нетронутым', action: () => true }
+            ]
+        }, {
             name: 'Оракул Золотого Пламени',
             description: 'За полупрозрачной завесой горит пламя, которое не обжигает. Оракул обещает защиту в двух грядущих схватках, если ты оставишь дар у подножия чаши.',
             rare: true,
@@ -757,7 +777,8 @@ class Game {
             'Кузница Погасших Звёзд': { style: 'forge', sigil: '⚒', caption: 'ЗАКАЛКА В ПЕПЛЕ', hint: 'Пламя куёт новую судьбу.' },
             'Зеркало Забытой Короны': { style: 'mirror', sigil: '◉', caption: 'ГРАНЬ ВЛАСТИ', hint: 'Какую цену ты заплатишь за власть?' },
             'Договор с Хранителем Печатей': { style: 'covenant', sigil: '✺', caption: 'РЕДКАЯ ВСТРЕЧА · КРОВАВАЯ ПЕЧАТЬ', hint: 'Чужое наследие не достаётся бесплатно.' },
-            'Оракул Золотого Пламени': { style: 'oracle', sigil: '☼', caption: 'РЕДКАЯ ВСТРЕЧА · ЗОЛОТОЕ ПЛАМЯ', hint: 'Этот огонь защитит тебя, когда придёт час.' }
+            'Оракул Золотого Пламени': { style: 'oracle', sigil: '☼', caption: 'РЕДКАЯ ВСТРЕЧА · ЗОЛОТОЕ ПЛАМЯ', hint: 'Этот огонь защитит тебя, когда придёт час.' },
+            'Монета Забытого Долга': { style: 'curse', sigil: '☷', caption: 'РЕДКАЯ ВСТРЕЧА · ДОЛГ КОРОНЫ', hint: 'Каждая монета требует расплаты.' }
         };
         return scenes[name] || { style: 'mystery', sigil: '✦', caption: 'НЕИЗВЕСТНАЯ ВСТРЕЧА', hint: 'Выбери свой путь.' };
     }
@@ -786,7 +807,7 @@ class Game {
         event.options.forEach((option, index) => {
             const button = document.createElement('button');
             button.className = 'cathedral-event-choice';
-            const isExit = /^(Уйти|Не принимать клятву|Не трогать печать|Отказаться от клейма|Отвергнуть печать|Не принимать благословение)$/.test(option.text);
+            const isExit = /^(Уйти|Не принимать клятву|Не трогать печать|Отказаться от клейма|Отвергнуть печать|Не принимать благословение|Оставить проклятие нетронутым)$/.test(option.text);
             if (isExit) button.classList.add('cathedral-event-choice--exit');
             const number = document.createElement('span');
             number.className = 'cathedral-event-choice-number';
