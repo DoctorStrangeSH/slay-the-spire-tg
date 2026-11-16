@@ -24,6 +24,12 @@ const RELIC_CATALOG = Object.freeze({
         emoji: '💎',
         description: 'Каждое новое благословение длится на один бой дольше (до 99 боёв).'
     },
+    bloodPact: {
+        id: 'bloodPact',
+        name: 'Кровавый договор',
+        emoji: '🩸',
+        description: '+2 силы на весь бой, если к его началу действует проклятие. Проклятие сохраняет свой штраф.'
+    },
     bloodFang: {
         id: 'bloodFang',
         heroId: 'berserk',
