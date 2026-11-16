@@ -272,3 +272,28 @@ test('cursed coin grants gold now and reduces first-turn energy in two battles',
     assert.equal(game.currentBattle.block, 5);
     assert.equal(game.currentBattle.energy, 2);
 });
+
+test('chapel only charges for cleansing an active curse and preserves blessing', () => {
+    const source = readFileSync(join(__dirname, '../js/systems/Game.js'), 'utf8');
+    const Game = vm.runInNewContext(source + '\nGame;', {
+        GAME_CONFIG: { maxActs: 3 }, RunSave: class { clear() {} }, alert() {}
+    });
+    const game = new Game();
+    game.player = { gold: 50, blessingBattles: 2, curseBattles: 0 };
+    const chapel = game.getEventsForAct().find(event => event.name === 'Часовня Последнего Света');
+    const cleanse = chapel.options.find(option => option.text.includes('Очистить проклятие'));
+    assert.equal(cleanse.action(), false);
+    assert.equal(game.player.gold, 50);
+    game.player.curseBattles = 2;
+    game.player.gold = 19;
+    assert.equal(cleanse.action(), false);
+    assert.equal(game.player.curseBattles, 2);
+    game.player.gold = 50;
+    assert.equal(cleanse.action(), true);
+    assert.equal(game.player.gold, 30);
+    assert.equal(game.player.curseBattles, 0);
+    assert.equal(game.player.blessingBattles, 2);
+    assert.deepEqual(Array.from(game.getTemporaryConditions().map(effect => effect.kind)), ['blessing']);
+    assert.equal(cleanse.action(), false);
+    assert.equal(game.player.gold, 30);
+});

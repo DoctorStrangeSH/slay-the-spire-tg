@@ -35,15 +35,19 @@ const MapUI = {
         `;
         mapContainer.appendChild(actInfo);
         if ((Number(game.player.blessingBattles) || 0) > 0) {
-            const blessing = document.createElement('div');
+            const blessing = document.createElement('button');
             blessing.className = 'cathedral-map-blessing';
+            blessing.type = 'button';
+            blessing.onclick = () => game.showConditions();
             blessing.textContent = `☼ Золотое пламя · +5 блока в начале следующих ${game.player.blessingBattles} боёв`;
             mapContainer.appendChild(blessing);
         }
         
         if ((Number(game.player.curseBattles) || 0) > 0) {
-            const curse = document.createElement('div');
+            const curse = document.createElement('button');
             curse.className = 'cathedral-map-curse';
+            curse.type = 'button';
+            curse.onclick = () => game.showConditions();
             curse.textContent = `☷ Монета Забытого Долга · −1 энергия в начале следующих ${game.player.curseBattles} боёв`;
             mapContainer.appendChild(curse);
         }

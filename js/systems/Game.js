@@ -153,6 +153,63 @@ class Game {
         document.body.appendChild(modal);
     }
 
+    getTemporaryConditions() {
+        if (!this.player) return [];
+        const effects = [
+            { key: 'blessingBattles', kind: 'blessing', icon: '☼',
+              name: 'Золотое пламя', description: '+5 блока в начале первого хода каждого следующего боя.' },
+            { key: 'curseBattles', kind: 'curse', icon: '☷',
+              name: 'Монета Забытого Долга', description: '−1 энергия в начале первого хода каждого следующего боя.' }
+        ];
+        return effects.map(effect => ({
+            ...effect,
+            remaining: Number.isInteger(this.player[effect.key]) && this.player[effect.key] > 0
+                ? this.player[effect.key] : 0
+        })).filter(effect => effect.remaining > 0);
+    }
+
+    showConditions() {
+        document.getElementById('conditions-modal')?.remove();
+        const modal = document.createElement('div');
+        modal.id = 'conditions-modal';
+        modal.className = 'modal';
+        modal.setAttribute('role', 'dialog');
+        modal.setAttribute('aria-modal', 'true');
+        modal.setAttribute('aria-label', 'Состояния героя');
+        const content = document.createElement('div');
+        content.className = 'modal-content cathedral-conditions-content';
+        const title = document.createElement('h3');
+        title.textContent = '✦ Состояния героя';
+        content.appendChild(title);
+        const conditions = this.getTemporaryConditions();
+        if (!conditions.length) {
+            const empty = document.createElement('p');
+            empty.textContent = 'Пока нет благословений и проклятий.';
+            content.appendChild(empty);
+        }
+        for (const condition of conditions) {
+            const entry = document.createElement('div');
+            entry.className = `cathedral-condition-entry cathedral-condition-entry--${condition.kind}`;
+            const name = document.createElement('strong');
+            name.textContent = `${condition.icon} ${condition.name}`;
+            const description = document.createElement('span');
+            description.textContent = condition.description;
+            const duration = document.createElement('small');
+            duration.textContent = `Осталось боёв: ${condition.remaining}`;
+            entry.appendChild(name);
+            entry.appendChild(description);
+            entry.appendChild(duration);
+            content.appendChild(entry);
+        }
+        const close = document.createElement('button');
+        close.textContent = 'Закрыть';
+        close.onclick = () => modal.remove();
+        content.appendChild(close);
+        modal.appendChild(content);
+        document.body.appendChild(modal);
+        close.focus();
+    }
+
     startBattle(isElite = false) {
         const enemy = getRandomEnemy();
         if (isElite) {
@@ -662,6 +719,22 @@ class Game {
                             this.player.gold -= 25;
                             this.player.maxHp += 3;
                             this.player.hp += 3;
+                            return true;
+                        }
+                    },
+                    {
+                        text: 'Очистить проклятие (20 золота)',
+                        action: () => {
+                            if (!(Number(this.player.curseBattles) > 0)) {
+                                alert('На вас нет проклятия!');
+                                return false;
+                            }
+                            if (this.player.gold < 20) {
+                                alert('Недостаточно золота!');
+                                return false;
+                            }
+                            this.player.gold -= 20;
+                            this.player.curseBattles = 0;
                             return true;
                         }
                     },
