@@ -26,7 +26,8 @@ class Game {
             hp: hero.maxHp,
             gold: 0,
             deck: getStarterDeckForHero(heroId),
-            relics: []
+            relics: [],
+            eventHistory: []
         };
 
         this.startNewGame();
@@ -40,6 +41,7 @@ class Game {
         this.player.gold = 0;
         this.player.deck = getStarterDeckForHero(this.player.heroId);
         this.player.relics = [];
+        this.player.eventHistory = [];
         this.act = 1;
         this.floor = 0;
 
@@ -642,8 +644,19 @@ class Game {
         const rareEvents = this.getEligibleRareEvents();
         const isRare = rareEvents.length > 0 && Math.random() < this.getRareEventChance();
         const events = isRare ? rareEvents : this.getEventsForAct();
-        const event = events[Math.floor(Math.random() * events.length)];
-        if (event) this.showEventModal(event);
+        const history = Array.isArray(this.player?.eventHistory)
+            ? this.player.eventHistory.filter(name => typeof name === 'string').slice(-2)
+            : [];
+        const freshEvents = events.filter(event => !history.includes(event.name));
+        // Если весь пул уже встречался, событие всё равно должно состояться.
+        const availableEvents = freshEvents.length ? freshEvents : events;
+        const event = availableEvents[Math.floor(Math.random() * availableEvents.length)];
+        if (!event) return;
+        if (this.player) {
+            const previous = Array.isArray(this.player.eventHistory) ? this.player.eventHistory : [];
+            this.player.eventHistory = [...previous.slice(-2), event.name];
+        }
+        this.showEventModal(event);
     }
 
     getRareEventsForAct() {
