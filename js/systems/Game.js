@@ -3,6 +3,7 @@ class Game {
     constructor() {
         this.player = null;
         this.currentBattle = null;
+        this.currentBattleIsElite = false;
         this.gameState = 'menu';
         this.act = 1;
         this.maxActs = GAME_CONFIG.maxActs;
@@ -247,6 +248,7 @@ class Game {
     }
 
     startBattle(isElite = false) {
+        this.currentBattleIsElite = isElite;
         const enemy = getRandomEnemy();
         if (isElite) {
             enemy.maxHp = Math.floor(enemy.maxHp * 1.5);
@@ -258,6 +260,7 @@ class Game {
     }
 
     startBossBattle() {
+        this.currentBattleIsElite = false;
         const boss = getBossForAct(this.act);
         this.beginEncounter(boss);
     }
@@ -431,11 +434,20 @@ class Game {
         // Только один экран исхода: повторные события не начислят золото второй раз.
         if (document.getElementById('battle-result-modal')) return;
         if (victory) {
-            const goldReward = Math.floor(Math.random() * 20) + 10;
+            const elite = this.currentBattleIsElite === true;
+            let goldReward = Math.floor(Math.random() * 20) + (elite ? 25 : 10);
+            let relic = null;
+            if (elite) {
+                relic = chooseRelic(this.player.relics, Math.random, this.player.heroId);
+                if (relic) this.player.relics.push(relic.id);
+                else goldReward += 40; // Exhausted relic pool never leaves an elite unrewarded.
+            }
+            this.currentBattleIsElite = false;
             this.player.gold += goldReward;
             BattleFeedback.result({
                 victory: true,
                 gold: goldReward,
+                relic,
                 onContinue: () => {
                     if (Math.random() < 0.7) this.offerCard();
                     else this.continueJourney();
