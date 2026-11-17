@@ -1513,3 +1513,6 @@ button:disabled { opacity: .42; filter: grayscale(.5); }
   #action-buttons .action-btn { min-height: 29px; padding: 5px 3px; }
   #battle-preview { bottom: 185px; }
 }
+
+/* Desktop and mobile share the same vertical battle flow. */
+#battle-screen { flex-direction: column; }
