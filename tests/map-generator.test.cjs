@@ -107,8 +107,8 @@ test('event scenes distinguish all choices and preserve failed bargain outcome',
     });
     const game = new Game();
     const events = game.getEventsForAct();
-    assert.equal(events.length, 7);
-    assert.equal(new Set(events.map(event => game.getEventPresentation(event.name).style )).size, 7);
+    assert.equal(events.length, 8);
+    assert.equal(new Set(events.map(event => game.getEventPresentation(event.name).style )).size, 8);
     assert.ok(events.every(event => event.options.length >= 2));
     assert.ok(events.every(event => event.description.length > 75));
     game.player = { hp: 12, maxHp: 50, gold: 0 };
@@ -160,7 +160,7 @@ test('each act has its own encounter and risky choices cannot be lethal', () => 
     for (let act = 1; act <= 3; act++) {
         game.act = act;
         const events = game.getEventsForAct();
-        assert.equal(events.length, 7);
+        assert.equal(events.length, 8);
         assert.ok(events.some(event => event.name === names[act - 1]));
         assert.ok(events.every(event => !names.some(name => name !== names[act - 1] && event.name === name)));
     }
@@ -259,6 +259,45 @@ test('single eligible event remains available despite history', () => {
     assert.deepEqual(Array.from(game.player.eventHistory), [
         'Единственное событие', 'Единственное событие'
     ]);
+});
+
+test('pilgrim choice unlocks a single follow-up encounter across saved player data', () => {
+    const source = readFileSync(join(__dirname, '../js/systems/Game.js'), 'utf8');
+    const Game = vm.runInNewContext(source + '\nGame;', {
+        GAME_CONFIG: { maxActs: 3 }, RunSave: class { clear() {} },
+        Math: Object.assign(Object.create(Math), { random: () => 0.5 }),
+        alert() {}
+    });
+    const game = new Game();
+    game.player = { gold: 15, hp: 40, maxHp: 80, eventHistory: [] };
+    const first = game.getEventsForAct().find(event => event.name === 'Паломник у развилки');
+    assert.ok(first);
+    assert.equal(first.options[0].action(), false);
+    assert.equal(game.player.pilgrimChoice, undefined);
+    game.player.gold = 25;
+    assert.equal(first.options[0].action(), true);
+    assert.equal(game.player.gold, 5);
+    assert.equal(game.getEventsForAct().some(event => event.name === 'Паломник у развилки'), false);
+    game.player = JSON.parse(JSON.stringify(game.player));
+    const reunion = game.getEventsForAct().find(event => event.name === 'Возвращение паломника');
+    assert.ok(reunion);
+    assert.equal(reunion.options[0].action(), true);
+    assert.equal(game.player.gold, 55);
+    assert.equal(game.player.pilgrimChoice, 'repaid');
+    assert.equal(game.getEventsForAct().some(event => event.name === 'Возвращение паломника'), false);
+});
+
+test('ignoring the pilgrim closes the quest without a later reward', () => {
+    const source = readFileSync(join(__dirname, '../js/systems/Game.js'), 'utf8');
+    const Game = vm.runInNewContext(source + '\nGame;', {
+        GAME_CONFIG: { maxActs: 3 }, RunSave: class { clear() {} }
+    });
+    const game = new Game();
+    game.player = { gold: 0 };
+    const first = game.getEventsForAct().find(event => event.name === 'Паломник у развилки');
+    assert.equal(first.options[1].action(), true);
+    assert.equal(game.player.pilgrimChoice, 'ignored');
+    assert.equal(game.getEventsForAct().some(event => /паломник/i.test(event.name)), false);
 });
 
 test('oracle blessing persists on player and expires after two battle openings', () => {
