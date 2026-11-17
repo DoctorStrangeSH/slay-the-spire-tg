@@ -72,6 +72,11 @@ class RunHistory {
     }
 
     achievements(data = this.read()) {
+        const categoryByName = {
+            'Кровавый триумф': 'berserk', 'На последнем дыхании': 'berserk',
+            'Стальной разум': 'engineer', 'Железная линия': 'engineer',
+            'Зрящий за гранью': 'psyker', 'Разрыв сознания': 'psyker'
+        };
         return [
             { name: 'Первый шаг', description: 'Завершить первый забег', unlocked: data.runs >= 1 },
             { name: 'Покоритель шпиля', description: 'Одержать первую победу', unlocked: data.victories >= 1 },
@@ -85,6 +90,6 @@ class RunHistory {
             { name: 'На последнем дыхании', description: 'Берсерком победить босса, имея не более 20% максимального HP', unlocked: data.challenges?.berserk_last_breath === true },
             { name: 'Железная линия', description: 'Инженером победить элитного врага, сохранив не менее двух конструкций', unlocked: data.challenges?.engineer_iron_line === true },
             { name: 'Разрыв сознания', description: 'Псайкером победить элитного врага под параличом, разыграв три карты за ход', unlocked: data.challenges?.psyker_mind_chain === true }
-        ];
+        ].map(entry => ({ ...entry, category: categoryByName[entry.name] || 'general' }));
     }
 }

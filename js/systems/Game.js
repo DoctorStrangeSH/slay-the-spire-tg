@@ -159,20 +159,57 @@ class Game {
             row.append(name, detail);
             panel.appendChild(row);
         }
-        const achievements = document.createElement('h4');
-        achievements.textContent = 'Достижения';
-        panel.appendChild(achievements);
-        for (const achievement of this.runHistory.achievements(data)) {
-            const row = document.createElement('article');
-            row.className = 'run-journal-entry cathedral-achievement';
-            const name = document.createElement('strong');
-            name.textContent = `${achievement.unlocked ? '✦' : '◇'} ${achievement.name}`;
-            const description = document.createElement('p');
-            description.textContent = achievement.description;
-            row.classList.toggle('cathedral-achievement--locked', !achievement.unlocked);
-            row.append(name, description);
-            panel.appendChild(row);
+        const achievements = this.runHistory.achievements(data);
+        const unlocked = achievements.filter(item => item.unlocked).length;
+        const hall = document.createElement('section');
+        hall.className = 'cathedral-challenge-hall';
+        const hallTitle = document.createElement('h4');
+        hallTitle.textContent = '✦ Зал испытаний';
+        const progress = document.createElement('p');
+        progress.className = 'cathedral-challenge-progress-label';
+        progress.textContent = `Открыто ${unlocked} из ${achievements.length}`;
+        const track = document.createElement('div');
+        track.className = 'cathedral-challenge-progress';
+        track.setAttribute('role', 'progressbar');
+        track.setAttribute('aria-label', 'Прогресс достижений');
+        track.setAttribute('aria-valuenow', String(unlocked));
+        track.setAttribute('aria-valuemin', '0');
+        track.setAttribute('aria-valuemax', String(achievements.length));
+        const fill = document.createElement('div');
+        fill.className = 'cathedral-challenge-progress-fill';
+        fill.style.width = `${achievements.length ? Math.round(unlocked / achievements.length * 100) : 0}%`;
+        track.appendChild(fill);
+        hall.append(hallTitle, progress, track);
+
+        const categories = [
+            ['general', '✦ Общие достижения'],
+            ['berserk', '⚔️ Испытания Берсерка'],
+            ['engineer', '🔧 Испытания Инженера'],
+            ['psyker', '🔮 Испытания Псайкера']
+        ];
+        for (const [id, label] of categories) {
+            const entries = achievements.filter(item => item.category === id);
+            const complete = entries.filter(item => item.unlocked).length;
+            const group = document.createElement('details');
+            group.className = 'cathedral-challenge-group';
+            group.open = id === 'general';
+            const header = document.createElement('summary');
+            header.textContent = `${label} · ${complete}/${entries.length}`;
+            group.appendChild(header);
+            for (const achievement of entries) {
+                const row = document.createElement('article');
+                row.className = 'run-journal-entry cathedral-achievement';
+                const name = document.createElement('strong');
+                name.textContent = `${achievement.unlocked ? '✦' : '◇'} ${achievement.name}`;
+                const description = document.createElement('p');
+                description.textContent = achievement.description;
+                row.classList.toggle('cathedral-achievement--locked', !achievement.unlocked);
+                row.append(name, description);
+                group.appendChild(row);
+            }
+            hall.appendChild(group);
         }
+        panel.appendChild(hall);
         const recentTitle = document.createElement('h4');
         recentTitle.textContent = 'Последние забеги';
         panel.appendChild(recentTitle);
