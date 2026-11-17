@@ -666,13 +666,23 @@ class Game {
     }
 
     recordCombatChallenge(victory) {
-        if (!victory || !this.player || this.player.heroId !== 'berserk') return false;
-        if (this.currentBattle?.enemy?.isBoss !== true) return false;
-        const hp = Number(this.player.hp);
-        const maxHp = Number(this.player.maxHp);
-        if (!Number.isFinite(hp) || !Number.isFinite(maxHp) || maxHp <= 0
-            || hp <= 0 || hp > maxHp * 0.2) return false;
-        return this.runHistory?.unlockChallenge('berserk_last_breath') || false;
+        if (!victory || !this.player || !this.runHistory) return false;
+        if (this.player.heroId === 'berserk' && this.currentBattle?.enemy?.isBoss === true) {
+            const hp = Number(this.player.hp);
+            const maxHp = Number(this.player.maxHp);
+            if (Number.isFinite(hp) && Number.isFinite(maxHp) && maxHp > 0
+                && hp > 0 && hp <= maxHp * 0.2) {
+                return this.runHistory.unlockChallenge('berserk_last_breath');
+            }
+        }
+        if (this.player.heroId === 'engineer' && this.currentBattleIsElite === true) {
+            const active = this.currentBattle?.buildings?.buildings;
+            if (Array.isArray(active) && active.filter(building =>
+                building && Number.isFinite(Number(building.hp)) && Number(building.hp) > 0).length >= 2) {
+                return this.runHistory.unlockChallenge('engineer_iron_line');
+            }
+        }
+        return false;
     }
 
     endBattle(victory) {
