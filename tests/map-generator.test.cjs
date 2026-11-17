@@ -218,6 +218,49 @@ test('rare room selection uses a twelve-percent independent roll', () => {
     assert.notEqual(selected.rare, true);
 });
 
+test('recent encounters are distinct and survive player snapshot', () => {
+    const source = readFileSync(join(__dirname, '../js/systems/Game.js'), 'utf8');
+    const Game = vm.runInNewContext(source + '\nGame;', {
+        GAME_CONFIG: { maxActs: 3 }, RunSave: class { clear() {} },
+        Math: Object.assign(Object.create(Math), { random: () => 0.5 })
+    });
+    const game = new Game();
+    game.player = { eventHistory: [] };
+    game.getEligibleRareEvents = () => [];
+    game.getEventsForAct = () => [
+        { name: 'Фонтан' }, { name: 'Библиотека' }, { name: 'Часовня' }
+    ];
+    const selected = [];
+    game.showEventModal = event => { selected.push(event.name); };
+    for (let i = 0; i < 3; i++) game.triggerEvent();
+    assert.equal(new Set(selected).size, 3);
+    assert.deepEqual(Array.from(game.player.eventHistory), selected);
+    game.player = JSON.parse(JSON.stringify(game.player));
+    game.triggerEvent();
+    assert.notEqual(selected[3], selected[2]);
+    assert.notEqual(selected[3], selected[1]);
+    assert.equal(game.player.eventHistory.length, 3);
+});
+
+test('single eligible event remains available despite history', () => {
+    const source = readFileSync(join(__dirname, '../js/systems/Game.js'), 'utf8');
+    const Game = vm.runInNewContext(source + '\nGame;', {
+        GAME_CONFIG: { maxActs: 3 }, RunSave: class { clear() {} },
+        Math: Object.assign(Object.create(Math), { random: () => 0.5 })
+    });
+    const game = new Game();
+    game.player = { eventHistory: ['Единственное событие'] };
+    game.getEligibleRareEvents = () => [];
+    game.getEventsForAct = () => [{ name: 'Единственное событие' }];
+    let selected;
+    game.showEventModal = event => { selected = event.name; };
+    game.triggerEvent();
+    assert.equal(selected, 'Единственное событие');
+    assert.deepEqual(Array.from(game.player.eventHistory), [
+        'Единственное событие', 'Единственное событие'
+    ]);
+});
+
 test('oracle blessing persists on player and expires after two battle openings', () => {
     const source = readFileSync(join(__dirname, '../js/systems/Game.js'), 'utf8');
     const context = { GAME_CONFIG: { maxActs: 3 }, RunSave: class { clear() {} },
