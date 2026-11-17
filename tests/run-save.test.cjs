@@ -99,3 +99,17 @@ test('legacy treasure-as-shop map checkpoint still restores', () => {
     assert.equal(persistence.restore(restored), true);
     assert.equal(restored.mapGenerator.legacyTreasureShop, true);
 });
+
+test('checkpoint preserves unresolved obelisk bargain for a later event', () => {
+    const persistence = new RunSave(storage());
+    const original = game();
+    original.player.obeliskDebt = 'owed';
+    original.player.obeliskDebtAct = 1;
+    original.player.obeliskDebtFloor = 0;
+    assert.equal(persistence.save(original), true);
+    const restored = { player: null };
+    assert.equal(persistence.restore(restored), true);
+    assert.equal(restored.player.obeliskDebt, 'owed');
+    assert.equal(restored.player.obeliskDebtAct, 1);
+    assert.equal(restored.player.obeliskDebtFloor, 0);
+});
