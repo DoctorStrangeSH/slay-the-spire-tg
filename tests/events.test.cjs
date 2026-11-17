@@ -219,3 +219,35 @@ test('event chronicle keeps last 50 decisions and accepts legacy player fields',
     assert.equal(state.player.journalLog[0].event, 'Событие 5');
     assert.equal(state.player.journalLog.at(-1).outcome, 'Без немедленных изменений');
 });
+
+test('run summary reports combat, deck and story progress with deterministic score', () => {
+    const state = game(45, 60);
+    state.act = 3;
+    state.floor = 8;
+    state.player.name = 'Берсерк';
+    state.player.deck = [{ name: 'Удар' }, { name: 'Защита' }];
+    state.player.relics = ['relic'];
+    state.player.journalLog = [{ event: 'Обелиск' }];
+    state.player.battleWins = 12;
+    state.player.eliteWins = 3;
+    state.player.bossWins = 2;
+    const summary = state.getRunSummary(true);
+    assert.equal(summary.act, 3);
+    assert.equal(summary.floor, 9);
+    assert.equal(summary.wins, 12);
+    assert.equal(summary.cards, 2);
+    assert.equal(summary.relics, 1);
+    assert.equal(summary.decisions, 1);
+    assert.equal(summary.score, 1425);
+    assert.equal(summary.rank, 'Легенда шпиля');
+    assert.equal(state.getRunSummary(false).score, 925);
+});
+
+test('run summary supports old saves without any progress counters', () => {
+    const state = game();
+    const summary = state.getRunSummary(false);
+    assert.equal(summary.wins, 0);
+    assert.equal(summary.decisions, 0);
+    assert.equal(summary.score, 0);
+    assert.equal(summary.rank, 'Искатель судьбы');
+});
