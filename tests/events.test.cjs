@@ -103,3 +103,37 @@ test('obelisk refuses to reduce a critically low maximum HP', () => {
     assert.equal(state.player.maxHp, 10);
     assert.equal(state.player.gold, 12);
 });
+
+test('obelisk collector is deferred until a later floor and remembers the bargain', () => {
+    const state = game(60, 0);
+    state.act = 1;
+    state.floor = 3;
+    assert.equal(state.applyObeliskBargain(), true);
+    assert.equal(state.player.obeliskDebt, 'owed');
+    assert.equal(state.getEventsForAct().some(event => event.name === 'Хранитель Расколотого Обелиска'), false);
+    state.floor = 4;
+    assert.equal(state.canEncounterObeliskCollector(), true);
+    const collector = state.getEventsForAct().find(event => event.name === 'Хранитель Расколотого Обелиска');
+    assert.ok(collector);
+    assert.equal(collector.options[0].action(), true);
+    assert.equal(state.player.maxHp, 80);
+    assert.equal(state.player.gold, 25);
+    assert.equal(state.player.obeliskDebt, 'redeemed');
+    assert.equal(state.getEventsForAct().some(event => event.name === 'Хранитель Расколотого Обелиска'), false);
+});
+
+test('obelisk collector cannot charge without enough gold and can be refused', () => {
+    const state = game(44, 0);
+    state.floor = 2;
+    state.applyObeliskBargain();
+    state.floor = 3;
+    const collector = state.getEventsForAct().find(event => event.name === 'Хранитель Расколотого Обелиска');
+    state.player.gold = 59;
+    const beforeHp = state.player.hp;
+    assert.equal(collector.options[0].action(), false);
+    assert.equal(state.player.gold, 59);
+    assert.equal(state.player.hp, beforeHp);
+    assert.equal(state.player.obeliskDebt, 'owed');
+    assert.equal(collector.options[1].action(), true);
+    assert.equal(state.player.obeliskDebt, 'forgone');
+});
