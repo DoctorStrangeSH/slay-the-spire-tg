@@ -845,6 +845,25 @@ class Game {
         return true;
     }
 
+    applyForbiddenManuscript() {
+        const eligible = Array.isArray(this.player?.deck)
+            ? this.player.deck.filter(card => this.getCardUpgrade(card))
+            : [];
+        if (this.player.hp <= 7 || eligible.length === 0) return false;
+        const target = eligible[Math.floor(Math.random() * eligible.length)];
+        if (!this.upgradeCard(target)) return false;
+        this.player.hp -= 7;
+        return true;
+    }
+
+    applyObeliskBargain() {
+        if (!this.player || this.player.maxHp <= 10) return false;
+        this.player.maxHp -= 4;
+        this.player.hp = Math.min(this.player.hp, this.player.maxHp);
+        this.player.gold += 85;
+        return true;
+    }
+
     getEventsForAct() {
         const commonEvents = [
             {
@@ -858,6 +877,51 @@ class Game {
                         }
                     },
                     { text: 'Уйти', action: () => { } }
+                ]
+            },
+            {
+                name: 'Архив Несказанных Имен',
+                description: 'Под сводами разрушенного скриптория страницы перелистываются без ветра. Книга обещает переписать судьбу одной случайной карты, если чернилами станет твоя кровь.',
+                options: [
+                    {
+                        text: 'Пролить 7 HP (улучшить случайную карту)',
+                        action: () => {
+                            if (!this.applyForbiddenManuscript()) {
+                                alert('Нужно больше 7 HP и хотя бы одна карта для улучшения!');
+                                return false;
+                            }
+                            return true;
+                        }
+                    },
+                    {
+                        text: 'Собрать потерянные монеты (+22 золота)',
+                        action: () => { this.player.gold += 22; return true; }
+                    },
+                    { text: 'Уйти', action: () => true }
+                ]
+            },
+            {
+                name: 'Расколотый Обелиск',
+                description: 'На вершине холма возвышается камень с золотыми жилами. Он может превратить часть твоей жизненной силы в богатство или подарить короткий отдых у подножия.',
+                options: [
+                    {
+                        text: 'Отдать 4 максимальных HP (+85 золота)',
+                        action: () => {
+                            if (!this.applyObeliskBargain()) {
+                                alert('Обелиск требует более крепкого тела!');
+                                return false;
+                            }
+                            return true;
+                        }
+                    },
+                    {
+                        text: 'Перевести дух (+12 HP)',
+                        action: () => {
+                            this.player.hp = Math.min(this.player.maxHp, this.player.hp + 12);
+                            return true;
+                        }
+                    },
+                    { text: 'Уйти', action: () => true }
                 ]
             },
             {
@@ -1092,6 +1156,8 @@ class Game {
             'Паломник у развилки': { style: 'pilgrim', sigil: '✧', caption: 'ПУТНИК НА ПЕРЕПУТЬЕ', hint: 'Твоя доброта может пережить эту встречу.' },
             'Возвращение паломника': { style: 'pilgrim-return', sigil: '✦', caption: 'ДОБРО ВОЗВРАЩАЕТСЯ', hint: 'Старый долг оплачен. Выбери награду.' },
             'Загадочный фонтан': { style: 'fountain', sigil: '♒', caption: 'ЗАБЫТАЯ КУПЕЛЬ', hint: 'Пить из древней воды или оставить её нетронутой?' },
+            'Архив Несказанных Имен': { style: 'archive', sigil: '✒', caption: 'ЗАПРЕТНЫЕ СТРАНИЦЫ', hint: 'Иногда знание оплачивают собственной кровью.' },
+            'Расколотый Обелиск': { style: 'obelisk', sigil: '◇', caption: 'КАМЕНЬ ЖЕРТВОПРИНОШЕНИЯ', hint: 'Не всё богатство стоит потери сил.' },
             'Странный торговец': { style: 'merchant', sigil: '◇', caption: 'СДЕЛКА В ТЕНИ', hint: 'У каждой тайны есть цена.' },
             'Алтарь Пепельной Клятвы': { style: 'altar', sigil: '✥', caption: 'ОБЕТ КРОВИ', hint: 'Сила требует жертвы. Решение за тобой.' },
             'Библиотека Безымянных': { style: 'library', sigil: '✣', caption: 'ШЁПОТ СТРАНИЦ', hint: 'Знание бывает дороже золота.' },

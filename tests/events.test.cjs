@@ -57,3 +57,49 @@ test('altar appears among normal map events', () => {
     const state = game();
     assert.ok(state.getEventsForAct().some(x => x.name === 'Алтарь Пепельной Клятвы'));
 });
+
+test('forbidden archive upgrades a real deck card and spends exactly 7 HP', () => {
+    const state = game(28, 9);
+    state.player.deck = [
+        { id: 'strike', name: 'Удар', damage: 6 },
+        { id: 'spell', name: 'Сила', strength: 2 }
+    ];
+    const event = state.getEventsForAct().find(x => x.name === 'Архив Несказанных Имен');
+    assert.ok(event);
+    assert.equal(event.options[0].action(), true);
+    assert.equal(state.player.hp, 21);
+    assert.equal(state.player.deck[0].damage, 9);
+    assert.equal(state.player.deck[0].upgraded, true);
+    assert.equal(state.player.gold, 9);
+});
+
+test('forbidden archive does not charge for a lethal or impossible upgrade', () => {
+    const state = game(7);
+    state.player.deck = [{ name: 'Закалена', damage: 10, upgraded: true }];
+    const event = state.getEventsForAct().find(x => x.name === 'Архив Несказанных Имен');
+    assert.equal(event.options[0].action(), false);
+    assert.equal(state.player.hp, 7);
+    state.player.hp = 20;
+    assert.equal(event.options[0].action(), false);
+    assert.equal(state.player.hp, 20);
+});
+
+test('obelisk costs max HP, caps current HP and pays a fixed amount', () => {
+    const state = game(80, 10);
+    const event = state.getEventsForAct().find(x => x.name === 'Расколотый Обелиск');
+    assert.ok(event);
+    assert.equal(event.options[0].action(), true);
+    assert.equal(state.player.maxHp, 76);
+    assert.equal(state.player.hp, 76);
+    assert.equal(state.player.gold, 95);
+});
+
+test('obelisk refuses to reduce a critically low maximum HP', () => {
+    const state = game(8, 12);
+    state.player.maxHp = 10;
+    const event = state.getEventsForAct().find(x => x.name === 'Расколотый Обелиск');
+    assert.equal(event.options[0].action(), false);
+    assert.equal(state.player.hp, 8);
+    assert.equal(state.player.maxHp, 10);
+    assert.equal(state.player.gold, 12);
+});
