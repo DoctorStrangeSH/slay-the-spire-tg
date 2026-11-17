@@ -26,14 +26,6 @@ const HeroSelect = {
                     <p class="hero-desc">${hero.description}</p>
                     <p>❤️ ${hero.maxHp} HP</p>
                 `;
-                const reward = game?.runHistory?.rewardForHero(hero.id);
-                if (reward) {
-                    const badge = document.createElement('p');
-                    badge.className = 'hero-earned-title';
-                    badge.textContent = `${reward.sigil} ${reward.title}`;
-                    badge.setAttribute('aria-label', `Открытый титул: ${reward.title}`);
-                    heroCard.appendChild(badge);
-                }
                 heroCard.setAttribute('role', 'button');
                 heroCard.setAttribute('tabindex', '0');
                 heroCard.setAttribute('aria-label', `Выбрать героя: ${hero.name}`);

@@ -73,13 +73,13 @@ class RunHistory {
 
     rewardForHero(heroId, data = this.read()) {
         const rewards = {
-            berserk: { challenge: 'berserk_last_breath', title: 'Клятвопреступник', sigil: '🩸' },
-            engineer: { challenge: 'engineer_iron_line', title: 'Мастер механизмов', sigil: '⚙️' },
-            psyker: { challenge: 'psyker_mind_chain', title: 'Разрушитель разума', sigil: '🔮' }
+            berserk: { challenge: 'berserk_last_breath', title: 'Клятвопреступник', sigil: '🩸', skin: 'berserk' },
+            engineer: { challenge: 'engineer_iron_line', title: 'Мастер механизмов', sigil: '⚙️', skin: 'engineer' },
+            psyker: { challenge: 'psyker_mind_chain', title: 'Разрушитель разума', sigil: '🔮', skin: 'psyker' }
         };
         const reward = rewards[heroId];
         return reward && data.challenges?.[reward.challenge] === true
-            ? { title: reward.title, sigil: reward.sigil } : null;
+            ? { title: reward.title, sigil: reward.sigil, skin: reward.skin } : null;
     }
 
     achievements(data = this.read()) {
@@ -103,9 +103,9 @@ class RunHistory {
             { name: 'Разрыв сознания', description: 'Псайкером победить элитного врага под параличом, разыграв три карты за ход', unlocked: data.challenges?.psyker_mind_chain === true }
         ].map(entry => ({ ...entry, category: categoryByName[entry.name] || 'general',
             reward: {
-                'На последнем дыхании': 'Титул «Клятвопреступник»',
-                'Железная линия': 'Титул «Мастер механизмов»',
-                'Разрыв сознания': 'Титул «Разрушитель разума»'
+                'На последнем дыхании': 'Титул «Клятвопреступник» и кровавый стиль карт',
+                'Железная линия': 'Титул «Мастер механизмов» и металлический стиль карт',
+                'Разрыв сознания': 'Титул «Разрушитель разума» и мистический стиль карт'
             }[entry.name] || null }));
     }
 }
