@@ -30,6 +30,9 @@ class Game {
             relics: [],
             eventHistory: [],
             journalLog: [],
+            battleWins: 0,
+            eliteWins: 0,
+            bossWins: 0,
             pilgrimChoice: null,
             obeliskDebt: null,
             archiveDebt: null
@@ -48,6 +51,9 @@ class Game {
         this.player.relics = [];
         this.player.eventHistory = [];
         this.player.journalLog = [];
+        this.player.battleWins = 0;
+        this.player.eliteWins = 0;
+        this.player.bossWins = 0;
         this.player.pilgrimChoice = null;
         this.player.obeliskDebt = null;
         this.player.obeliskDebtAct = null;
@@ -577,6 +583,10 @@ class Game {
         if (document.getElementById('battle-result-modal')) return;
         if (victory) {
             const elite = this.currentBattleIsElite === true;
+            const boss = this.currentBattle?.enemy?.isBoss === true;
+            this.player.battleWins = (Number(this.player.battleWins) || 0) + 1;
+            if (elite) this.player.eliteWins = (Number(this.player.eliteWins) || 0) + 1;
+            if (boss) this.player.bossWins = (Number(this.player.bossWins) || 0) + 1;
             let goldReward = Math.floor(Math.random() * 20) + (elite ? 25 : 10);
             let relic = null;
             if (elite) {
@@ -599,7 +609,10 @@ class Game {
             this.runSave.clear();
             BattleFeedback.result({
                 victory: false,
-                onContinue: () => this.showMenu()
+                onContinue: () => {
+                    this.showMenu();
+                    this.showRunResult(false);
+                }
             });
         }
     }
@@ -1755,6 +1768,92 @@ class Game {
         }
     }
 
+    getRunSummary(victory) {
+        const player = this.player || {};
+        const wins = Math.max(0, Number(player.battleWins) || 0);
+        const elites = Math.max(0, Number(player.eliteWins) || 0);
+        const bosses = Math.max(0, Number(player.bossWins) || 0);
+        const cards = Array.isArray(player.deck) ? player.deck.length : 0;
+        const relics = Array.isArray(player.relics) ? player.relics.length : 0;
+        const decisions = Array.isArray(player.journalLog) ? player.journalLog.length : 0;
+        const score = Math.max(0, Math.floor(wins * 25 + elites * 75 + bosses * 150
+            + relics * 30 + decisions * 10 + (Number(player.gold) || 0)
+            + (victory ? 500 : 0)));
+        return {
+            victory: Boolean(victory), act: this.act, floor: this.floor + 1,
+            hero: String(player.name || 'Неизвестный герой'),
+            hp: Math.max(0, Number(player.hp) || 0),
+            maxHp: Math.max(0, Number(player.maxHp) || 0),
+            gold: Math.max(0, Number(player.gold) || 0),
+            wins, elites, bosses, cards, relics, decisions, score,
+            rank: score >= 1250 ? 'Легенда шпиля' : score >= 650 ? 'Покоритель тьмы'
+                : score >= 300 ? 'Странник собора' : 'Искатель судьбы'
+        };
+    }
+
+    createRunSummaryElement(victory) {
+        const stats = this.getRunSummary(victory);
+        const wrap = document.createElement('section');
+        wrap.className = 'cathedral-run-summary';
+        wrap.setAttribute('aria-label', 'Итоги забега');
+        const heading = document.createElement('h3');
+        heading.textContent = '✧ Летопись восхождения';
+        const subtitle = document.createElement('p');
+        subtitle.className = 'cathedral-run-summary-subtitle';
+        subtitle.textContent = `${stats.hero} · Акт ${stats.act}, этаж ${stats.floor}`;
+        const grid = document.createElement('div');
+        grid.className = 'cathedral-run-summary-grid';
+        const items = [
+            ['⚔️ Побед', stats.wins], ['☠️ Элитных', stats.elites],
+            ['👑 Боссов', stats.bosses], ['❤️ Здоровье', `${stats.hp}/${stats.maxHp}`],
+            ['🃏 Карт', stats.cards], ['💎 Реликвий', stats.relics],
+            ['📜 Решений', stats.decisions], ['💰 Золото', stats.gold]
+        ];
+        items.forEach(([label, value]) => {
+            const cell = document.createElement('div');
+            const name = document.createElement('span');
+            name.textContent = label;
+            const number = document.createElement('strong');
+            number.textContent = String(value);
+            cell.append(name, number);
+            grid.appendChild(cell);
+        });
+        const score = document.createElement('p');
+        score.className = 'cathedral-run-summary-score';
+        score.textContent = `✦ ${stats.rank} · ${stats.score} очков`;
+        wrap.append(heading, subtitle, grid, score);
+        return wrap;
+    }
+
+    showRunResult(victory) {
+        document.getElementById('cathedral-run-result')?.remove();
+        const overlay = document.createElement('div');
+        overlay.id = 'cathedral-run-result';
+        overlay.className = 'cathedral-act-transition';
+        overlay.dataset.actTheme = victory ? 'victory' : 'defeat';
+        overlay.setAttribute('role', 'dialog');
+        overlay.setAttribute('aria-modal', 'true');
+        overlay.setAttribute('aria-label', victory ? 'Итоги победы' : 'Итоги поражения');
+        const panel = document.createElement('div');
+        panel.className = 'cathedral-transition-panel cathedral-result-panel';
+        const title = document.createElement('h2');
+        title.textContent = victory ? '✦ Шпиль покорён' : '☽ Путь оборвался';
+        const description = document.createElement('p');
+        description.className = 'cathedral-transition-subtitle';
+        description.textContent = victory
+            ? 'Твоя история останется в стенах собора.'
+            : 'Собор запомнит этот путь. Следующее восхождение начнётся иначе.';
+        const button = document.createElement('button');
+        button.type = 'button';
+        button.className = 'cathedral-transition-continue';
+        button.textContent = 'Вернуться в главное меню →';
+        button.onclick = () => overlay.remove();
+        panel.append(title, description, this.createRunSummaryElement(victory), button);
+        overlay.appendChild(panel);
+        document.body.appendChild(overlay);
+        button.focus();
+    }
+
     showActTransition(completedAct, isVictory) {
         document.getElementById('cathedral-act-transition')?.remove();
         const theme = isVictory
@@ -1778,6 +1877,11 @@ class Game {
                 <button type="button" class="cathedral-transition-continue">${isVictory ? 'Вернуться в главное меню' : 'Продолжить восхождение'} →</button>
             </div>
         `;
+        if (isVictory) {
+            const panel = overlay.querySelector('.cathedral-transition-panel');
+            panel.insertBefore(this.createRunSummaryElement(true),
+                overlay.querySelector('.cathedral-transition-continue'));
+        }
         const continueButton = overlay.querySelector('.cathedral-transition-continue');
         continueButton.addEventListener('click', () => overlay.remove(), { once: true });
         document.body.appendChild(overlay);

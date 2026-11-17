@@ -141,3 +141,15 @@ test('run checkpoint persists the chronological journal without losing decisions
     assert.equal(restored.player.journalLog.length, 1);
     assert.equal(restored.player.journalLog[0].choice, 'Помочь');
 });
+
+test('run checkpoint retains battle wins, elite wins and boss wins', () => {
+    const persistence = new RunSave(storage());
+    const current = game();
+    Object.assign(current.player, { battleWins: 6, eliteWins: 2, bossWins: 1 });
+    assert.equal(persistence.save(current), true);
+    const restored = { player: null };
+    assert.equal(persistence.restore(restored), true);
+    assert.equal(restored.player.battleWins, 6);
+    assert.equal(restored.player.eliteWins, 2);
+    assert.equal(restored.player.bossWins, 1);
+});
