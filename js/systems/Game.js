@@ -628,12 +628,22 @@ class Game {
         }
     }
 
+    getRareEventChance() {
+        const act = Number.isInteger(this.act) ? this.act : 1;
+        return Math.min(0.20, 0.12 + 0.04 * Math.max(0, act - 1));
+    }
+
+    getEligibleRareEvents() {
+        return this.getRareEventsForAct().filter(event =>
+            !event.requiresCurse || this.getTotalCurseBattles() > 0);
+    }
+
     triggerEvent() {
-        const rareEvents = this.getRareEventsForAct();
-        const isRare = rareEvents.length > 0 && Math.random() < 0.12;
+        const rareEvents = this.getEligibleRareEvents();
+        const isRare = rareEvents.length > 0 && Math.random() < this.getRareEventChance();
         const events = isRare ? rareEvents : this.getEventsForAct();
         const event = events[Math.floor(Math.random() * events.length)];
-        this.showEventModal(event);
+        if (event) this.showEventModal(event);
     }
 
     getRareEventsForAct() {
@@ -671,6 +681,7 @@ class Game {
             ]
         }, {
             name: 'Кузница Судеб',
+            requiresCurse: true,
             description: 'В глубине собора кузнец без лица предлагает переплавить бремя проклятия в дар. Золотая сталь принесёт защиту, кровавая — силу. Без проклятия кузница молчит.',
             rare: true,
             options: [
