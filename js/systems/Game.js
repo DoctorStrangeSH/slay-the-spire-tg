@@ -205,6 +205,12 @@ class Game {
                 description.textContent = achievement.description;
                 row.classList.toggle('cathedral-achievement--locked', !achievement.unlocked);
                 row.append(name, description);
+                if (achievement.reward) {
+                    const prize = document.createElement('small');
+                    prize.className = 'cathedral-achievement-reward';
+                    prize.textContent = `${achievement.unlocked ? '✦ Получено' : '◆ Награда'}: ${achievement.reward}`;
+                    row.appendChild(prize);
+                }
                 group.appendChild(row);
             }
             hall.appendChild(group);
