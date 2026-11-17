@@ -250,6 +250,17 @@ const BattleUI = {
             <div class="card-description">${card.description}</div>
         `;
         
+        const inspectButton = document.createElement('button');
+        inspectButton.type = 'button';
+        inspectButton.className = 'card-inspect-button';
+        inspectButton.textContent = 'ⓘ';
+        inspectButton.setAttribute('aria-label', `Подробнее о карте «${card.name}»`);
+        inspectButton.onclick = event => {
+            event.stopPropagation();
+            this.showCardDetails(card, rarity, inspectButton);
+        };
+        cardDiv.appendChild(inspectButton);
+
         cardDiv.onclick = () => game.selectCard(index);
         cardDiv.onkeydown = event => {
             if (event.key === 'Enter' || event.key === ' ') {
@@ -260,6 +271,47 @@ const BattleUI = {
         return cardDiv;
     },
     
+    showCardDetails(card, rarity, returnFocus) {
+        document.getElementById('card-details-modal')?.remove();
+        const overlay = document.createElement('div');
+        overlay.id = 'card-details-modal';
+        overlay.className = 'modal card-details-overlay';
+        overlay.setAttribute('role', 'dialog');
+        overlay.setAttribute('aria-modal', 'true');
+        overlay.setAttribute('aria-label', `Карта ${card.name}`);
+
+        const panel = document.createElement('div');
+        panel.className = 'modal-content card-details-panel';
+        const heading = document.createElement('h3');
+        heading.textContent = card.name;
+        const meta = document.createElement('p');
+        meta.className = 'card-details-meta';
+        meta.textContent = `${rarity.label} · Энергия: ${card.cost}`;
+        const artwork = document.createElement('div');
+        artwork.className = 'card-details-art';
+        artwork.innerHTML = CardArt.markup(card);
+        const description = document.createElement('p');
+        description.className = 'card-details-description';
+        description.textContent = card.description || 'Нет описания.';
+        const closeButton = document.createElement('button');
+        closeButton.type = 'button';
+        closeButton.className = 'card-details-close';
+        closeButton.textContent = 'Закрыть';
+        const close = () => {
+            document.removeEventListener('keydown', onKeyDown);
+            overlay.remove();
+            if (returnFocus?.isConnected) returnFocus.focus({ preventScroll: true });
+        };
+        const onKeyDown = event => { if (event.key === 'Escape') close(); };
+        closeButton.onclick = close;
+        overlay.onclick = event => { if (event.target === overlay) close(); };
+        panel.append(heading, meta, artwork, description, closeButton);
+        overlay.appendChild(panel);
+        document.body.appendChild(overlay);
+        document.addEventListener('keydown', onKeyDown);
+        closeButton.focus();
+    },
+
     updatePreview(game, battle) {
         const previewEl = document.getElementById('battle-preview');
         

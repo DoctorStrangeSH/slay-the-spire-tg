@@ -1769,3 +1769,63 @@ button:disabled { opacity: .42; filter: grayscale(.5); }
   #action-buttons .discard-btn { min-height: 27px; padding: 4px 2px; }
   #battle-preview { bottom: calc(107px + 78px + env(safe-area-inset-bottom)); }
 }
+
+/* Separate inspection from selection so tiny card copy is never the only help. */
+#hand-area .card { isolation: isolate; }
+.card-inspect-button {
+  position: absolute;
+  right: 5px;
+  bottom: 5px;
+  z-index: 3;
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  min-width: 30px;
+  padding: 0;
+  border: 1px solid #dec18e;
+  border-radius: 50%;
+  color: #fff0cc;
+  background: #171e2be8;
+  font: 800 19px/1 system-ui, sans-serif;
+  box-shadow: 0 2px 8px #000b;
+  cursor: pointer;
+}
+.card-inspect-button:focus-visible { outline: 3px solid #f1d7a0; outline-offset: 2px; }
+.card-details-overlay { z-index: 1200; }
+.card-details-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  overflow-y: auto;
+  text-align: center;
+}
+.card-details-panel h3 { margin: 0; font-size: clamp(19px, 5vw, 25px); }
+.card-details-meta { margin: 0; font-size: 13px; color: #ddc395; }
+.card-details-art {
+  width: min(100%, 300px);
+  max-height: 34dvh;
+  margin: 0 auto;
+  overflow: hidden;
+  border: 1px solid #ad9367;
+  border-radius: 9px;
+  background: #111821;
+}
+.card-details-art img, .card-details-art svg { display: block; width: 100%; height: auto; max-height: 34dvh; object-fit: contain; }
+.card-details-description {
+  margin: 0;
+  padding: 12px;
+  border: 1px solid #8c765c88;
+  border-radius: 8px;
+  background: #121923;
+  color: #f1e7d6 !important;
+  font: 500 16px/1.5 system-ui, sans-serif;
+  overflow-wrap: anywhere;
+}
+.card-details-close { min-height: 44px; }
+@media (max-width: 640px) {
+  #hand-area .card-description { padding-right: 12px; }
+  .card-inspect-button { width: 28px; height: 28px; min-width: 28px; }
+  .card-details-overlay { padding: max(12px, env(safe-area-inset-top)) 12px max(12px, env(safe-area-inset-bottom)); }
+  .card-details-panel { width: min(100%, 380px); padding: 17px; }
+}

@@ -34,8 +34,8 @@ test('rendering known card types is safe and unknown old types fall back', () =>
 
 test('CardArt loads before BattleUI and all asset manifests are versioned', () => {
     assert.ok(html.indexOf('js/ui/CardArt.js') < html.indexOf('js/ui/BattleUI.js'));
-    assert.match(html, /js\/ui\/CardArt\.js\?v=2026\.11\.17\.50/);
-    assert.match(html, /css\/cathedral\.css\?v=2026\.11\.17\.50/);
+    assert.match(html, /js\/ui\/CardArt\.js\?v=2026\.11\.17\.51/);
+    assert.match(html, /css\/cathedral\.css\?v=2026\.11\.17\.51/);
 });
 
 test('combat and rewards use illustration registry consistently', () => {
@@ -101,4 +101,17 @@ test('rare signature art distinguishes the three hero identities', () => {
         assert.match(svg, /<\/svg>$/);
         assert.doesNotMatch(svg, /<script|onload=|href="https?:/i);
     }
+});
+
+
+test('card inspection keeps description readable and separate from selection', () => {
+    const ui = fs.readFileSync(path.join(root, 'js/ui/BattleUI.js'), 'utf8');
+    const styles = fs.readFileSync(path.join(root, 'css/cathedral.css'), 'utf8');
+    assert.match(ui, /inspectButton\.onclick = event =>/);
+    assert.match(ui, /event\.stopPropagation\(\)/);
+    assert.match(ui, /showCardDetails\(card, rarity, inspectButton\)/);
+    assert.match(ui, /description\.textContent = card\.description/);
+    assert.match(ui, /event\.key === 'Escape'/);
+    assert.match(styles, /\.card-inspect-button/);
+    assert.match(styles, /\.card-details-description/);
 });
