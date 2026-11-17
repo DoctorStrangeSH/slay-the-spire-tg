@@ -44,20 +44,29 @@ const BattleUI = {
         const intent = battle.getEnemyIntentInfo();
         const intentEl = document.getElementById('enemy-intent');
         
-        // Если враг парализован - показываем это
+        // Intent is a forecast: show damage after block and honest random ranges.
         let intentLabel;
         if (battle.isEnemyParalyzed()) {
-            intentEl.innerHTML = `🔒 <span class="intent-value">Парализован</span>`;
+            intentEl.innerHTML = `🔒 <span class="intent-value">Пропуск хода</span>`;
             intentEl.className = 'intent intent-paralysis';
             intentLabel = 'Паралич: враг пропустит ход';
         } else if (intent.type === 'attack') {
-            intentEl.innerHTML = `⚔️ <span class="intent-value">${intent.damage}</span><span class="intent-caption">Урон</span>`;
+            const range = intent.maxDamage > intent.damage
+                ? `${intent.damage}–${intent.maxDamage}` : String(intent.damage);
+            const afterBlock = intent.maxAfterBlock > intent.afterBlock
+                ? `${intent.afterBlock}–${intent.maxAfterBlock}` : String(intent.afterBlock);
+            const chance = intent.bonusChance ? ' · 30% усиленный удар' : '';
+            intentEl.innerHTML = `⚔️ <span class="intent-value">${range}</span><span class="intent-caption">После блока: ${afterBlock}${chance}</span>`;
             intentEl.className = 'intent intent-attack';
-            intentLabel = `Следующее действие: атака на ${intent.damage} урона`;
+            intentLabel = `Следующее действие: атака на ${range} урона. После текущего блока героя: ${afterBlock}.${intent.bonusChance ? ' Шанс усиленного удара 30%.' : ''}`;
+            if (battle.buildings?.getBuildingCount?.() > 0) {
+                intentLabel += ' Враг также может атаковать постройку.';
+            }
         } else {
-            intentEl.innerHTML = `🛡️ <span class="intent-value">+${intent.block}</span><span class="intent-caption">Блок</span>`;
+            const poisonText = intent.poison ? ` · ☠️ +${intent.poison} яда герою` : '';
+            intentEl.innerHTML = `🛡️ <span class="intent-value">+${intent.block}</span><span class="intent-caption">Блок${poisonText}</span>`;
             intentEl.className = 'intent intent-defend';
-            intentLabel = `Следующее действие: получает ${intent.block} блока`;
+            intentLabel = `Следующее действие: получает ${intent.block} блока${intent.poison ? ` и накладывает ${intent.poison} яда на героя` : ''}`;
         }
         intentEl.setAttribute('aria-label', intentLabel);
         intentEl.title = intentLabel;
