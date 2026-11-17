@@ -122,6 +122,16 @@ const MapUI = {
         return rooms[type] || { label: 'Путь вперёд', hint: 'Неизведанная комната', risk: '' };
     },
 
+    getRouteForecast(node, mapGenerator) {
+        if (!node || !Array.isArray(node.connections)) return '';
+        const destinations = node.connections
+            .map(id => mapGenerator.findNodeById(id))
+            .filter(Boolean);
+        const labels = [...new Set(destinations.map(next =>
+            this.getNodeIcon(next.type) + ' ' + this.getNodeLabel(next.type)))];
+        return labels.length ? 'После: ' + labels.join(' · ') : '';
+    },
+
     renderNextChoices(container, game) {
         const choices = game.mapGenerator.getAvailableNodes(game.currentNodeId)
             .sort((a, b) => a.x - b.x);
@@ -140,7 +150,9 @@ const MapUI = {
             const button = document.createElement('button');
             button.type = 'button';
             button.className = 'spire-next-card spire-next-card--' + node.type;
-            button.setAttribute('aria-label', details.label + '. ' + details.hint);
+            const forecast = this.getRouteForecast(node, game.mapGenerator);
+            button.setAttribute('aria-label', details.label + '. ' + details.hint +
+                (forecast ? '. ' + forecast : ''));
             const icon = document.createElement('span');
             icon.className = 'spire-next-icon';
             icon.textContent = this.getNodeIcon(node.type);
@@ -155,6 +167,12 @@ const MapUI = {
             copy.appendChild(name);
             copy.appendChild(hint);
             copy.appendChild(risk);
+            if (forecast) {
+                const future = document.createElement('span');
+                future.className = 'spire-next-forecast';
+                future.textContent = forecast;
+                copy.appendChild(future);
+            }
             button.appendChild(icon);
             button.appendChild(copy);
             button.addEventListener('click', () => game.selectMapNode(node));
