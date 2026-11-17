@@ -1225,6 +1225,25 @@ class Game {
         return 30;
     }
 
+    getCardUpgrade(card) {
+        if (!card || card.upgraded || ['telekinesis', 'mindStrike', 'telepathicStrike'].includes(card.id)) return null;
+        for (const [stat, bonus, label] of [['damage', 3, 'Урон'], ['block', 3, 'Блок'], ['heal', 2, 'Лечение']]) {
+            const current = Number(card[stat]);
+            if (Number.isFinite(current) && current > 0) return { stat, bonus, label, current, next: current + bonus };
+        }
+        return null;
+    }
+
+    upgradeCard(card) {
+        const change = this.getCardUpgrade(card);
+        if (!change) return false;
+        card[change.stat] = change.next;
+        card.upgraded = true;
+        card.name = `${card.name || card.id || 'Карта'}+`;
+        card.description = `${card.description || ''} · ✦ ${change.label}: ${change.next}`.trim();
+        return true;
+    }
+
     openShop() {
         const cards = Object.values(getCardsForHero(this.player.heroId));
         // Sample without replacement: one visit should never offer the same card twice.
@@ -1276,6 +1295,7 @@ class Game {
                 if (purchased || this.player.gold < price) return;
                 this.player.gold -= price;
                 this.player.deck.push({ ...card });
+                refreshUpgradeOptions();
                 purchased = true;
                 button.textContent = '✓ Куплено';
                 renderBalance();
@@ -1335,6 +1355,7 @@ class Game {
             if (!Number.isInteger(index) || index < 0 || index >= this.player.deck.length) return;
             this.player.gold -= removalPrice;
             this.player.deck.splice(index, 1);
+            refreshUpgradeOptions();
             removed = true;
             removalButton.textContent = '✓ Карта удалена';
             removalSelect.disabled = true;
@@ -1346,6 +1367,58 @@ class Game {
         });
         removal.append(removalName, removalDesc, removalSelect, removalButton);
         shelf.appendChild(removal);
+        // Enhance the actual deck copy: BattleCards reads these same numeric fields.
+        const upgradePrice = 75;
+        const upgrade = document.createElement('article');
+        upgrade.className = 'merchant-item merchant-upgrade';
+        const upgradeName = document.createElement('strong');
+        upgradeName.textContent = '✦ Усиление карты';
+        const upgradeDesc = document.createElement('p');
+        upgradeDesc.textContent = 'Усильте урон или блок на 3, лечение на 2. Один раз за посещение.';
+        const upgradeSelect = document.createElement('select');
+        upgradeSelect.className = 'merchant-removal-select';
+        upgradeSelect.setAttribute('aria-label', 'Карта для улучшения');
+        const upgradePreview = document.createElement('p');
+        upgradePreview.className = 'merchant-upgrade-preview';
+        const eligible = [];
+        const refreshUpgradeOptions = () => {
+            const previousCard = eligible[Number(upgradeSelect.value)];
+            eligible.length = 0;
+            this.player.deck.forEach(card => { if (this.getCardUpgrade(card)) eligible.push(card); });
+            upgradeSelect.innerHTML = '';
+            eligible.forEach((card, index) => {
+                const option = document.createElement('option');
+                option.value = String(index);
+                option.textContent = card.name || card.id || 'Карта';
+                upgradeSelect.appendChild(option);
+            });
+            const retained = eligible.indexOf(previousCard);
+            upgradeSelect.value = String(retained >= 0 ? retained : 0);
+            const selected = eligible[Number(upgradeSelect.value)];
+            const change = this.getCardUpgrade(selected);
+            upgradePreview.textContent = change ? `${change.label}: ${change.current} → ${change.next}` : 'Нет карт, которые можно улучшить';
+        };
+        upgradeSelect.onchange = () => {
+            const change = this.getCardUpgrade(eligible[Number(upgradeSelect.value)]);
+            upgradePreview.textContent = change ? `${change.label}: ${change.current} → ${change.next}` : 'Выберите карту';
+        };
+        const upgradeButton = document.createElement('button');
+        upgradeButton.type = 'button';
+        let upgraded = false;
+        upgradeButton.onclick = () => {
+            if (upgraded || this.player.gold < upgradePrice) return;
+            const card = eligible[Number(upgradeSelect.value)];
+            if (!card || !this.player.deck.includes(card) || !this.upgradeCard(card)) return;
+            this.player.gold -= upgradePrice;
+            upgraded = true;
+            upgradeButton.textContent = '✓ Карта улучшена';
+            upgradeSelect.disabled = true;
+            renderBalance();
+        };
+        stock.push({ button: upgradeButton, price: upgradePrice, sold: () => upgraded || eligible.length === 0 });
+        upgrade.append(upgradeName, upgradeDesc, upgradeSelect, upgradePreview, upgradeButton);
+        shelf.appendChild(upgrade);
+        refreshUpgradeOptions();
         const leave = document.createElement('button');
         leave.type = 'button';
         leave.className = 'merchant-leave';
@@ -1357,6 +1430,7 @@ class Game {
         renderBalance();
         if (this.player.hp >= this.player.maxHp) healButton.textContent = 'Здоровье полное';
         if (this.player.deck.length <= 5) removalButton.textContent = 'Нужно больше 5 карт';
+        if (!eligible.length) upgradeButton.textContent = 'Нет доступных карт';
         leave.focus();
     }
 

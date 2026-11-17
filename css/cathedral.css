@@ -1911,3 +1911,9 @@ button:disabled { opacity: .42; filter: grayscale(.5); }
   font: 600 14px/1.4 system-ui, sans-serif;
 }
 .merchant-removal-select:disabled { opacity: .6; }
+
+/* Card upgrades show a before/after comparison on the same merchant shelf. */
+.merchant-upgrade { border-color: #b18e50; background: #2a2630; }
+.merchant-upgrade-preview {
+  color: #eacb86 !important; font-weight: 800; font-variant-numeric: tabular-nums;
+}
