@@ -122,10 +122,14 @@ test('accessible route cards list only reachable rooms and activate chosen desti
     });
     const reachable = [{ id: 'rest', x: 5, type: 'rest' },
         { id: 'elite', x: 1, type: 'elite' }];
+    reachable[0].connections = ['next-shop'];
     let picked = null;
     const game = {
         currentNodeId: 'current',
-        mapGenerator: { getAvailableNodes: () => reachable },
+        mapGenerator: {
+            getAvailableNodes: () => reachable,
+            findNodeById(id) { return id === 'next-shop' ? { type: 'shop' } : null; }
+        },
         selectMapNode(node) { picked = node; }
     };
     const host = makeElement('main');
@@ -137,12 +141,27 @@ test('accessible route cards list only reachable rooms and activate chosen desti
     assert.equal(list.children.length, 2);
     assert.match(list.children[0].attrs['aria-label'], /Элитный бой/);
     assert.match(list.children[1].attrs['aria-label'], /Привал/);
+    assert.match(list.children[1].attrs['aria-label'], /После:.*Магазин/);
+    assert.ok(list.children[1].children[1].children.some(child =>
+        child.className === 'spire-next-forecast' && child.textContent.includes('Магазин')));
     list.children[0].listeners.click();
     assert.equal(picked.id, 'elite');
     const emptyHost = makeElement('main');
     game.mapGenerator.getAvailableNodes = () => [];
     MapUI.renderNextChoices(emptyHost, game);
     assert.equal(emptyHost.children.length, 0);
+});
+
+test('route forecast follows connections and excludes disconnected rooms', () => {
+    const ui = readFileSync(join(__dirname, '../js/ui/MapUI.js'), 'utf8');
+    const MapUI = vm.runInNewContext(constants + '\n' + ui + '\nMapUI;', { window: {} });
+    const map = new MapGenerator(1, 'forecast-test');
+    const start = map.paths[0][0];
+    const forecast = MapUI.getRouteForecast(start, map);
+    assert.ok(forecast.startsWith('После: '));
+    assert.match(forecast, /Бой/);
+    assert.equal(MapUI.getRouteForecast({ connections: ['missing'] }, map), '');
+    assert.equal(MapUI.getRouteForecast({ connections: [] }, map), '');
 });
 
 test('three acts have distinct visual banners while routes remain unchanged', () => {

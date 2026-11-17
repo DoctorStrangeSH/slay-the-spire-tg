@@ -1685,3 +1685,24 @@ button:disabled { opacity: .42; filter: grayscale(.5); }
   .spire-next-list { grid-auto-columns: minmax(148px, 52%); }
   .spire-next-card { min-height: 70px; padding: 7px; }
 }
+
+/* Tactical route previews show the next floor without obscuring the atlas. */
+.spire-next-forecast {
+  display: block;
+  width: 100%;
+  margin-top: 4px;
+  padding-top: 5px;
+  border-top: 1px solid #b49b7544;
+  color: #d6c8b0;
+  font: 600 10px/1.3 system-ui, sans-serif;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+.spire-next-card:focus-visible .spire-next-forecast,
+.spire-next-card:hover .spire-next-forecast { color: #ffe6b2; }
+.spire-next-card .spire-next-copy { width: 100%; }
+.spire-next-card .spire-next-icon { align-self: flex-start; }
+@media (max-width: 420px) {
+  .spire-next-card { min-height: 94px; align-items: flex-start; }
+  .spire-next-forecast { font-size: 9px; }
+}
