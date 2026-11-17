@@ -29,7 +29,8 @@ class Game {
             deck: getStarterDeckForHero(heroId),
             relics: [],
             eventHistory: [],
-            pilgrimChoice: null
+            pilgrimChoice: null,
+            obeliskDebt: null
         };
 
         this.startNewGame();
@@ -45,6 +46,9 @@ class Game {
         this.player.relics = [];
         this.player.eventHistory = [];
         this.player.pilgrimChoice = null;
+        this.player.obeliskDebt = null;
+        this.player.obeliskDebtAct = null;
+        this.player.obeliskDebtFloor = null;
         this.act = 1;
         this.floor = 0;
 
@@ -666,6 +670,10 @@ class Game {
         const availableEvents = freshEvents.length ? freshEvents : events;
         let event = availableEvents[Math.floor(Math.random() * availableEvents.length)];
         // Отложенное последствие: спасённый паломник может встретиться позже.
+        if (!isRare && this.player?.obeliskDebt === 'owed') {
+            const collector = availableEvents.find(candidate => candidate.name === 'Хранитель Расколотого Обелиска');
+            if (collector && Math.random() < 0.5) event = collector;
+        }
         if (!isRare && this.player?.pilgrimChoice === 'helped') {
             const reunion = availableEvents.find(candidate => candidate.name === 'Возвращение паломника');
             if (reunion && Math.random() < 0.4) event = reunion;
@@ -861,7 +869,18 @@ class Game {
         this.player.maxHp -= 4;
         this.player.hp = Math.min(this.player.hp, this.player.maxHp);
         this.player.gold += 85;
+        this.player.obeliskDebt = 'owed';
+        this.player.obeliskDebtAct = this.act;
+        this.player.obeliskDebtFloor = this.floor;
         return true;
+    }
+
+    canEncounterObeliskCollector() {
+        if (this.player?.obeliskDebt !== 'owed') return false;
+        const act = Number(this.player.obeliskDebtAct);
+        const floor = Number(this.player.obeliskDebtFloor);
+        return Number.isInteger(act) && Number.isInteger(floor)
+            && (this.act > act || (this.act === act && this.floor > floor));
     }
 
     getEventsForAct() {
@@ -1088,6 +1107,30 @@ class Game {
                 ]
             });
         }
+        // The obelisk bargain persists in the player checkpoint and resolves only on a later floor.
+        if (this.canEncounterObeliskCollector()) {
+            commonEvents.push({
+                name: 'Хранитель Расколотого Обелиска',
+                description: 'У следующей часовни тебя встречает хранитель камня. Он узнал печать обелиска на твоей ладони и предлагает выкупить утраченную силу.',
+                options: [
+                    {
+                        text: 'Выкупить силу (−60 золота, +4 максимальных HP)',
+                        action: () => {
+                            if (this.player.gold < 60) { alert('Недостаточно золота!'); return false; }
+                            this.player.gold -= 60;
+                            this.player.maxHp += 4;
+                            this.player.hp = Math.min(this.player.maxHp, this.player.hp + 4);
+                            this.player.obeliskDebt = 'redeemed';
+                            return true;
+                        }
+                    },
+                    {
+                        text: 'Отказаться от выкупа',
+                        action: () => { this.player.obeliskDebt = 'forgone'; return true; }
+                    }
+                ]
+            });
+        }
         const actEvents = {
             1: {
                 name: 'Сердце Терновника',
@@ -1157,6 +1200,7 @@ class Game {
             'Возвращение паломника': { style: 'pilgrim-return', sigil: '✦', caption: 'ДОБРО ВОЗВРАЩАЕТСЯ', hint: 'Старый долг оплачен. Выбери награду.' },
             'Загадочный фонтан': { style: 'fountain', sigil: '♒', caption: 'ЗАБЫТАЯ КУПЕЛЬ', hint: 'Пить из древней воды или оставить её нетронутой?' },
             'Архив Несказанных Имен': { style: 'archive', sigil: '✒', caption: 'ЗАПРЕТНЫЕ СТРАНИЦЫ', hint: 'Иногда знание оплачивают собственной кровью.' },
+            'Хранитель Расколотого Обелиска': { style: 'obelisk-collector', sigil: '⚖', caption: 'ВОЗВРАЩЕНИЕ ДОЛГА', hint: 'Можно вернуть утраченную силу, но цена всё ещё велика.' },
             'Расколотый Обелиск': { style: 'obelisk', sigil: '◇', caption: 'КАМЕНЬ ЖЕРТВОПРИНОШЕНИЯ', hint: 'Не всё богатство стоит потери сил.' },
             'Странный торговец': { style: 'merchant', sigil: '◇', caption: 'СДЕЛКА В ТЕНИ', hint: 'У каждой тайны есть цена.' },
             'Алтарь Пепельной Клятвы': { style: 'altar', sigil: '✥', caption: 'ОБЕТ КРОВИ', hint: 'Сила требует жертвы. Решение за тобой.' },
