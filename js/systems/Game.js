@@ -30,7 +30,8 @@ class Game {
             relics: [],
             eventHistory: [],
             pilgrimChoice: null,
-            obeliskDebt: null
+            obeliskDebt: null,
+            archiveDebt: null
         };
 
         this.startNewGame();
@@ -49,6 +50,9 @@ class Game {
         this.player.obeliskDebt = null;
         this.player.obeliskDebtAct = null;
         this.player.obeliskDebtFloor = null;
+        this.player.archiveDebt = null;
+        this.player.archiveDebtAct = null;
+        this.player.archiveDebtFloor = null;
         this.act = 1;
         this.floor = 0;
 
@@ -669,14 +673,17 @@ class Game {
         // Если весь пул уже встречался, событие всё равно должно состояться.
         const availableEvents = freshEvents.length ? freshEvents : events;
         let event = availableEvents[Math.floor(Math.random() * availableEvents.length)];
-        // Отложенное последствие: спасённый паломник может встретиться позже.
-        if (!isRare && this.player?.obeliskDebt === 'owed') {
-            const collector = availableEvents.find(candidate => candidate.name === 'Хранитель Расколотого Обелиска');
-            if (collector && Math.random() < 0.5) event = collector;
-        }
-        if (!isRare && this.player?.pilgrimChoice === 'helped') {
-            const reunion = availableEvents.find(candidate => candidate.name === 'Возвращение паломника');
-            if (reunion && Math.random() < 0.4) event = reunion;
+        // Deferred encounters compete fairly: one old decision cannot hide another.
+        if (!isRare) {
+            const followUpNames = [
+                'Возвращение паломника',
+                'Хранитель Расколотого Обелиска',
+                'Чернильный Сборщик'
+            ];
+            const followUps = availableEvents.filter(candidate => followUpNames.includes(candidate.name));
+            if (followUps.length && Math.random() < 0.55) {
+                event = followUps[Math.floor(Math.random() * followUps.length)];
+            }
         }
         if (!event) return;
         if (this.player) {
@@ -861,7 +868,18 @@ class Game {
         const target = eligible[Math.floor(Math.random() * eligible.length)];
         if (!this.upgradeCard(target)) return false;
         this.player.hp -= 7;
+        this.player.archiveDebt = 'owed';
+        this.player.archiveDebtAct = this.act;
+        this.player.archiveDebtFloor = this.floor;
         return true;
+    }
+
+    canEncounterArchiveScribe() {
+        if (this.player?.archiveDebt !== 'owed') return false;
+        const act = Number(this.player.archiveDebtAct);
+        const floor = Number(this.player.archiveDebtFloor);
+        return Number.isInteger(act) && Number.isInteger(floor)
+            && (this.act > act || (this.act === act && this.floor > floor));
     }
 
     applyObeliskBargain() {
@@ -1131,6 +1149,38 @@ class Game {
                 ]
             });
         }
+        if (this.canEncounterArchiveScribe()) {
+            commonEvents.push({
+                name: 'Чернильный Сборщик',
+                description: 'Между колоннами слышен шелест страниц. Сборщик с руками, испачканными чернилами, помнит кровь, отданную за запретное знание, и предлагает закрыть счёт.',
+                options: [
+                    {
+                        text: 'Залечить шрам (−25 золота, +20 HP)',
+                        action: () => {
+                            if (this.player.gold < 25) { alert('Недостаточно золота!'); return false; }
+                            this.player.gold -= 25;
+                            this.player.hp = Math.min(this.player.maxHp, this.player.hp + 20);
+                            this.player.archiveDebt = 'healed';
+                            return true;
+                        }
+                    },
+                    {
+                        text: 'Продать страницу (+40 золота, метка крови на 1 бой)',
+                        action: () => {
+                            this.player.gold += 40;
+                            this.player.bloodMarkBattles = Math.min(99,
+                                Math.max(0, Number(this.player.bloodMarkBattles) || 0) + 1);
+                            this.player.archiveDebt = 'sold';
+                            return true;
+                        }
+                    },
+                    {
+                        text: 'Сжечь книгу',
+                        action: () => { this.player.archiveDebt = 'burned'; return true; }
+                    }
+                ]
+            });
+        }
         const actEvents = {
             1: {
                 name: 'Сердце Терновника',
@@ -1199,6 +1249,7 @@ class Game {
             'Паломник у развилки': { style: 'pilgrim', sigil: '✧', caption: 'ПУТНИК НА ПЕРЕПУТЬЕ', hint: 'Твоя доброта может пережить эту встречу.' },
             'Возвращение паломника': { style: 'pilgrim-return', sigil: '✦', caption: 'ДОБРО ВОЗВРАЩАЕТСЯ', hint: 'Старый долг оплачен. Выбери награду.' },
             'Загадочный фонтан': { style: 'fountain', sigil: '♒', caption: 'ЗАБЫТАЯ КУПЕЛЬ', hint: 'Пить из древней воды или оставить её нетронутой?' },
+            'Чернильный Сборщик': { style: 'archive-scribe', sigil: '✒', caption: 'СЧЁТ ЗА КРОВЬ', hint: 'Каждое знание оставляет след.' },
             'Архив Несказанных Имен': { style: 'archive', sigil: '✒', caption: 'ЗАПРЕТНЫЕ СТРАНИЦЫ', hint: 'Иногда знание оплачивают собственной кровью.' },
             'Хранитель Расколотого Обелиска': { style: 'obelisk-collector', sigil: '⚖', caption: 'ВОЗВРАЩЕНИЕ ДОЛГА', hint: 'Можно вернуть утраченную силу, но цена всё ещё велика.' },
             'Расколотый Обелиск': { style: 'obelisk', sigil: '◇', caption: 'КАМЕНЬ ЖЕРТВОПРИНОШЕНИЯ', hint: 'Не всё богатство стоит потери сил.' },
