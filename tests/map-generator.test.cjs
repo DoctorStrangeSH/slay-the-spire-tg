@@ -36,6 +36,45 @@ test('each generated node except boss has a valid outgoing route', () => {
     }
 });
 
+test('new map offers fair routes and correctly placed special rooms', () => {
+    for (let seed = 0; seed < 80; seed++) {
+        const map = new MapGenerator(1, seed);
+        assert.equal(map.paths[0].length, 1);
+        assert.equal(map.paths[1].length, 3);
+        assert.ok(map.paths[1].every(node => node.type === 'battle'));
+        assert.deepEqual(Array.from(map.paths[8], node => node.type), ['treasure']);
+        assert.deepEqual(Array.from(map.paths[14], node => node.type), ['rest']);
+        assert.deepEqual(Array.from(map.paths[15], node => node.type), ['boss']);
+        assert.equal(map.allNodes.filter(node => node.type === 'shop').length, 2);
+        assert.equal(map.allNodes.filter(node => node.type === 'elite').length, 2);
+        assert.ok(map.allNodes.every(node => node.type !== 'elite' || node.floor >= 5));
+        assert.ok(map.allNodes.every(node => node.type !== 'shop' || node.floor >= 4));
+        for (let floor = 1; floor < map.floors; floor++) {
+            for (const node of map.paths[floor]) {
+                assert.ok(map.paths[floor - 1].some(prev => prev.connections.includes(node.id)),
+                    'unreachable room ' + node.id + ' at seed ' + seed);
+            }
+        }
+    }
+});
+
+test('legacy map layout remains reproducible for old checkpoints', () => {
+    const a = new MapGenerator(1, 'legacy-run', { legacyLayout: true });
+    const b = new MapGenerator(1, 'legacy-run', { legacyLayout: true });
+    assert.equal(snapshot(a), snapshot(b));
+    assert.notEqual(snapshot(a), snapshot(new MapGenerator(1, 'legacy-run')));
+});
+
+test('mobile layout sets a fixed-height battle field with a scrollable card hand', () => {
+    const css = readFileSync(join(__dirname, '../css/cathedral.css'), 'utf8');
+    const mapUI = readFileSync(join(__dirname, '../js/ui/MapUI.js'), 'utf8');
+    assert.match(css, /#battle-screen\s*\{[\s\S]*?height:\s*100dvh/);
+    assert.match(css, /#hand-area\s*\{[\s\S]*?touch-action:\s*pan-x/);
+    assert.match(css, /#action-buttons\s*\{[\s\S]*?grid-template-columns:\s*repeat\(3/);
+    assert.match(mapUI, /15 - node\.floor/);
+    assert.doesNotMatch(mapUI, /addEventListener\('touchend'/);
+});
+
 test('available routes come only from current node, never from visited siblings', () => {
     const map = new MapGenerator(1, 'route-guard');
     const first = map.paths[1];
