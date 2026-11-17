@@ -251,3 +251,23 @@ test('run summary supports old saves without any progress counters', () => {
     assert.equal(summary.score, 0);
     assert.equal(summary.rank, 'Искатель судьбы');
 });
+
+test('berserk low HP boss victory unlocks only on the valid battle', () => {
+    const state = game(16);
+    state.player.heroId = 'berserk';
+    let unlocked = 0;
+    state.runHistory = { unlockChallenge: id => { assert.equal(id, 'berserk_last_breath'); unlocked++; return true; } };
+    state.currentBattle = { enemy: { isBoss: true } };
+    assert.equal(state.recordCombatChallenge(true), true);
+    assert.equal(unlocked, 1);
+    state.player.hp = 17;
+    assert.equal(state.recordCombatChallenge(true), false);
+    state.player.hp = 16;
+    state.currentBattle.enemy.isBoss = false;
+    assert.equal(state.recordCombatChallenge(true), false);
+    state.currentBattle.enemy.isBoss = true;
+    state.player.heroId = 'engineer';
+    assert.equal(state.recordCombatChallenge(true), false);
+    assert.equal(state.recordCombatChallenge(false), false);
+    assert.equal(unlocked, 1);
+});
