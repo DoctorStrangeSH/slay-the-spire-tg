@@ -222,8 +222,18 @@ const BattleUI = {
         const focusedCard = document.activeElement?.dataset?.cardIndex;
         handArea.innerHTML = '';
 
+        // Animate only cards newly drawn into this battle, not every selection rerender.
+        if (this.animatedHandBattle !== battle) {
+            this.animatedHandBattle = battle;
+            this.animatedHandCards = new WeakSet();
+        }
         battle.hand.forEach((card, index) => {
             const cardEl = this.createCardElement(card, index, battle);
+            if (card && typeof card === 'object' && !this.animatedHandCards.has(card)) {
+                this.animatedHandCards.add(card);
+                cardEl.classList.add('card-dealt');
+                cardEl.style.setProperty('--deal-order', String(Math.min(index, 8)));
+            }
             handArea.appendChild(cardEl);
         });
         handArea.scrollLeft = scrollLeft;
