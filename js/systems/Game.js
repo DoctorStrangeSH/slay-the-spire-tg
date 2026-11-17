@@ -98,7 +98,9 @@ class Game {
     showBattle() {
         this.gameState = 'battle';
         hideAllScreens();
-        document.getElementById('battle-screen').style.display = 'flex';
+        const battleScreen = document.getElementById('battle-screen');
+        battleScreen.style.display = 'flex';
+        battleScreen.dataset.cardSkin = this.runHistory?.rewardForHero(this.player?.heroId)?.skin || '';
         document.getElementById('enemy-area')?.classList.remove('fx-defeated');
         document.getElementById('player-area')?.classList.remove('fx-defeated');
         document.getElementById('battle-result-modal')?.remove();
