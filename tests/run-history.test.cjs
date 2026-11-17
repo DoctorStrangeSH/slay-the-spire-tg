@@ -60,3 +60,33 @@ test('unavailable storage does not prevent the game from ending', () => {
     assert.equal(history.record(summary(), 'berserk', 'a'), false);
     assert.equal(history.read().runs, 0);
 });
+
+test('hero achievements require actual victories and survive reopening the profile', () => {
+    const storage = memory();
+    const history = new RunHistory(storage);
+    history.record(summary(false, 100), 'berserk', 'lost');
+    assert.equal(history.achievements().find(a => a.name === 'Кровавый триумф').unlocked, false);
+    history.record(summary(true, 500), 'berserk', 'won-berserk');
+    history.record(summary(true, 500), 'engineer', 'won-engineer');
+    history.record(summary(true, 500), 'psyker', 'won-psyker');
+    const reopened = new RunHistory(storage);
+    const data = reopened.read();
+    assert.equal(data.heroes.berserk, 2);
+    assert.equal(data.heroVictories.berserk, 1);
+    assert.equal(data.heroVictories.engineer, 1);
+    assert.equal(data.heroVictories.psyker, 1);
+    assert.equal(reopened.achievements().find(a => a.name === 'Три судьбы').unlocked, true);
+});
+
+test('legacy history without per-hero victories keeps generic achievements', () => {
+    const values = memory();
+    values.setItem(RunHistory.KEY, JSON.stringify({
+        version: 1, runs: 3, victories: 1, defeats: 2,
+        bestScore: 700, bestAct: 3, totalBattles: 12,
+        heroes: { berserk: 3 }, recent: []
+    }));
+    const history = new RunHistory(values);
+    assert.equal(history.read().victories, 1);
+    assert.equal(history.read().heroVictories.berserk, undefined);
+    assert.equal(history.achievements().find(a => a.name === 'Кровавый триумф').unlocked, false);
+});

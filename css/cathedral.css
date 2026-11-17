@@ -2005,3 +2005,8 @@ button:disabled { opacity: .42; filter: grayscale(.5); }
 
 .cathedral-achievement--locked { opacity: .55; filter: grayscale(.65); }
 .cathedral-achievement strong { color: #f8d69a; }
+
+.cathedral-history-hero { display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+.cathedral-history-hero small { color: #dfc596; text-align: right; }
+@media (max-width: 440px) { .cathedral-history-hero { flex-direction: column; align-items: flex-start; }
+  .cathedral-history-hero small { text-align: left; } }

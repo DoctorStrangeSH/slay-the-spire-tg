@@ -9,7 +9,7 @@ class RunHistory {
 
     empty() {
         return { version: 1, runs: 0, victories: 0, defeats: 0,
-            bestScore: 0, bestAct: 0, totalBattles: 0, heroes: {}, recent: [] };
+            bestScore: 0, bestAct: 0, totalBattles: 0, heroes: {}, heroVictories: {}, recent: [] };
     }
 
     read() {
@@ -19,6 +19,7 @@ class RunHistory {
             if (!data || data.version !== 1 || !Array.isArray(data.recent)) return this.empty();
             return { ...this.empty(), ...data,
                 heroes: data.heroes && typeof data.heroes === 'object' && !Array.isArray(data.heroes) ? data.heroes : {},
+                heroVictories: data.heroVictories && typeof data.heroVictories === 'object' && !Array.isArray(data.heroVictories) ? data.heroVictories : {},
                 recent: data.recent.slice(-RunHistory.MAX_RECENT) };
         } catch (_) {
             return this.empty();
@@ -44,6 +45,7 @@ class RunHistory {
         data.bestAct = Math.max(data.bestAct, entry.act);
         data.totalBattles += entry.wins;
         data.heroes[entry.heroId] = (Number(data.heroes[entry.heroId]) || 0) + 1;
+        if (entry.victory) data.heroVictories[entry.heroId] = (Number(data.heroVictories[entry.heroId]) || 0) + 1;
         data.recent = [...data.recent, entry].slice(-RunHistory.MAX_RECENT);
         try {
             this.storage.setItem(RunHistory.KEY, JSON.stringify(data));
@@ -60,7 +62,11 @@ class RunHistory {
             { name: 'Покоритель шпиля', description: 'Одержать первую победу', unlocked: data.victories >= 1 },
             { name: 'Ветеран собора', description: 'Завершить 10 забегов', unlocked: data.runs >= 10 },
             { name: 'Несокрушимый', description: 'Победить трижды', unlocked: data.victories >= 3 },
-            { name: 'Легенда', description: 'Набрать 1250 очков в одном забеге', unlocked: data.bestScore >= 1250 }
+            { name: 'Легенда', description: 'Набрать 1250 очков в одном забеге', unlocked: data.bestScore >= 1250 },
+            { name: 'Кровавый триумф', description: 'Победить Берсерком', unlocked: (Number(data.heroVictories?.berserk) || 0) >= 1 },
+            { name: 'Стальной разум', description: 'Победить Инженером', unlocked: (Number(data.heroVictories?.engineer) || 0) >= 1 },
+            { name: 'Зрящий за гранью', description: 'Победить Псайкером', unlocked: (Number(data.heroVictories?.psyker) || 0) >= 1 },
+            { name: 'Три судьбы', description: 'Победить каждым из трёх стартовых героев', unlocked: ['berserk', 'engineer', 'psyker'].every(id => (Number(data.heroVictories?.[id]) || 0) >= 1) }
         ];
     }
 }

@@ -143,6 +143,22 @@ class Game {
         summary.className = 'run-journal-place';
         summary.textContent = `Забегов: ${data.runs} · Побед: ${data.victories} · Лучший счёт: ${data.bestScore}`;
         panel.append(title, summary);
+        const heroTitle = document.createElement('h4');
+        heroTitle.textContent = 'Герои';
+        panel.appendChild(heroTitle);
+        const heroes = [
+            ['berserk', '⚔️ Берсерк'], ['engineer', '🔧 Инженер'], ['psyker', '🔮 Псайкер']
+        ];
+        for (const [id, label] of heroes) {
+            const row = document.createElement('article');
+            row.className = 'run-journal-entry cathedral-history-hero';
+            const name = document.createElement('strong');
+            name.textContent = label;
+            const detail = document.createElement('small');
+            detail.textContent = `Забегов: ${Number(data.heroes[id]) || 0} · Побед: ${Number(data.heroVictories[id]) || 0}`;
+            row.append(name, detail);
+            panel.appendChild(row);
+        }
         const achievements = document.createElement('h4');
         achievements.textContent = 'Достижения';
         panel.appendChild(achievements);
