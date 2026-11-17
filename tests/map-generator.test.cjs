@@ -122,7 +122,7 @@ test('accessible route cards list only reachable rooms and activate chosen desti
     });
     const reachable = [{ id: 'rest', x: 5, type: 'rest' },
         { id: 'elite', x: 1, type: 'elite' }];
-    reachable[1].connections = ['next-shop'];
+    reachable[0].connections = ['next-shop'];
     let picked = null;
     const game = {
         currentNodeId: 'current',
