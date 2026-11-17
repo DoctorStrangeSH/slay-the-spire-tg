@@ -1488,24 +1488,82 @@ class Game {
     }
 
     rest() {
-        const healAmount = Math.floor(this.player.maxHp * 0.3);
-        this.player.hp = Math.min(this.player.maxHp, Math.floor(this.player.hp + healAmount));
-
         const modal = document.createElement('div');
-        modal.className = 'modal';
-        modal.innerHTML = `
-            <div class="modal-content">
-                <h3>🏕️ Отдых</h3>
-                <p>Вы восстановили ${healAmount} HP</p>
-                <button id="rest-continue-btn">Продолжить</button>
-            </div>
-        `;
-        document.body.appendChild(modal);
-
-        document.getElementById('rest-continue-btn').onclick = () => {
-            document.body.removeChild(modal);
-            this.continueJourney();
+        modal.className = 'modal campfire-modal';
+        modal.setAttribute('role', 'dialog');
+        modal.setAttribute('aria-modal', 'true');
+        modal.setAttribute('aria-label', 'Привал у костра');
+        const panel = document.createElement('div');
+        panel.className = 'modal-content campfire-content';
+        const title = document.createElement('h3');
+        title.textContent = '🏕️ Привал у костра';
+        const intro = document.createElement('p');
+        intro.textContent = 'Перед продолжением пути выберите одну награду.';
+        const choices = document.createElement('div');
+        choices.className = 'campfire-choices';
+        const healAmount = Math.max(1, Math.floor(this.player.maxHp * 0.3));
+        const actualHeal = Math.min(healAmount, this.player.maxHp - this.player.hp);
+        const healButton = document.createElement('button');
+        healButton.type = 'button';
+        healButton.className = 'campfire-choice campfire-heal';
+        healButton.textContent = `❤️ Отдохнуть · +${actualHeal} здоровья`;
+        healButton.disabled = actualHeal <= 0;
+        const forge = document.createElement('div');
+        forge.className = 'campfire-forge';
+        const forgeLabel = document.createElement('label');
+        forgeLabel.textContent = '✦ Улучшить одну карту бесплатно';
+        const selector = document.createElement('select');
+        selector.className = 'merchant-removal-select';
+        selector.setAttribute('aria-label', 'Карта для улучшения на привале');
+        const eligible = this.player.deck.filter(card => this.getCardUpgrade(card));
+        eligible.forEach((card, index) => {
+            const option = document.createElement('option');
+            option.value = String(index);
+            option.textContent = card.name || card.id || 'Карта';
+            selector.appendChild(option);
+        });
+        selector.value = '0';
+        selector.disabled = eligible.length === 0;
+        const preview = document.createElement('p');
+        preview.className = 'campfire-preview';
+        const renderPreview = () => {
+            const change = this.getCardUpgrade(eligible[Number(selector.value)]);
+            preview.textContent = change
+                ? `${change.label}: ${change.current} → ${change.next}`
+                : 'Нет карт, доступных для улучшения';
         };
+        selector.onchange = renderPreview;
+        renderPreview();
+        const upgradeButton = document.createElement('button');
+        upgradeButton.type = 'button';
+        upgradeButton.className = 'campfire-choice campfire-upgrade';
+        upgradeButton.textContent = '✦ Закалить карту';
+        upgradeButton.disabled = eligible.length === 0;
+        const finish = () => { modal.remove(); this.continueJourney(); };
+        healButton.onclick = () => {
+            if (this.player.hp >= this.player.maxHp) return;
+            this.player.hp = Math.min(this.player.maxHp, this.player.hp + healAmount);
+            finish();
+        };
+        upgradeButton.onclick = () => {
+            const card = eligible[Number(selector.value)];
+            if (!card || !this.player.deck.includes(card) || !this.upgradeCard(card)) return;
+            finish();
+        };
+        forge.append(forgeLabel, selector, preview, upgradeButton);
+        choices.append(healButton, forge);
+        panel.append(title, intro, choices);
+        if (healButton.disabled && upgradeButton.disabled) {
+            const continueButton = document.createElement('button');
+            continueButton.type = 'button';
+            continueButton.className = 'campfire-choice campfire-continue';
+            continueButton.textContent = 'Продолжить путь →';
+            continueButton.onclick = finish;
+            panel.appendChild(continueButton);
+        }
+        modal.appendChild(panel);
+        document.body.appendChild(modal);
+        (healButton.disabled ? (upgradeButton.disabled ? panel.children[3] : upgradeButton) : healButton).focus();
     }
 }
 
