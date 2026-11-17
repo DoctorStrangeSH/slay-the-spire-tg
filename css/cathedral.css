@@ -2010,3 +2010,18 @@ button:disabled { opacity: .42; filter: grayscale(.5); }
 .cathedral-history-hero small { color: #dfc596; text-align: right; }
 @media (max-width: 440px) { .cathedral-history-hero { flex-direction: column; align-items: flex-start; }
   .cathedral-history-hero small { text-align: left; } }
+
+/* Зал испытаний: компактные сворачиваемые категории и доступный прогресс. */
+.cathedral-challenge-hall { margin-top: 18px; }
+.cathedral-challenge-hall h4 { margin-bottom: 6px; }
+.cathedral-challenge-progress-label { color: #f0d6a8; margin: 0 0 10px; font-size: .9rem; }
+.cathedral-challenge-progress { height: 12px; overflow: hidden; border-radius: 99px;
+  border: 1px solid #8f7958; background: #101925; }
+.cathedral-challenge-progress-fill { height: 100%; background: linear-gradient(90deg, #996647, #e5ba76);
+  border-radius: inherit; transition: width .3s ease; }
+.cathedral-challenge-group { border: 1px solid #716550; border-radius: 10px;
+  margin-top: 11px; padding: 0 10px 8px; background: #1b2633; }
+.cathedral-challenge-group summary { cursor: pointer; padding: 12px 4px; min-height: 44px;
+  color: #f4daa9; font-weight: 800; }
+.cathedral-challenge-group summary:focus-visible { outline: 2px solid #eac47e; outline-offset: 3px; }
+.cathedral-challenge-group .run-journal-entry { margin: 5px 0 9px; }
