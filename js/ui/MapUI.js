@@ -122,6 +122,29 @@ const MapUI = {
         return rooms[type] || { label: 'Путь вперёд', hint: 'Неизведанная комната', risk: '' };
     },
 
+    getRouteAdvice(type, player) {
+        if (!player) return '';
+        const hp = Number(player.hp);
+        const maxHp = Number(player.maxHp);
+        const gold = Number(player.gold);
+        const hasHealth = Number.isFinite(hp) && Number.isFinite(maxHp) && maxHp > 0;
+        const lowHealth = hasHealth && hp / maxHp <= 0.35;
+        if (type === NODE_TYPES.SHOP && Number.isFinite(gold)) {
+            return `💰 У вас ${Math.max(0, Math.floor(gold))} золота`;
+        }
+        if (type === NODE_TYPES.REST && hasHealth) {
+            const gain = Math.min(Math.max(0, Math.floor(maxHp - hp)), Math.floor(maxHp * 0.3));
+            return gain > 0 ? `❤️ Восстановите до ${gain} здоровья` : '❤️ Здоровье уже полное';
+        }
+        if ((type === NODE_TYPES.ELITE || type === NODE_TYPES.BOSS) && lowHealth) {
+            return '⚠️ Опасно: осталось мало здоровья';
+        }
+        if (type === NODE_TYPES.BATTLE && lowHealth) {
+            return '⚠️ Мало здоровья перед сражением';
+        }
+        return '';
+    },
+
     getRouteForecast(node, mapGenerator) {
         if (!node || !Array.isArray(node.connections)) return '';
         const destinations = node.connections
@@ -151,8 +174,9 @@ const MapUI = {
             button.type = 'button';
             button.className = 'spire-next-card spire-next-card--' + node.type;
             const forecast = this.getRouteForecast(node, game.mapGenerator);
+            const advice = this.getRouteAdvice(node.type, game.player);
             button.setAttribute('aria-label', details.label + '. ' + details.hint +
-                (forecast ? '. ' + forecast : ''));
+                (forecast ? '. ' + forecast : '') + (advice ? '. ' + advice : ''));
             const icon = document.createElement('span');
             icon.className = 'spire-next-icon';
             icon.textContent = this.getNodeIcon(node.type);
@@ -167,6 +191,12 @@ const MapUI = {
             copy.appendChild(name);
             copy.appendChild(hint);
             copy.appendChild(risk);
+            if (advice) {
+                const context = document.createElement('span');
+                context.className = 'spire-next-advice';
+                context.textContent = advice;
+                copy.appendChild(context);
+            }
             if (forecast) {
                 const future = document.createElement('span');
                 future.className = 'spire-next-forecast';
