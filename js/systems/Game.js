@@ -76,7 +76,7 @@ class Game {
     showBattle() {
         this.gameState = 'battle';
         hideAllScreens();
-        document.getElementById('battle-screen').style.display = 'block';
+        document.getElementById('battle-screen').style.display = 'flex';
         document.getElementById('enemy-area')?.classList.remove('fx-defeated');
         document.getElementById('player-area')?.classList.remove('fx-defeated');
         document.getElementById('battle-result-modal')?.remove();

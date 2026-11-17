@@ -91,7 +91,16 @@ const MapUI = {
         // Создаём SVG для карты
         const svg = this.createSVG(game);
         mapContainer.appendChild(svg);
-        
+        // Начало маршрута внизу, вершина с боссом — наверху.
+        // Показываем текущий этаж сразу, не заставляя игрока его искать.
+        requestAnimationFrame(() => {
+            const current = game.mapGenerator.findNodeById(game.currentNodeId);
+            const targetY = current ? this.getNodeY(current, 20,
+                (600 - 40) / (game.mapGenerator.floors - 1)) : 600;
+            const viewport = mapContainer.clientHeight || 400;
+            mapContainer.scrollTop = Math.max(0, targetY * (svg.getBoundingClientRect().height / 600) - viewport * 0.64);
+        });
+
         // Легенда
         this.renderLegend(mapContainer);
     },
@@ -225,19 +234,8 @@ const MapUI = {
                 game.selectMapNode(node);
             });
             
-            // Touch для мобильных
-            circle.addEventListener('touchend', (e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                game.selectMapNode(node);
-            });
-            
-            group.addEventListener('touchend', (e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                game.selectMapNode(node);
-            });
-            
+            // Click уже работает с сенсорным вводом; отдельный touchend
+            // вызывал двойное открытие комнаты на некоторых WebView.
             group.style.pointerEvents = 'all';
         } else if (!isVisited && !isAvailable) {
             circle.setAttribute('opacity', '0.4');
@@ -280,7 +278,7 @@ const MapUI = {
     },
     
     getNodeY(node, marginY, floorHeight) {
-        return marginY + node.floor * floorHeight;
+        return marginY + (15 - node.floor) * floorHeight;
     },
     
     getNodeColor(type) {
