@@ -71,6 +71,17 @@ class RunHistory {
         }
     }
 
+    rewardForHero(heroId, data = this.read()) {
+        const rewards = {
+            berserk: { challenge: 'berserk_last_breath', title: 'Клятвопреступник', sigil: '🩸' },
+            engineer: { challenge: 'engineer_iron_line', title: 'Мастер механизмов', sigil: '⚙️' },
+            psyker: { challenge: 'psyker_mind_chain', title: 'Разрушитель разума', sigil: '🔮' }
+        };
+        const reward = rewards[heroId];
+        return reward && data.challenges?.[reward.challenge] === true
+            ? { title: reward.title, sigil: reward.sigil } : null;
+    }
+
     achievements(data = this.read()) {
         const categoryByName = {
             'Кровавый триумф': 'berserk', 'На последнем дыхании': 'berserk',
@@ -90,6 +101,11 @@ class RunHistory {
             { name: 'На последнем дыхании', description: 'Берсерком победить босса, имея не более 20% максимального HP', unlocked: data.challenges?.berserk_last_breath === true },
             { name: 'Железная линия', description: 'Инженером победить элитного врага, сохранив не менее двух конструкций', unlocked: data.challenges?.engineer_iron_line === true },
             { name: 'Разрыв сознания', description: 'Псайкером победить элитного врага под параличом, разыграв три карты за ход', unlocked: data.challenges?.psyker_mind_chain === true }
-        ].map(entry => ({ ...entry, category: categoryByName[entry.name] || 'general' }));
+        ].map(entry => ({ ...entry, category: categoryByName[entry.name] || 'general',
+            reward: {
+                'На последнем дыхании': 'Титул «Клятвопреступник»',
+                'Железная линия': 'Титул «Мастер механизмов»',
+                'Разрыв сознания': 'Титул «Разрушитель разума»'
+            }[entry.name] || null }));
     }
 }

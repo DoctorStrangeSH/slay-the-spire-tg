@@ -130,3 +130,16 @@ test('achievement hall categories cover all achievements without duplicates', ()
     }
     assert.deepEqual(tally, { general: 6, berserk: 2, engineer: 2, psyker: 2 });
 });
+
+test('hero title rewards unlock only for their matching challenges', () => {
+    const history = new RunHistory(memory());
+    assert.equal(history.rewardForHero('berserk'), null);
+    assert.equal(history.rewardForHero('unknown'), null);
+    history.unlockChallenge('engineer_iron_line');
+    assert.equal(history.rewardForHero('berserk'), null);
+    assert.equal(history.rewardForHero('engineer').title, 'Мастер механизмов');
+    assert.equal(history.rewardForHero('psyker'), null);
+    const achievement = history.achievements().find(item => item.name === 'Железная линия');
+    assert.equal(achievement.reward, 'Титул «Мастер механизмов»');
+    assert.equal(achievement.unlocked, true);
+});
