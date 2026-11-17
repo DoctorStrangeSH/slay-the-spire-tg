@@ -531,3 +531,40 @@ test('blood mark takes health on each battle, cannot kill, and powers curse reli
     assert.equal(game.player.bloodMarkBattles, 0);
     assert.equal(game.player.gold, 20);
 });
+
+test('rare events scale by act and never offer the forge without a curse', () => {
+    const source = readFileSync(join(__dirname, '../js/systems/Game.js'), 'utf8');
+    const rolls = [0.05, 0.30];
+    const random = () => rolls.shift();
+    const Game = vm.runInNewContext(source + '\nGame;', {
+        GAME_CONFIG: { maxActs: 3 }, RunSave: class { clear() {} },
+        Math: Object.assign(Object.create(Math), { random })
+    });
+    const game = new Game();
+    game.player = { curseBattles: 0, exhaustionBattles: 0, bloodMarkBattles: 0 };
+    assert.equal(game.getEligibleRareEvents().some(e => e.name === 'Кузница Судеб'), false);
+    let selected;
+    game.showEventModal = event => { selected = event; };
+    game.triggerEvent();
+    assert.equal(selected.rare, true);
+    assert.notEqual(selected.name, 'Кузница Судеб');
+    game.player.exhaustionBattles = 1;
+    assert.equal(game.getEligibleRareEvents().some(e => e.name === 'Кузница Судеб'), true);
+    rolls.push(0.05, 0.30);
+    game.triggerEvent();
+    assert.equal(selected.name, 'Кузница Судеб');
+    game.act = 1;
+    assert.equal(game.getRareEventChance(), 0.12);
+    game.act = 2;
+    assert.equal(game.getRareEventChance(), 0.16);
+    game.act = 3;
+    assert.equal(game.getRareEventChance(), 0.20);
+    rolls.push(0.15, 0.1);
+    game.act = 2;
+    game.triggerEvent();
+    assert.equal(selected.rare, true);
+    rolls.push(0.18, 0.1);
+    game.act = 3;
+    game.triggerEvent();
+    assert.equal(selected.rare, true);
+});
