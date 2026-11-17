@@ -120,7 +120,7 @@ class MapGenerator {
             [earlyEliteFloor]: [NODE_TYPES.ELITE, NODE_TYPES.REST, NODE_TYPES.BATTLE],
             8: [NODE_TYPES.TREASURE],
             [lateShopFloor]: [NODE_TYPES.SHOP, NODE_TYPES.BATTLE, NODE_TYPES.EVENT],
-            [lateEliteFloor]: [NODE_TYPES.ELITE, NODE_TYPES.REST, NODE_TYPES.BATTLE],
+            [lateEliteFloor]: [NODE_TYPES.ELITE, lateEliteFloor === 13 ? NODE_TYPES.EVENT : NODE_TYPES.REST, NODE_TYPES.BATTLE],
             14: [NODE_TYPES.REST]
         };
     }
