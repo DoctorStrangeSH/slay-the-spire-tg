@@ -100,3 +100,12 @@ test('berserk boss challenge is persistent and idempotent', () => {
     const reopened = new RunHistory(storage);
     assert.equal(reopened.achievements().find(a => a.name === 'На последнем дыхании').unlocked, true);
 });
+
+test('engineer iron line challenge persists and rejects repeated grants', () => {
+    const storage = memory();
+    const history = new RunHistory(storage);
+    assert.equal(history.unlockChallenge('engineer_iron_line'), true);
+    assert.equal(history.unlockChallenge('engineer_iron_line'), false);
+    const reopened = new RunHistory(storage);
+    assert.equal(reopened.achievements().find(a => a.name === 'Железная линия').unlocked, true);
+});
