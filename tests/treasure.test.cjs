@@ -27,7 +27,7 @@ test('maps place a genuine treasure node, not a disguised shop', () => {
         const treasures = generated.allNodes.filter(n => n.type === NODE_TYPES.TREASURE);
         assert.equal(treasures.length, 1);
         assert.equal(treasures[0].floor, generated.floorRestrictions.treasureFloor);
-        assert.equal(generated.allNodes.filter(n => n.type === NODE_TYPES.SHOP).length, 3);
+        assert.equal(generated.allNodes.filter(n => n.type === NODE_TYPES.SHOP).length, 2);
     }
 });
 
