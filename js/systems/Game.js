@@ -682,6 +682,11 @@ class Game {
                 return this.runHistory.unlockChallenge('engineer_iron_line');
             }
         }
+        if (this.player.heroId === 'psyker' && this.currentBattleIsElite === true
+            && (Number(this.currentBattle?.cardsPlayedThisTurn) || 0) >= 3
+            && (Number(this.currentBattle?.statusEffects?.enemy?.paralysis) || 0) > 0) {
+            return this.runHistory.unlockChallenge('psyker_mind_chain');
+        }
         return false;
     }
 
