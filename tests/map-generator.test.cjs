@@ -107,8 +107,8 @@ test('event scenes distinguish all choices and preserve failed bargain outcome',
     });
     const game = new Game();
     const events = game.getEventsForAct();
-    assert.equal(events.length, 7);
-    assert.equal(new Set(events.map(event => game.getEventPresentation(event.name).style )).size, 7);
+    assert.equal(events.length, 8);
+    assert.equal(new Set(events.map(event => game.getEventPresentation(event.name).style )).size, 8);
     assert.ok(events.every(event => event.options.length >= 2));
     assert.ok(events.every(event => event.description.length > 75));
     game.player = { hp: 12, maxHp: 50, gold: 0 };
@@ -160,7 +160,7 @@ test('each act has its own encounter and risky choices cannot be lethal', () => 
     for (let act = 1; act <= 3; act++) {
         game.act = act;
         const events = game.getEventsForAct();
-        assert.equal(events.length, 7);
+        assert.equal(events.length, 8);
         assert.ok(events.some(event => event.name === names[act - 1]));
         assert.ok(events.every(event => !names.some(name => name !== names[act - 1] && event.name === name)));
     }
