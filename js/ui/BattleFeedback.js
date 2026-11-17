@@ -224,7 +224,7 @@ const BattleFeedback = Object.freeze({
             this.float('player-area', after.heroBlock - before.heroBlock, 'shield');
         }
     },
-    result({ victory, gold = 0, onContinue }) {
+    result({ victory, gold = 0, relic = null, onContinue }) {
         if (document.getElementById('battle-result-modal')) return;
         const defeatedArea = document.getElementById(victory ? 'enemy-area' : 'player-area');
         defeatedArea?.classList.add('fx-defeated');
@@ -256,6 +256,12 @@ const BattleFeedback = Object.freeze({
             reward.className = 'battle-result-reward';
             reward.textContent = '✦ +' + gold + ' золота';
             content.appendChild(reward);
+            if (relic) {
+                const relicReward = document.createElement('p');
+                relicReward.className = 'battle-result-reward battle-result-relic';
+                relicReward.textContent = `${relic.emoji} Реликвия: ${relic.name}`;
+                content.appendChild(relicReward);
+            }
         }
         const continueButton = document.createElement('button');
         continueButton.type = 'button';
