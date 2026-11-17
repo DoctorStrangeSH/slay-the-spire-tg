@@ -88,6 +88,9 @@ const MapUI = {
             mapContainer.appendChild(curse);
         }
 
+        // Доступные развилки дублируются крупными карточками для телефона.
+        this.renderNextChoices(mapContainer, game);
+
         // Создаём SVG для карты
         window._currentMapOrganicLayout = !game.mapGenerator.legacyLayout && !game.mapGenerator.legacyBranchingLayout;
         const svg = this.createSVG(game);
@@ -106,6 +109,61 @@ const MapUI = {
         this.renderLegend(mapContainer);
     },
     
+    getRoomDetails(type) {
+        const rooms = {
+            [NODE_TYPES.BATTLE]: { label: 'Обычный бой', hint: 'Золото и выбор карты', risk: 'Умеренный риск' },
+            [NODE_TYPES.ELITE]: { label: 'Элитный бой', hint: 'Опасный враг и реликвия', risk: 'Высокий риск' },
+            [NODE_TYPES.EVENT]: { label: 'Неизвестное событие', hint: 'Выбор, награда или испытание', risk: 'Неизвестный исход' },
+            [NODE_TYPES.REST]: { label: 'Привал', hint: 'Возможность восстановиться', risk: 'Безопасная комната' },
+            [NODE_TYPES.SHOP]: { label: 'Магазин', hint: 'Карты и полезные покупки', risk: 'Без боя' },
+            [NODE_TYPES.TREASURE]: { label: 'Сокровищница', hint: 'Ценная награда', risk: 'Без боя' },
+            [NODE_TYPES.BOSS]: { label: 'Босс акта', hint: 'Главное испытание', risk: 'Очень высокий риск' }
+        };
+        return rooms[type] || { label: 'Путь вперёд', hint: 'Неизведанная комната', risk: '' };
+    },
+
+    renderNextChoices(container, game) {
+        const choices = game.mapGenerator.getAvailableNodes(game.currentNodeId)
+            .sort((a, b) => a.x - b.x);
+        if (!choices.length) return;
+        const panel = document.createElement('section');
+        panel.className = 'spire-next-choices';
+        panel.setAttribute('aria-label', 'Выбор следующей комнаты');
+        const title = document.createElement('div');
+        title.className = 'spire-next-heading';
+        title.textContent = '✦ ВЫБЕРИТЕ СЛЕДУЮЩУЮ КОМНАТУ';
+        panel.appendChild(title);
+        const list = document.createElement('div');
+        list.className = 'spire-next-list';
+        choices.forEach(node => {
+            const details = this.getRoomDetails(node.type);
+            const button = document.createElement('button');
+            button.type = 'button';
+            button.className = 'spire-next-card spire-next-card--' + node.type;
+            button.setAttribute('aria-label', details.label + '. ' + details.hint);
+            const icon = document.createElement('span');
+            icon.className = 'spire-next-icon';
+            icon.textContent = this.getNodeIcon(node.type);
+            const copy = document.createElement('span');
+            copy.className = 'spire-next-copy';
+            const name = document.createElement('strong');
+            name.textContent = details.label;
+            const hint = document.createElement('small');
+            hint.textContent = details.hint;
+            const risk = document.createElement('em');
+            risk.textContent = details.risk;
+            copy.appendChild(name);
+            copy.appendChild(hint);
+            copy.appendChild(risk);
+            button.appendChild(icon);
+            button.appendChild(copy);
+            button.addEventListener('click', () => game.selectMapNode(node));
+            list.appendChild(button);
+        });
+        panel.appendChild(list);
+        container.appendChild(panel);
+    },
+
     createSVG(game) {
         const svgNS = 'http://www.w3.org/2000/svg';
         const svg = document.createElementNS(svgNS, 'svg');
