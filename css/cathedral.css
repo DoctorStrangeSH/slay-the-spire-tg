@@ -2025,3 +2025,10 @@ button:disabled { opacity: .42; filter: grayscale(.5); }
   color: #f4daa9; font-weight: 800; }
 .cathedral-challenge-group summary:focus-visible { outline: 2px solid #eac47e; outline-offset: 3px; }
 .cathedral-challenge-group .run-journal-entry { margin: 5px 0 9px; }
+
+/* Косметические титулы за геройские испытания. */
+.hero-earned-title { margin: 9px auto 4px; width: fit-content; max-width: 95%;
+  padding: 6px 11px; border: 1px solid #dbb775; border-radius: 999px;
+  background: linear-gradient(120deg, #3e2c3a, #24374b); color: #ffe5aa;
+  font-size: .82rem; font-weight: 800; text-align: center; }
+.cathedral-achievement-reward { color: #efca89; font-weight: 700; }
