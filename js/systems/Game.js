@@ -27,7 +27,8 @@ class Game {
             gold: 0,
             deck: getStarterDeckForHero(heroId),
             relics: [],
-            eventHistory: []
+            eventHistory: [],
+            pilgrimChoice: null
         };
 
         this.startNewGame();
@@ -42,6 +43,7 @@ class Game {
         this.player.deck = getStarterDeckForHero(this.player.heroId);
         this.player.relics = [];
         this.player.eventHistory = [];
+        this.player.pilgrimChoice = null;
         this.act = 1;
         this.floor = 0;
 
@@ -650,7 +652,12 @@ class Game {
         const freshEvents = events.filter(event => !history.includes(event.name));
         // Если весь пул уже встречался, событие всё равно должно состояться.
         const availableEvents = freshEvents.length ? freshEvents : events;
-        const event = availableEvents[Math.floor(Math.random() * availableEvents.length)];
+        let event = availableEvents[Math.floor(Math.random() * availableEvents.length)];
+        // Отложенное последствие: спасённый паломник может встретиться позже.
+        if (!isRare && this.player?.pilgrimChoice === 'helped') {
+            const reunion = availableEvents.find(candidate => candidate.name === 'Возвращение паломника');
+            if (reunion && Math.random() < 0.4) event = reunion;
+        }
         if (!event) return;
         if (this.player) {
             const previous = Array.isArray(this.player.eventHistory) ? this.player.eventHistory : [];
@@ -957,6 +964,54 @@ class Game {
                 ]
             }
         ];
+        // Развилка с последствиями, сохраняющимися между комнатами и актами.
+        if (this.player?.pilgrimChoice == null) {
+            commonEvents.push({
+                name: 'Паломник у развилки',
+                description: 'Под дождём сидит странник с потухшим фонарём. Он просит немного золота, чтобы добраться до последней часовни. На ладони у него знак золотой звезды.',
+                options: [
+                    {
+                        text: 'Помочь страннику (−20 золота)',
+                        action: () => {
+                            if (this.player.gold < 20) { alert('Недостаточно золота!'); return false; }
+                            this.player.gold -= 20;
+                            this.player.pilgrimChoice = 'helped';
+                            return true;
+                        }
+                    },
+                    {
+                        text: 'Пройти мимо',
+                        action: () => {
+                            this.player.pilgrimChoice = 'ignored';
+                            return true;
+                        }
+                    }
+                ]
+            });
+        } else if (this.player.pilgrimChoice === 'helped') {
+            commonEvents.push({
+                name: 'Возвращение паломника',
+                description: 'У ворот часовни тебя узнаёт странник со знаком золотой звезды. Он пережил дорогу благодаря твоей помощи и теперь предлагает разделить свои находки.',
+                options: [
+                    {
+                        text: 'Принять благодарность (+50 золота)',
+                        action: () => {
+                            this.player.gold += 50;
+                            this.player.pilgrimChoice = 'repaid';
+                            return true;
+                        }
+                    },
+                    {
+                        text: 'Попросить исцеления (+22 HP)',
+                        action: () => {
+                            this.player.hp = Math.min(this.player.maxHp, this.player.hp + 22);
+                            this.player.pilgrimChoice = 'repaid';
+                            return true;
+                        }
+                    }
+                ]
+            });
+        }
         const actEvents = {
             1: {
                 name: 'Сердце Терновника',
@@ -1022,6 +1077,8 @@ class Game {
 
     getEventPresentation(name) {
         const scenes = {
+            'Паломник у развилки': { style: 'chapel', sigil: '✧', caption: 'ПУТНИК НА ПЕРЕПУТЬЕ', hint: 'Твоя доброта может пережить эту встречу.' },
+            'Возвращение паломника': { style: 'chapel', sigil: '✦', caption: 'ДОБРО ВОЗВРАЩАЕТСЯ', hint: 'Старый долг оплачен. Выбери награду.' },
             'Загадочный фонтан': { style: 'fountain', sigil: '♒', caption: 'ЗАБЫТАЯ КУПЕЛЬ', hint: 'Пить из древней воды или оставить её нетронутой?' },
             'Странный торговец': { style: 'merchant', sigil: '◇', caption: 'СДЕЛКА В ТЕНИ', hint: 'У каждой тайны есть цена.' },
             'Алтарь Пепельной Клятвы': { style: 'altar', sigil: '✥', caption: 'ОБЕТ КРОВИ', hint: 'Сила требует жертвы. Решение за тобой.' },
