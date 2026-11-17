@@ -18,6 +18,7 @@ class RunSave {
         return {
             version: RunSave.VERSION,
             savedAt: new Date().toISOString(),
+            runId: game.runId || null,
             act: game.act,
             floor: game.floor,
             currentNodeId: game.currentNodeId,
