@@ -665,10 +665,21 @@ class Game {
         }
     }
 
+    recordCombatChallenge(victory) {
+        if (!victory || !this.player || this.player.heroId !== 'berserk') return false;
+        if (this.currentBattle?.enemy?.isBoss !== true) return false;
+        const hp = Number(this.player.hp);
+        const maxHp = Number(this.player.maxHp);
+        if (!Number.isFinite(hp) || !Number.isFinite(maxHp) || maxHp <= 0
+            || hp <= 0 || hp > maxHp * 0.2) return false;
+        return this.runHistory?.unlockChallenge('berserk_last_breath') || false;
+    }
+
     endBattle(victory) {
         // Только один экран исхода: повторные события не начислят золото второй раз.
         if (document.getElementById('battle-result-modal')) return;
         if (victory) {
+            if (typeof this.recordCombatChallenge === 'function') this.recordCombatChallenge(true);
             const elite = this.currentBattleIsElite === true;
             const boss = this.currentBattle?.enemy?.isBoss === true;
             this.player.battleWins = (Number(this.player.battleWins) || 0) + 1;

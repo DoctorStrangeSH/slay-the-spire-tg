@@ -90,3 +90,13 @@ test('legacy history without per-hero victories keeps generic achievements', () 
     assert.equal(history.read().heroVictories.berserk, undefined);
     assert.equal(history.achievements().find(a => a.name === 'Кровавый триумф').unlocked, false);
 });
+
+test('berserk boss challenge is persistent and idempotent', () => {
+    const storage = memory();
+    const history = new RunHistory(storage);
+    assert.equal(history.unlockChallenge('unknown'), false);
+    assert.equal(history.unlockChallenge('berserk_last_breath'), true);
+    assert.equal(history.unlockChallenge('berserk_last_breath'), false);
+    const reopened = new RunHistory(storage);
+    assert.equal(reopened.achievements().find(a => a.name === 'На последнем дыхании').unlocked, true);
+});
