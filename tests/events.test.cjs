@@ -291,3 +291,28 @@ test('engineer elite victory needs two surviving buildings', () => {
     assert.equal(state.recordCombatChallenge(true), false);
     assert.equal(achievements.length, 1);
 });
+
+test('psyker mind chain requires elite victory with active paralysis and three cards in the turn', () => {
+    const state = game(40);
+    state.player.heroId = 'psyker';
+    state.currentBattleIsElite = true;
+    state.currentBattle = {
+        cardsPlayedThisTurn: 2,
+        statusEffects: { enemy: { paralysis: 1 } }
+    };
+    const unlocks = [];
+    state.runHistory = { unlockChallenge: id => { unlocks.push(id); return true; } };
+    assert.equal(state.recordCombatChallenge(true), false);
+    state.currentBattle.cardsPlayedThisTurn = 3;
+    state.currentBattle.statusEffects.enemy.paralysis = 0;
+    assert.equal(state.recordCombatChallenge(true), false);
+    state.currentBattle.statusEffects.enemy.paralysis = 1;
+    assert.equal(state.recordCombatChallenge(false), false);
+    assert.equal(state.recordCombatChallenge(true), true);
+    assert.equal(unlocks[0], 'psyker_mind_chain');
+    state.currentBattleIsElite = false;
+    assert.equal(state.recordCombatChallenge(true), false);
+    state.player.heroId = 'berserk';
+    assert.equal(state.recordCombatChallenge(true), false);
+    assert.equal(unlocks.length, 1);
+});
