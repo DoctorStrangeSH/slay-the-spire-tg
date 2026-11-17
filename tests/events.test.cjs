@@ -192,3 +192,30 @@ test('run journal remains empty and safe for a legacy player without story flags
     const state = game();
     assert.equal(state.getRunJournalEntries().length, 0);
 });
+
+test('event chronicle records the decision, act, floor and resource changes', () => {
+    const state = game(30, 10);
+    state.act = 2;
+    state.floor = 4;
+    const before = state.snapshotJournalResources();
+    state.player.hp -= 7;
+    state.player.gold += 85;
+    state.recordEventDecision({ name: 'Расколотый Обелиск' }, { text: 'Принять сделку' }, before);
+    const [entry] = state.player.journalLog;
+    assert.equal(entry.act, 2);
+    assert.equal(entry.floor, 5);
+    assert.equal(entry.event, 'Расколотый Обелиск');
+    assert.equal(entry.choice, 'Принять сделку');
+    assert.match(entry.outcome, /HP: -7/);
+    assert.match(entry.outcome, /золото: \+85/);
+});
+
+test('event chronicle keeps last 50 decisions and accepts legacy player fields', () => {
+    const state = game();
+    for (let i = 0; i < 55; i++) {
+        state.recordEventDecision({ name: `Событие ${i}` }, { text: 'Пройти дальше' }, state.snapshotJournalResources());
+    }
+    assert.equal(state.player.journalLog.length, 50);
+    assert.equal(state.player.journalLog[0].event, 'Событие 5');
+    assert.equal(state.player.journalLog.at(-1).outcome, 'Без немедленных изменений');
+});
