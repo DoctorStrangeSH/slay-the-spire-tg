@@ -4,7 +4,7 @@ class MapGenerator {
         this.act = act;
         // Совместимость с чекпоинтами до появления отдельных сокровищниц.
         this.legacyTreasureShop = options.legacyTreasureShop === true;
-        this.legacyLayout = options.legacyLayout === true;
+        this.legacyLayout = options.legacyLayout === true || this.legacyTreasureShop;
         // Один seed описывает целую карту; пригодится для повтора забега.
         this.seed = seed === null ? Math.floor(Math.random() * 0x100000000) : seed;
         this.random = createMapRandom(this.seed);
@@ -51,6 +51,7 @@ class MapGenerator {
     // Маршруты строятся до назначения комнат: на каждом обычном этаже
     // три осмысленные альтернативы, а ключевые комнаты имеют фиксированную роль.
     generateBranchingMap() {
+        this.floorRestrictions.treasureFloor = 8;
         this.createLayers();
         this.createNode(0, 0, NODE_TYPES.START, true);
         const specialFloors = {
