@@ -79,7 +79,7 @@ test('game loads feedback before controllers and invokes it after moves', () => 
     const html = fs.readFileSync(path.join(root, 'index.html'), 'utf8');
     const game = fs.readFileSync(path.join(root, 'js/systems/Game.js'), 'utf8');
     const css = fs.readFileSync(path.join(root, 'css/cathedral.css'), 'utf8');
-    assert.match(html, /js\/ui\/BattleFeedback\.js\?v=2026\.11\.17\.55/);
+    assert.match(html, /js\/ui\/BattleFeedback\.js\?v=2026\.11\.17\.56/);
     assert.match(game, /BattleFeedback\.snapshot\(this\.currentBattle\)/);
     assert.match(game, /BattleFeedback\.show\(before, this\.currentBattle\)/);
     assert.match(css, /prefers-reduced-motion: reduce/);
@@ -291,4 +291,40 @@ test('relic acquisition toast reads safe text and replaces previous timer', () =
     assert.equal(second.children[1].children[1].textContent, '<img>');
     [...timers.values()][0]();
     assert.equal(second.removed, true);
+});
+
+
+test('elite victory grants a relic and improved gold without altering regular combat', () => {
+    const gameSource = fs.readFileSync(path.join(root, 'js/systems/Game.js'), 'utf8');
+    let result;
+    const context = vm.createContext({
+        document: { getElementById: () => null }, Math,
+        chooseRelic: () => ({ id: 'eliteCharm', emoji: '💎', name: 'Оберег' }),
+        BattleFeedback: { result: data => { result = data; } }
+    });
+    const Game = vm.runInContext(gameSource + '\nGame;', context);
+    const elite = { player: { gold: 0, heroId: 'berserk', relics: [] }, currentBattleIsElite: true };
+    Game.prototype.endBattle.call(elite, true);
+    assert.ok(elite.player.gold >= 25 && elite.player.gold <= 44);
+    assert.deepEqual(elite.player.relics, ['eliteCharm']);
+    assert.equal(result.relic.id, 'eliteCharm');
+    assert.equal(elite.currentBattleIsElite, false);
+    const normal = { player: { gold: 0, heroId: 'berserk', relics: [] }, currentBattleIsElite: false };
+    Game.prototype.endBattle.call(normal, true);
+    assert.ok(normal.player.gold >= 10 && normal.player.gold <= 29);
+    assert.equal(normal.player.relics.length, 0);
+    assert.equal(result.relic, null);
+});
+
+test('elite victory uses bonus gold when relic pool is exhausted', () => {
+    const gameSource = fs.readFileSync(path.join(root, 'js/systems/Game.js'), 'utf8');
+    const context = vm.createContext({
+        document: { getElementById: () => null }, Math,
+        chooseRelic: () => null,
+        BattleFeedback: { result() {} }
+    });
+    const Game = vm.runInContext(gameSource + '\nGame;', context);
+    const elite = { player: { gold: 0, heroId: 'berserk', relics: [] }, currentBattleIsElite: true };
+    Game.prototype.endBattle.call(elite, true);
+    assert.ok(elite.player.gold >= 65 && elite.player.gold <= 84);
 });
