@@ -1309,6 +1309,43 @@ class Game {
         });
         heal.append(healName, healDesc, healButton);
         shelf.appendChild(heal);
+        // Deck thinning is a strategic purchase, not an automatic removal.
+        const removalPrice = 65;
+        const removal = document.createElement('article');
+        removal.className = 'merchant-item merchant-removal';
+        const removalName = document.createElement('strong');
+        removalName.textContent = '✂️ Очистка колоды';
+        const removalDesc = document.createElement('p');
+        removalDesc.textContent = 'Навсегда уберите одну карту из текущей колоды. Один раз за посещение. Минимум 5 карт.';
+        const removalSelect = document.createElement('select');
+        removalSelect.className = 'merchant-removal-select';
+        removalSelect.setAttribute('aria-label', 'Карта для удаления из колоды');
+        this.player.deck.forEach((card, index) => {
+            const option = document.createElement('option');
+            option.value = String(index);
+            option.textContent = `${index + 1}. ${card.name || card.id || 'Безымянная карта'}`;
+            removalSelect.appendChild(option);
+        });
+        const removalButton = document.createElement('button');
+        removalButton.type = 'button';
+        let removed = false;
+        removalButton.onclick = () => {
+            if (removed || this.player.gold < removalPrice || this.player.deck.length <= 5) return;
+            const index = Number(removalSelect.value);
+            if (!Number.isInteger(index) || index < 0 || index >= this.player.deck.length) return;
+            this.player.gold -= removalPrice;
+            this.player.deck.splice(index, 1);
+            removed = true;
+            removalButton.textContent = '✓ Карта удалена';
+            removalSelect.disabled = true;
+            renderBalance();
+        };
+        stock.push({
+            button: removalButton, price: removalPrice,
+            sold: () => removed || this.player.deck.length <= 5
+        });
+        removal.append(removalName, removalDesc, removalSelect, removalButton);
+        shelf.appendChild(removal);
         const leave = document.createElement('button');
         leave.type = 'button';
         leave.className = 'merchant-leave';
@@ -1319,6 +1356,7 @@ class Game {
         document.body.appendChild(modal);
         renderBalance();
         if (this.player.hp >= this.player.maxHp) healButton.textContent = 'Здоровье полное';
+        if (this.player.deck.length <= 5) removalButton.textContent = 'Нужно больше 5 карт';
         leave.focus();
     }
 

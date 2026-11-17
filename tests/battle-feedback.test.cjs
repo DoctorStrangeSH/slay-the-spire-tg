@@ -79,7 +79,7 @@ test('game loads feedback before controllers and invokes it after moves', () => 
     const html = fs.readFileSync(path.join(root, 'index.html'), 'utf8');
     const game = fs.readFileSync(path.join(root, 'js/systems/Game.js'), 'utf8');
     const css = fs.readFileSync(path.join(root, 'css/cathedral.css'), 'utf8');
-    assert.match(html, /js\/ui\/BattleFeedback\.js\?v=2026\.11\.17\.57/);
+    assert.match(html, /js\/ui\/BattleFeedback\.js\?v=2026\.11\.17\.58/);
     assert.match(game, /BattleFeedback\.snapshot\(this\.currentBattle\)/);
     assert.match(game, /BattleFeedback\.show\(before, this\.currentBattle\)/);
     assert.match(css, /prefers-reduced-motion: reduce/);
@@ -378,4 +378,61 @@ test('merchant pricing scales by rarity and purchases do not close the shop', ()
     content.children.at(-1).onclick();
     assert.equal(modal.removed, true);
     assert.equal(continued, 1);
+});
+
+test('merchant deck thinning removes exactly the selected copy once', () => {
+    const makeElement = tag => ({
+        tag, children: [], attributes: {}, textContent: '', value: '0',
+        append(...nodes) { this.children.push(...nodes); },
+        appendChild(node) { this.children.push(node); },
+        setAttribute(k, v) { this.attributes[k] = v; },
+        focus() {}, remove() {}
+    });
+    const document = { createElement: makeElement, body: makeElement('body') };
+    const Game = vm.runInNewContext(
+        fs.readFileSync(path.join(root, 'js/systems/Game.js'), 'utf8') + '\nGame;',
+        { document, getCardsForHero: () => ({}), CardArt: { rarity: () => ({ label: 'Обычная' }) } }
+    );
+    const game = Object.create(Game.prototype);
+    game.player = {
+        heroId: 'test', gold: 150, hp: 40, maxHp: 100,
+        deck: Array.from({ length: 7 }, (_, index) => ({ id: 'card' + index, name: 'Карта ' + index }))
+    };
+    game.openShop();
+    const shelf = document.body.children[0].children[0].children.find(n => n.className === 'merchant-shelf');
+    const removal = shelf.children.find(n => n.className === 'merchant-item merchant-removal');
+    const selector = removal.children.find(n => n.tag === 'select');
+    const button = removal.children.at(-1);
+    selector.value = '3';
+    button.onclick();
+    assert.equal(game.player.gold, 85);
+    assert.equal(game.player.deck.length, 6);
+    assert.equal(game.player.deck.some(card => card.id === 'card3'), false);
+    button.onclick();
+    assert.equal(game.player.deck.length, 6, 'a second removal is blocked');
+    assert.equal(game.player.gold, 85);
+    assert.equal(button.disabled, true);
+    assert.equal(selector.disabled, true);
+});
+
+test('merchant deck thinning refuses short decks and insufficient gold', () => {
+    const makeElement = tag => ({
+        tag, children: [], attributes: {}, value: '0',
+        append(...nodes) { this.children.push(...nodes); }, appendChild(node) { this.children.push(node); },
+        setAttribute(k, v) { this.attributes[k] = v; }, focus() {}, remove() {}
+    });
+    const document = { createElement: makeElement, body: makeElement('body') };
+    const Game = vm.runInNewContext(
+        fs.readFileSync(path.join(root, 'js/systems/Game.js'), 'utf8') + '\nGame;',
+        { document, getCardsForHero: () => ({}), CardArt: { rarity: () => ({ label: 'Обычная' }) } }
+    );
+    const game = Object.create(Game.prototype);
+    game.player = { heroId: 'test', gold: 50, hp: 30, maxHp: 100, deck: Array.from({ length: 5 }, (_, i) => ({ id: String(i) })) };
+    game.openShop();
+    const shelf = document.body.children[0].children[0].children.find(n => n.className === 'merchant-shelf');
+    const button = shelf.children.find(n => n.className === 'merchant-item merchant-removal').children.at(-1);
+    assert.equal(button.disabled, true);
+    button.onclick();
+    assert.equal(game.player.deck.length, 5);
+    assert.equal(game.player.gold, 50);
 });

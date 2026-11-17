@@ -1901,3 +1901,13 @@ button:disabled { opacity: .42; filter: grayscale(.5); }
   .merchant-item { padding: 12px; }
   .merchant-leave { position: sticky; bottom: 0; box-shadow: 0 -8px 18px #111923; }
 }
+
+/* Deliberate deck thinning: card selection stays usable on touch devices. */
+.merchant-removal { border-color: #8c789e; background: #262332; }
+.merchant-removal-select {
+  width: 100%; min-height: 44px; box-sizing: border-box;
+  border: 1px solid #9585a9; border-radius: 8px;
+  padding: 8px 10px; background: #141925; color: #f6e9d5;
+  font: 600 14px/1.4 system-ui, sans-serif;
+}
+.merchant-removal-select:disabled { opacity: .6; }
