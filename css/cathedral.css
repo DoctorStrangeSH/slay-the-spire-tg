@@ -1985,3 +1985,20 @@ button:disabled { opacity: .42; filter: grayscale(.5); }
 /* Хроника решений: текст выбора и эффект читаются отдельно на узком экране. */
 .run-journal-entry p { white-space: pre-line; }
 .run-journal-entry small { font-weight: 700; letter-spacing: .02em; }
+
+/* Финальная летопись: плотная сетка для узких экранов Telegram. */
+.cathedral-result-panel { max-height: 92dvh; overflow-y: auto; }
+.cathedral-run-summary { margin: 18px 0; padding: 16px; border: 1px solid #ac865a;
+  border-radius: 12px; background: linear-gradient(145deg, #201d2c, #111b27); color: #f3e2c7; }
+.cathedral-run-summary h3 { margin: 0 0 8px; font-size: 1.12rem; color: #f4d69b; }
+.cathedral-run-summary-subtitle { margin: 0 0 12px; color: #d4c3ae; }
+.cathedral-run-summary-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+.cathedral-run-summary-grid > div { display: flex; align-items: center; justify-content: space-between;
+  gap: 8px; min-width: 0; padding: 9px; border: 1px solid #665b55; border-radius: 8px;
+  background: #283041; font-size: .82rem; }
+.cathedral-run-summary-grid span { text-align: left; }
+.cathedral-run-summary-grid strong { color: #ffdf9d; font-size: .95rem; }
+.cathedral-run-summary-score { margin: 16px 0 0; padding-top: 12px; border-top: 1px solid #7b6952;
+  color: #ffd991; font-weight: 800; text-align: center; }
+@media (max-width: 380px) { .cathedral-run-summary { padding: 11px; }
+  .cathedral-run-summary-grid > div { padding: 7px; font-size: .72rem; } }
