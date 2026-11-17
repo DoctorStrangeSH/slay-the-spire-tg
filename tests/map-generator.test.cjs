@@ -58,6 +58,23 @@ test('new map offers fair routes and correctly placed special rooms', () => {
     }
 });
 
+test('shops and elites vary by seed while staying in balanced act bands', () => {
+    const placements = new Set();
+    for (let seed = 0; seed < 100; seed++) {
+        const map = new MapGenerator(1, seed);
+        const shops = map.allNodes.filter(node => node.type === 'shop');
+        const elites = map.allNodes.filter(node => node.type === 'elite');
+        assert.equal(shops.length, 2);
+        assert.equal(elites.length, 2);
+        assert.ok([4, 5].includes(shops[0].floor));
+        assert.ok([10, 11].includes(shops[1].floor));
+        assert.ok([6, 7].includes(elites[0].floor));
+        assert.ok([12, 13].includes(elites[1].floor));
+        placements.add(shops.map(node => node.floor).join(',') + ':' + elites.map(node => node.floor).join(','));
+    }
+    assert.ok(placements.size >= 8, 'different runs should offer varied room timing');
+});
+
 test('organic ascent changes horizontal positions without disconnected paths', () => {
     const layouts = new Set();
     for (let seed = 0; seed < 60; seed++) {
@@ -74,6 +91,15 @@ test('organic ascent changes horizontal positions without disconnected paths', (
     const previous = new MapGenerator(1, 'previous', { legacyBranchingLayout: true });
     assert.equal(previous.paths[1].length, 3);
     assert.notEqual(snapshot(previous), snapshot(new MapGenerator(1, 'previous')));
+});
+
+test('old organic checkpoints preserve their exact original seeded layout', () => {
+    const old = new MapGenerator(1, 'organic-checkpoint', { legacyOrganicLayout: true });
+    const again = new MapGenerator(1, 'organic-checkpoint', { legacyOrganicLayout: true });
+    assert.equal(snapshot(old), snapshot(again));
+    assert.equal(old.paths[4].filter(n => n.type === 'shop').length, 1);
+    assert.equal(old.paths[6].filter(n => n.type === 'elite').length, 1);
+    assert.notEqual(snapshot(old), snapshot(new MapGenerator(1, 'organic-checkpoint')));
 });
 
 test('legacy map layout remains reproducible for old checkpoints', () => {

@@ -75,6 +75,7 @@ class RunSave {
             // Сохранения прежних версий содержали другую геометрию и типы комнат.
             // Проверяем старые варианты прежде, чем отвергнуть чекпоинт.
             const legacyOptions = [
+                { legacyOrganicLayout: true },
                 { legacyBranchingLayout: true },
                 { legacyLayout: true },
                 { legacyLayout: true, legacyTreasureShop: true }

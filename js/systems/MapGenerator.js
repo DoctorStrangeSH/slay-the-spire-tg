@@ -6,6 +6,7 @@ class MapGenerator {
         this.legacyTreasureShop = options.legacyTreasureShop === true;
         this.legacyLayout = options.legacyLayout === true || this.legacyTreasureShop;
         this.legacyBranchingLayout = options.legacyBranchingLayout === true;
+        this.legacyOrganicLayout = options.legacyOrganicLayout === true;
         // Один seed описывает целую карту; пригодится для повтора забега.
         this.seed = seed === null ? Math.floor(Math.random() * 0x100000000) : seed;
         this.random = createMapRandom(this.seed);
@@ -56,14 +57,14 @@ class MapGenerator {
         this.floorRestrictions.treasureFloor = 8;
         this.createLayers();
         this.createNode(0, 0, NODE_TYPES.START, true);
-        const special = {
+        const special = this.legacyOrganicLayout ? {
             4: [NODE_TYPES.BATTLE, NODE_TYPES.SHOP, NODE_TYPES.EVENT],
             6: [NODE_TYPES.ELITE, NODE_TYPES.REST, NODE_TYPES.BATTLE],
             8: [NODE_TYPES.TREASURE],
             10: [NODE_TYPES.SHOP, NODE_TYPES.BATTLE, NODE_TYPES.EVENT],
             12: [NODE_TYPES.ELITE, NODE_TYPES.REST, NODE_TYPES.BATTLE],
             14: [NODE_TYPES.REST]
-        };
+        } : this.buildStrategicFloors();
         for (let floor = 1; floor < this.floors - 1; floor++) {
             if (special[floor]?.length === 1) {
                 this.createNode(floor, 0, special[floor][0]);
@@ -85,6 +86,23 @@ class MapGenerator {
         }
         this.createNode(this.floors - 1, 0, NODE_TYPES.BOSS);
         this.connectOrganicRoutes();
+    }
+
+    buildStrategicFloors() {
+        // Strategic locations move between runs, with a reliable early/late rhythm.
+        // Keeping shops/elites in separate floor bands avoids impossible openings.
+        const earlyShopFloor = this.randomInt(4, 5);
+        const lateShopFloor = this.randomInt(10, 11);
+        const earlyEliteFloor = this.randomInt(6, 7);
+        const lateEliteFloor = this.randomInt(12, 13);
+        return {
+            [earlyShopFloor]: [NODE_TYPES.BATTLE, NODE_TYPES.SHOP, NODE_TYPES.EVENT],
+            [earlyEliteFloor]: [NODE_TYPES.ELITE, NODE_TYPES.REST, NODE_TYPES.BATTLE],
+            8: [NODE_TYPES.TREASURE],
+            [lateShopFloor]: [NODE_TYPES.SHOP, NODE_TYPES.BATTLE, NODE_TYPES.EVENT],
+            [lateEliteFloor]: [NODE_TYPES.ELITE, NODE_TYPES.REST, NODE_TYPES.BATTLE],
+            14: [NODE_TYPES.REST]
+        };
     }
 
     connectOrganicRoutes() {
