@@ -178,6 +178,20 @@ test('accessible route cards list only reachable rooms and activate chosen desti
     assert.equal(emptyHost.children.length, 0);
 });
 
+test('route advice reflects the current run without inventing shop prices', () => {
+    const ui = readFileSync(join(__dirname, '../js/ui/MapUI.js'), 'utf8');
+    const MapUI = vm.runInNewContext(constants + '\n' + ui + '\nMapUI;', { window: {} });
+    const player = { hp: 20, maxHp: 100, gold: 42 };
+    assert.match(MapUI.getRouteAdvice('shop', player), /42 золота/);
+    assert.match(MapUI.getRouteAdvice('rest', player), /30 здоровья/);
+    assert.match(MapUI.getRouteAdvice('elite', player), /Опасно/);
+    assert.match(MapUI.getRouteAdvice('battle', player), /Мало здоровья/);
+    player.hp = 100;
+    assert.match(MapUI.getRouteAdvice('rest', player), /полное/);
+    assert.equal(MapUI.getRouteAdvice('elite', player), '');
+    assert.equal(MapUI.getRouteAdvice('shop', null), '');
+});
+
 test('route forecast follows connections and excludes disconnected rooms', () => {
     const ui = readFileSync(join(__dirname, '../js/ui/MapUI.js'), 'utf8');
     const MapUI = vm.runInNewContext(constants + '\n' + ui + '\nMapUI;', { window: {} });
