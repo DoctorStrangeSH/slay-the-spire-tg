@@ -127,3 +127,17 @@ test('checkpoint remembers outstanding archive debt across a restore', () => {
     assert.equal(restored.player.archiveDebtAct, 1);
     assert.equal(restored.player.archiveDebtFloor, 0);
 });
+
+test('run checkpoint persists the chronological journal without losing decisions', () => {
+    const persistence = new RunSave(storage());
+    const current = game();
+    current.player.journalLog = [{
+        act: 1, floor: 3, event: 'Паломник', choice: 'Помочь',
+        outcome: 'золото: -20'
+    }];
+    assert.equal(persistence.save(current), true);
+    const restored = { player: null };
+    assert.equal(persistence.restore(restored), true);
+    assert.equal(restored.player.journalLog.length, 1);
+    assert.equal(restored.player.journalLog[0].choice, 'Помочь');
+});

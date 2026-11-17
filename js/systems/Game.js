@@ -29,6 +29,7 @@ class Game {
             deck: getStarterDeckForHero(heroId),
             relics: [],
             eventHistory: [],
+            journalLog: [],
             pilgrimChoice: null,
             obeliskDebt: null,
             archiveDebt: null
@@ -46,6 +47,7 @@ class Game {
         this.player.deck = getStarterDeckForHero(this.player.heroId);
         this.player.relics = [];
         this.player.eventHistory = [];
+        this.player.journalLog = [];
         this.player.pilgrimChoice = null;
         this.player.obeliskDebt = null;
         this.player.obeliskDebtAct = null;
@@ -159,6 +161,36 @@ class Game {
         return entries;
     }
 
+    snapshotJournalResources() {
+        const player = this.player || {};
+        return {
+            hp: Number(player.hp) || 0,
+            maxHp: Number(player.maxHp) || 0,
+            gold: Number(player.gold) || 0,
+            cards: Array.isArray(player.deck) ? player.deck.length : 0
+        };
+    }
+
+    recordEventDecision(event, option, before) {
+        if (!this.player) return;
+        const after = this.snapshotJournalResources();
+        const deltas = [
+            ['HP', after.hp - before.hp],
+            ['макс. HP', after.maxHp - before.maxHp],
+            ['золото', after.gold - before.gold],
+            ['карты', after.cards - before.cards]
+        ].filter(([, delta]) => delta !== 0)
+            .map(([label, delta]) => `${label}: ${delta > 0 ? '+' : ''}${delta}`);
+        const previous = Array.isArray(this.player.journalLog) ? this.player.journalLog : [];
+        this.player.journalLog = [...previous.slice(-49), {
+            act: this.act,
+            floor: this.floor + 1,
+            event: event.name,
+            choice: option.text,
+            outcome: deltas.join(' · ') || 'Без немедленных изменений'
+        }];
+    }
+
     showRunJournal() {
         if (!this.player) return;
         document.getElementById('run-journal-modal')?.remove();
@@ -199,7 +231,15 @@ class Game {
                 panel.appendChild(row);
             });
         };
-        section('Важные решения', this.getRunJournalEntries(), 'Пока нет значимых решений.');
+        section('Нити судьбы', this.getRunJournalEntries(), 'Пока нет открытых сюжетных линий.');
+        const decisions = Array.isArray(this.player.journalLog)
+            ? this.player.journalLog.slice(-20).reverse().filter(entry => entry && typeof entry === 'object')
+            : [];
+        section('Хроника решений', decisions.map(entry => ({
+            title: String(entry.event || 'Неизвестная встреча'),
+            status: `Акт ${entry.act || '?'} · Этаж ${entry.floor || '?'}`,
+            description: `${String(entry.choice || 'Неизвестный выбор')}\n${String(entry.outcome || '')}`
+        })), 'Ваши решения появятся здесь после первой встречи.');
         const recent = Array.isArray(this.player.eventHistory)
             ? this.player.eventHistory.filter(name => typeof name === 'string').slice(-10).reverse()
             : [];
@@ -1397,8 +1437,10 @@ class Game {
             button.appendChild(copy);
             button.onclick = () => {
                 if (resolved) return;
+                const before = this.snapshotJournalResources();
                 const result = option.action();
                 if (result === false) return; // Невозможная покупка/сделка не завершает событие.
+                this.recordEventDecision(event, option, before);
                 resolved = true;
                 modal.remove();
                 if (result !== 'deferred') this.continueJourney();
