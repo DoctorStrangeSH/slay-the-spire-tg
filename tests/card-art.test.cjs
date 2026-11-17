@@ -34,8 +34,8 @@ test('rendering known card types is safe and unknown old types fall back', () =>
 
 test('CardArt loads before BattleUI and all asset manifests are versioned', () => {
     assert.ok(html.indexOf('js/ui/CardArt.js') < html.indexOf('js/ui/BattleUI.js'));
-    assert.match(html, /js\/ui\/CardArt\.js\?v=2026\.11\.17\.74/);
-    assert.match(html, /css\/cathedral\.css\?v=2026\.11\.17\.74/);
+    assert.match(html, /js\/ui\/CardArt\.js\?v=2026\.11\.17\.75/);
+    assert.match(html, /css\/cathedral\.css\?v=2026\.11\.17\.75/);
 });
 
 test('combat and rewards use illustration registry consistently', () => {
@@ -114,4 +114,16 @@ test('card inspection keeps description readable and separate from selection', (
     assert.match(ui, /event\.key === 'Escape'/);
     assert.match(styles, /\.card-inspect-button/);
     assert.match(styles, /\.card-details-description/);
+});
+
+test('hand deals only unseen cards and honors reduced motion', () => {
+    const ui = fs.readFileSync(path.join(root, 'js/ui/BattleUI.js'), 'utf8');
+    const styles = fs.readFileSync(path.join(root, 'css/cathedral.css'), 'utf8');
+    assert.match(ui, /animatedHandBattle !== battle/);
+    assert.match(ui, /new WeakSet\(\)/);
+    assert.match(ui, /!this\.animatedHandCards\.has\(card\)/);
+    assert.match(ui, /cardEl\.classList\.add\('card-dealt'\)/);
+    assert.match(styles, /@keyframes cathedral-card-deal/);
+    assert.match(styles, /@keyframes cathedral-card-glimmer/);
+    assert.match(styles, /prefers-reduced-motion: reduce/);
 });
