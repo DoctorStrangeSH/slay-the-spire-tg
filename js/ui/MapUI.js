@@ -89,16 +89,17 @@ const MapUI = {
         }
 
         // Создаём SVG для карты
+        window._currentMapOrganicLayout = !game.mapGenerator.legacyLayout && !game.mapGenerator.legacyBranchingLayout;
         const svg = this.createSVG(game);
         mapContainer.appendChild(svg);
         // Начало маршрута внизу, вершина с боссом — наверху.
         // Показываем текущий этаж сразу, не заставляя игрока его искать.
         requestAnimationFrame(() => {
             const current = game.mapGenerator.findNodeById(game.currentNodeId);
-            const targetY = current ? this.getNodeY(current, 20,
-                (600 - 40) / (game.mapGenerator.floors - 1)) : 600;
+            const targetY = current ? this.getNodeY(current, 36,
+                (1040 - 72) / (game.mapGenerator.floors - 1)) : 1040;
             const viewport = mapContainer.clientHeight || 400;
-            mapContainer.scrollTop = Math.max(0, targetY * (svg.getBoundingClientRect().height / 600) - viewport * 0.64);
+            mapContainer.scrollTop = Math.max(0, targetY * (svg.getBoundingClientRect().height / 1040) - viewport * 0.64);
         });
 
         // Легенда
@@ -109,17 +110,17 @@ const MapUI = {
         const svgNS = 'http://www.w3.org/2000/svg';
         const svg = document.createElementNS(svgNS, 'svg');
         
-        const width = 480;
-        const height = 600;
-        const marginX = 30;
-        const marginY = 20;
+        const width = 520;
+        const height = 1040;
+        const marginX = 24;
+        const marginY = 36;
         const floorHeight = (height - 2 * marginY) / (game.mapGenerator.floors - 1);
         
         svg.setAttribute('width', '100%');
         svg.setAttribute('height', height);
         svg.setAttribute('viewBox', `0 0 ${width} ${height}`);
         svg.setAttribute('role', 'img');
-        svg.setAttribute('aria-label', 'Карта маршрутов с доступными комнатами');
+        svg.setAttribute('aria-label', 'Карта восхождения: двигайтесь снизу вверх по светящимся развилкам');
         
         const availableNodes = game.mapGenerator.getAvailableNodes(game.currentNodeId);
         const currentNode = game.mapGenerator.findNodeById(game.currentNodeId);
@@ -150,17 +151,17 @@ const MapUI = {
     },
     
     createConnectionLine(node1, node2, svgNS, width, marginX, marginY, floorHeight) {
-        const line = document.createElementNS(svgNS, 'line');
+        const line = document.createElementNS(svgNS, 'path');
         
         const x1 = this.getNodeX(node1, width, marginX);
         const y1 = this.getNodeY(node1, marginY, floorHeight);
         const x2 = this.getNodeX(node2, width, marginX);
         const y2 = this.getNodeY(node2, marginY, floorHeight);
         
-        line.setAttribute('x1', x1);
-        line.setAttribute('y1', y1);
-        line.setAttribute('x2', x2);
-        line.setAttribute('y2', y2);
+        const bend = (y2 - y1) * 0.45;
+        line.setAttribute('d', `M ${x1} ${y1} C ${x1} ${y1 + bend}, ${x2} ${y2 - bend}, ${x2} ${y2}`);
+        line.setAttribute('fill', 'none');
+        line.setAttribute('stroke-linecap', 'round');
         
         const isVisited = node1.visited && node2.visited;
         const isAvailable = node1.visited && !node2.visited;
@@ -189,9 +190,9 @@ const MapUI = {
         const cx = this.getNodeX(node, width, marginX);
         const cy = this.getNodeY(node, marginY, floorHeight);
         
-        let radius = 15;
-        if (node.type === NODE_TYPES.BOSS) radius = 20;
-        if (node.type === NODE_TYPES.START) radius = 18;
+        let radius = 18;
+        if (node.type === NODE_TYPES.BOSS) radius = 25;
+        if (node.type === NODE_TYPES.START) radius = 21;
         
         const circle = document.createElementNS(svgNS, 'circle');
         circle.setAttribute('cx', cx);
@@ -241,6 +242,9 @@ const MapUI = {
             circle.setAttribute('opacity', '0.4');
         }
         
+        const title = document.createElementNS(svgNS, 'title');
+        title.textContent = this.getNodeLabel(node.type) + (isAvailable ? ' — доступно' : isVisited ? ' — пройдено' : '');
+        group.appendChild(title);
         group.appendChild(circle);
         
         // Иконка (не перехватывает клики)
@@ -271,9 +275,12 @@ const MapUI = {
     
     getNodeX(node, width, marginX) {
         const floorNodes = window._currentMapPaths?.[node.floor] || [];
-        const maxNodes = Math.max(floorNodes.length, 1);
         const availableWidth = width - 2 * marginX;
-        const step = availableWidth / (maxNodes + 1);
+        if (floorNodes.length === 1) return width / 2;
+        if (window._currentMapOrganicLayout) {
+            return marginX + availableWidth * (node.x + 1) / 8;
+        }
+        const step = availableWidth / (floorNodes.length + 1);
         return marginX + step * (node.x + 1);
     },
     
