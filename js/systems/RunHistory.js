@@ -1,0 +1,66 @@
+// Постоянная история завершённых восхождений отдельно от чекпоинта текущего забега.
+class RunHistory {
+    static get KEY() { return 'slay-and-spire-history-v1'; }
+    static get MAX_RECENT() { return 20; }
+
+    constructor(storage = typeof localStorage === 'undefined' ? null : localStorage) {
+        this.storage = storage;
+    }
+
+    empty() {
+        return { version: 1, runs: 0, victories: 0, defeats: 0,
+            bestScore: 0, bestAct: 0, totalBattles: 0, heroes: {}, recent: [] };
+    }
+
+    read() {
+        if (!this.storage) return this.empty();
+        try {
+            const data = JSON.parse(this.storage.getItem(RunHistory.KEY));
+            if (!data || data.version !== 1 || !Array.isArray(data.recent)) return this.empty();
+            return { ...this.empty(), ...data,
+                heroes: data.heroes && typeof data.heroes === 'object' && !Array.isArray(data.heroes) ? data.heroes : {},
+                recent: data.recent.slice(-RunHistory.MAX_RECENT) };
+        } catch (_) {
+            return this.empty();
+        }
+    }
+
+    record(summary, heroId, runId) {
+        if (!summary || !this.storage || !runId) return false;
+        const data = this.read();
+        if (data.recent.some(item => item.id === runId)) return false;
+        const entry = {
+            id: String(runId), victory: Boolean(summary.victory),
+            hero: String(summary.hero || 'Герой'), heroId: String(heroId || 'unknown'),
+            act: Number(summary.act) || 1, floor: Number(summary.floor) || 1,
+            score: Math.max(0, Number(summary.score) || 0),
+            wins: Math.max(0, Number(summary.wins) || 0),
+            completedAt: new Date().toISOString()
+        };
+        data.runs += 1;
+        data.victories += Number(entry.victory);
+        data.defeats += Number(!entry.victory);
+        data.bestScore = Math.max(data.bestScore, entry.score);
+        data.bestAct = Math.max(data.bestAct, entry.act);
+        data.totalBattles += entry.wins;
+        data.heroes[entry.heroId] = (Number(data.heroes[entry.heroId]) || 0) + 1;
+        data.recent = [...data.recent, entry].slice(-RunHistory.MAX_RECENT);
+        try {
+            this.storage.setItem(RunHistory.KEY, JSON.stringify(data));
+            return true;
+        } catch (error) {
+            console.warn('Не удалось сохранить историю восхождений:', error);
+            return false;
+        }
+    }
+
+    achievements(data = this.read()) {
+        return [
+            { name: 'Первый шаг', description: 'Завершить первый забег', unlocked: data.runs >= 1 },
+            { name: 'Покоритель шпиля', description: 'Одержать первую победу', unlocked: data.victories >= 1 },
+            { name: 'Ветеран собора', description: 'Завершить 10 забегов', unlocked: data.runs >= 10 },
+            { name: 'Несокрушимый', description: 'Победить трижды', unlocked: data.victories >= 3 },
+            { name: 'Легенда', description: 'Набрать 1250 очков в одном забеге', unlocked: data.bestScore >= 1250 }
+        ];
+    }
+}
