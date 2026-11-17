@@ -208,19 +208,31 @@ const BattleUI = {
     
     renderHand(game, battle) {
         const handArea = document.getElementById('hand-area');
+        // Keep the player's place in a horizontally scrolled hand after selecting a card.
+        const scrollLeft = handArea.scrollLeft;
+        const focusedCard = document.activeElement?.dataset?.cardIndex;
         handArea.innerHTML = '';
-        
+
         battle.hand.forEach((card, index) => {
             const cardEl = this.createCardElement(card, index, battle);
             handArea.appendChild(cardEl);
         });
+        handArea.scrollLeft = scrollLeft;
+        if (focusedCard !== undefined) {
+            const card = [...handArea.children].find(el => el.dataset.cardIndex === focusedCard);
+            card?.focus({ preventScroll: true });
+        }
     },
     
     createCardElement(card, index, battle) {
         const cardDiv = document.createElement('div');
         const rarity = CardArt.rarity(card);
         cardDiv.className = `card card-type-${card.type} card-rarity-${rarity.key}`;
-        cardDiv.setAttribute('aria-label', `${card.name}, ${rarity.label}, стоимость ${card.cost}`);
+        cardDiv.setAttribute('role', 'button');
+        cardDiv.setAttribute('tabindex', '0');
+        cardDiv.dataset.cardIndex = String(index);
+        cardDiv.setAttribute('aria-pressed', String(battle.selectedCards.includes(index)));
+        cardDiv.setAttribute('aria-label', `${card.name}, ${rarity.label}, стоимость ${card.cost}. ${card.description}`);
         
         if (battle.selectedCards.includes(index)) {
             cardDiv.classList.add('selected');
@@ -239,6 +251,12 @@ const BattleUI = {
         `;
         
         cardDiv.onclick = () => game.selectCard(index);
+        cardDiv.onkeydown = event => {
+            if (event.key === 'Enter' || event.key === ' ') {
+                event.preventDefault();
+                cardDiv.click();
+            }
+        };
         return cardDiv;
     },
     
