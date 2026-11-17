@@ -79,7 +79,7 @@ test('game loads feedback before controllers and invokes it after moves', () => 
     const html = fs.readFileSync(path.join(root, 'index.html'), 'utf8');
     const game = fs.readFileSync(path.join(root, 'js/systems/Game.js'), 'utf8');
     const css = fs.readFileSync(path.join(root, 'css/cathedral.css'), 'utf8');
-    assert.match(html, /js\/ui\/BattleFeedback\.js\?v=2026\.11\.17\.56/);
+    assert.match(html, /js\/ui\/BattleFeedback\.js\?v=2026\.11\.17\.57/);
     assert.match(game, /BattleFeedback\.snapshot\(this\.currentBattle\)/);
     assert.match(game, /BattleFeedback\.show\(before, this\.currentBattle\)/);
     assert.match(css, /prefers-reduced-motion: reduce/);
@@ -327,4 +327,55 @@ test('elite victory uses bonus gold when relic pool is exhausted', () => {
     const elite = { player: { gold: 0, heroId: 'berserk', relics: [] }, currentBattleIsElite: true };
     Game.prototype.endBattle.call(elite, true);
     assert.ok(elite.player.gold >= 65 && elite.player.gold <= 84);
+});
+
+test('merchant pricing scales by rarity and purchases do not close the shop', () => {
+    const cards = Object.fromEntries(['a','b','c','d','e'].map((id, i) => [id, {
+        id, name: 'Card '+id, cost: 1, rarity: ['common','uncommon','rare','common','uncommon'][i], description: 'Test'
+    }]));
+    const makeElement = tag => ({
+        tag, children: [], disabled: false, textContent: '', attributes: {},
+        append(...nodes) { this.children.push(...nodes); },
+        appendChild(node) { this.children.push(node); },
+        setAttribute(key, value) { this.attributes[key] = value; },
+        focus() {}, remove() { this.removed = true; }
+    });
+    const document = { createElement: makeElement, body: makeElement('body') };
+    const gameSource = fs.readFileSync(path.join(root, 'js/systems/Game.js'), 'utf8');
+    const Game = vm.runInNewContext(gameSource + '\nGame;', {
+        document, getCardsForHero: () => cards,
+        CardArt: { rarity: card => ({ label: card.rarity }) }
+    });
+    const game = Object.create(Game.prototype);
+    game.player = { heroId: 'test', gold: 220, deck: [], hp: 30, maxHp: 100 };
+    let continued = 0;
+    game.continueJourney = () => continued++;
+    assert.equal(game.getShopPrice({ rarity: 'common' }), 30);
+    assert.equal(game.getShopPrice({ rarity: 'uncommon' }), 50);
+    assert.equal(game.getShopPrice({ rarity: 'rare' }), 80);
+    game.openShop();
+    const modal = document.body.children[0];
+    const content = modal.children[0];
+    const shelf = content.children.find(node => node.className === 'merchant-shelf');
+    const offers = shelf.children.slice(0, 4);
+    assert.equal(offers.length, 4);
+    assert.equal(new Set(offers.map(item => item.children[0].textContent)).size, 4);
+    const first = offers[0].children.at(-1);
+    const second = offers[1].children.at(-1);
+    first.onclick();
+    assert.equal(game.player.deck.length, 1);
+    assert.equal(first.disabled, true);
+    first.onclick();
+    assert.equal(game.player.deck.length, 1, 'the same item cannot be purchased twice');
+    second.onclick();
+    assert.equal(game.player.deck.length, 2, 'another card can be bought without leaving');
+    const heal = shelf.children[4].children.at(-1);
+    const before = game.player.hp;
+    heal.onclick();
+    assert.ok(game.player.hp > before);
+    assert.equal(heal.disabled, true);
+    assert.equal(continued, 0);
+    content.children.at(-1).onclick();
+    assert.equal(modal.removed, true);
+    assert.equal(continued, 1);
 });
