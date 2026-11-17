@@ -109,3 +109,12 @@ test('engineer iron line challenge persists and rejects repeated grants', () => 
     const reopened = new RunHistory(storage);
     assert.equal(reopened.achievements().find(a => a.name === 'Железная линия').unlocked, true);
 });
+
+test('psyker mind chain challenge stays unlocked after a new session', () => {
+    const storage = memory();
+    const history = new RunHistory(storage);
+    assert.equal(history.unlockChallenge('psyker_mind_chain'), true);
+    assert.equal(history.unlockChallenge('psyker_mind_chain'), false);
+    assert.equal(new RunHistory(storage).achievements()
+        .find(a => a.name === 'Разрыв сознания').unlocked, true);
+});
