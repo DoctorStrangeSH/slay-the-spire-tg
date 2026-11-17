@@ -79,7 +79,7 @@ test('game loads feedback before controllers and invokes it after moves', () => 
     const html = fs.readFileSync(path.join(root, 'index.html'), 'utf8');
     const game = fs.readFileSync(path.join(root, 'js/systems/Game.js'), 'utf8');
     const css = fs.readFileSync(path.join(root, 'css/cathedral.css'), 'utf8');
-    assert.match(html, /js\/ui\/BattleFeedback\.js\?v=2026\.11\.17\.59/);
+    assert.match(html, /js\/ui\/BattleFeedback\.js\?v=2026\.11\.17\.60/);
     assert.match(game, /BattleFeedback\.snapshot\(this\.currentBattle\)/);
     assert.match(game, /BattleFeedback\.show\(before, this\.currentBattle\)/);
     assert.match(css, /prefers-reduced-motion: reduce/);
@@ -475,4 +475,97 @@ test('shop card upgrades change actual combat stats and cannot be bought twice',
     assert.equal(game.getCardUpgrade(game.player.deck[0]), null);
     assert.equal(game.upgradeCard(game.player.deck[1]), true);
     assert.equal(game.player.deck[1].block, 8);
+});
+
+test('campfire offers a single choice: heal without upgrading', () => {
+    const makeElement = tag => ({
+        tag, children: [], attributes: {}, value: '0',
+        append(...nodes) { this.children.push(...nodes); },
+        appendChild(node) { this.children.push(node); },
+        setAttribute(k, v) { this.attributes[k] = v; },
+        focus() {}, remove() { this.removed = true; }
+    });
+    const document = { createElement: makeElement, body: makeElement('body') };
+    const Game = vm.runInNewContext(
+        fs.readFileSync(path.join(root, 'js/systems/Game.js'), 'utf8') + '\nGame;', { document }
+    );
+    const game = Object.create(Game.prototype);
+    game.player = { hp: 40, maxHp: 100, deck: [{ id: 'strike', name: 'Удар', damage: 6 }] };
+    let journeys = 0;
+    game.continueJourney = () => journeys++;
+    game.rest();
+    const modal = document.body.children[0];
+    const panel = modal.children[0];
+    const choices = panel.children[2];
+    const heal = choices.children[0];
+    const forge = choices.children[1];
+    assert.equal(game.player.hp, 40, 'no automatic healing before choosing');
+    assert.equal(heal.disabled, false);
+    heal.onclick();
+    assert.equal(game.player.hp, 70);
+    assert.equal(game.player.deck[0].damage, 6);
+    assert.equal(journeys, 1);
+    assert.equal(modal.removed, true);
+    assert.equal(forge.children.at(-1).disabled, false);
+});
+
+test('campfire free forge improves a selected deck card without healing', () => {
+    const makeElement = tag => ({
+        tag, children: [], attributes: {}, value: '0',
+        append(...nodes) { this.children.push(...nodes); },
+        appendChild(node) { this.children.push(node); },
+        setAttribute(k, v) { this.attributes[k] = v; },
+        focus() {}, remove() { this.removed = true; }
+    });
+    const document = { createElement: makeElement, body: makeElement('body') };
+    const Game = vm.runInNewContext(
+        fs.readFileSync(path.join(root, 'js/systems/Game.js'), 'utf8') + '\nGame;', { document }
+    );
+    const game = Object.create(Game.prototype);
+    game.player = { hp: 40, maxHp: 100, deck: [
+        { id: 'strike', name: 'Удар', damage: 6 },
+        { id: 'guard', name: 'Защита', block: 5 }
+    ] };
+    let journeys = 0;
+    game.continueJourney = () => journeys++;
+    game.rest();
+    const modal = document.body.children[0];
+    const forge = modal.children[0].children[2].children[1];
+    const selector = forge.children.find(node => node.tag === 'select');
+    selector.value = '1';
+    selector.onchange();
+    assert.match(forge.children[2].textContent, /5 → 8/);
+    const upgrade = forge.children.at(-1);
+    upgrade.onclick();
+    assert.equal(game.player.hp, 40);
+    assert.equal(game.player.deck[0].damage, 6);
+    assert.equal(game.player.deck[1].block, 8);
+    assert.equal(game.player.deck[1].upgraded, true);
+    assert.equal(journeys, 1);
+    assert.equal(modal.removed, true);
+});
+
+test('campfire disables full-health rest and unavailable upgrades safely', () => {
+    const makeElement = tag => ({
+        tag, children: [], attributes: {}, value: '0',
+        append(...nodes) { this.children.push(...nodes); },
+        appendChild(node) { this.children.push(node); },
+        setAttribute(k, v) { this.attributes[k] = v; },
+        focus() {}, remove() {}
+    });
+    const document = { createElement: makeElement, body: makeElement('body') };
+    const Game = vm.runInNewContext(
+        fs.readFileSync(path.join(root, 'js/systems/Game.js'), 'utf8') + '\nGame;', { document }
+    );
+    const game = Object.create(Game.prototype);
+    game.player = { hp: 100, maxHp: 100, deck: [{ name: 'Уже усилена', damage: 9, upgraded: true }] };
+    let journeys = 0;
+    game.continueJourney = () => journeys++;
+    game.rest();
+    const panel = document.body.children[0].children[0];
+    assert.equal(panel.children[2].children[0].disabled, true);
+    assert.equal(panel.children[2].children[1].children.at(-1).disabled, true);
+    panel.children.at(-1).onclick();
+    assert.equal(journeys, 1);
+    assert.equal(game.player.hp, 100);
 });
