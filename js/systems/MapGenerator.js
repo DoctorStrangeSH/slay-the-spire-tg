@@ -86,6 +86,26 @@ class MapGenerator {
         }
         this.createNode(this.floors - 1, 0, NODE_TYPES.BOSS);
         this.connectOrganicRoutes();
+        if (!this.legacyOrganicLayout) this.removeRepetitiveRoutes(new Set(Object.keys(special).map(Number)));
+    }
+
+    removeRepetitiveRoutes(protectedFloors) {
+        // A route should not lead straight into the same passive room twice.
+        // Preserve the designed shop/elite/treasure/rest milestones.
+        const passive = new Set([NODE_TYPES.EVENT, NODE_TYPES.REST]);
+        for (let floor = 1; floor < this.floors - 2; floor++) {
+            for (const from of this.paths[floor]) {
+                for (const targetId of from.connections) {
+                    const target = this.findNodeById(targetId);
+                    if (!target || !passive.has(from.type) || target.type !== from.type) continue;
+                    if (protectedFloors.has(target.floor)) {
+                        if (!protectedFloors.has(from.floor)) from.type = NODE_TYPES.BATTLE;
+                    } else {
+                        target.type = NODE_TYPES.BATTLE;
+                    }
+                }
+            }
+        }
     }
 
     buildStrategicFloors() {
