@@ -5,6 +5,7 @@ class MapGenerator {
         // Совместимость с чекпоинтами до появления отдельных сокровищниц.
         this.legacyTreasureShop = options.legacyTreasureShop === true;
         this.legacyLayout = options.legacyLayout === true || this.legacyTreasureShop;
+        this.legacyBranchingLayout = options.legacyBranchingLayout === true;
         // Один seed описывает целую карту; пригодится для повтора забега.
         this.seed = seed === null ? Math.floor(Math.random() * 0x100000000) : seed;
         this.random = createMapRandom(this.seed);
@@ -35,7 +36,8 @@ class MapGenerator {
 
     generateMap() {
         if (!this.legacyLayout) {
-            this.generateBranchingMap();
+            if (this.legacyBranchingLayout) this.generateBranchingMap();
+            else this.generateOrganicMap();
             return;
         }
         this.floorRestrictions.treasureFloor = this.floors - 1 - 7;
@@ -46,6 +48,74 @@ class MapGenerator {
         this.fillRemainingNodes();
         this.connectNodes();
         this.validateMap();
+    }
+
+    // Новая карта: неровные семь колонок и 3–4 потенциальных направления.
+    // В отличие от фиксированных рельс, каждый этаж перестраивает геометрию.
+    generateOrganicMap() {
+        this.floorRestrictions.treasureFloor = 8;
+        this.createLayers();
+        this.createNode(0, 0, NODE_TYPES.START, true);
+        const special = {
+            4: [NODE_TYPES.BATTLE, NODE_TYPES.SHOP, NODE_TYPES.EVENT],
+            6: [NODE_TYPES.ELITE, NODE_TYPES.REST, NODE_TYPES.BATTLE],
+            8: [NODE_TYPES.TREASURE],
+            10: [NODE_TYPES.SHOP, NODE_TYPES.BATTLE, NODE_TYPES.EVENT],
+            12: [NODE_TYPES.ELITE, NODE_TYPES.REST, NODE_TYPES.BATTLE],
+            14: [NODE_TYPES.REST]
+        };
+        for (let floor = 1; floor < this.floors - 1; floor++) {
+            if (special[floor]?.length === 1) {
+                this.createNode(floor, 0, special[floor][0]);
+                continue;
+            }
+            const count = special[floor]?.length || this.randomInt(3, 4);
+            const columns = [0, 1, 2, 3, 4, 5, 6];
+            shuffleArray(columns, this.random);
+            const positions = columns.slice(0, count).sort((a, b) => a - b);
+            positions.forEach((position, index) => {
+                let type = special[floor]?.[index] || NODE_TYPES.BATTLE;
+                if (!special[floor] && floor > 1) {
+                    const chance = this.random();
+                    if (chance < 0.25) type = NODE_TYPES.EVENT;
+                    else if (floor >= 5 && chance < 0.34) type = NODE_TYPES.REST;
+                }
+                this.createNode(floor, position, type);
+            });
+        }
+        this.createNode(this.floors - 1, 0, NODE_TYPES.BOSS);
+        this.connectOrganicRoutes();
+    }
+
+    connectOrganicRoutes() {
+        for (let floor = 0; floor < this.floors - 1; floor++) {
+            const from = this.paths[floor];
+            const to = this.paths[floor + 1];
+            if (from.length === 1 || to.length === 1) {
+                for (const node of from) {
+                    for (const target of to) node.connections.push(target.id);
+                }
+                continue;
+            }
+            // Основные линии монотонны: соединения сохраняют порядок слева направо.
+            from.forEach((node, i) => {
+                const targetIndex = Math.round(i * (to.length - 1) / (from.length - 1));
+                node.connections.push(to[targetIndex].id);
+            });
+            // Ни одна комната не остаётся без входа.
+            to.forEach((target, j) => {
+                if (!from.some(node => node.connections.includes(target.id))) {
+                    const sourceIndex = Math.round(j * (from.length - 1) / (to.length - 1));
+                    from[sourceIndex].connections.push(target.id);
+                }
+            });
+            // Одна дополнительная развилка на этаж — выбор не превращается в паутину.
+            const index = this.randomInt(0, from.length - 2);
+            const node = from[index];
+            const currentTarget = to.findIndex(target => node.connections.includes(target.id));
+            const alt = to[Math.min(to.length - 1, currentTarget + 1)];
+            if (alt && !node.connections.includes(alt.id)) node.connections.push(alt.id);
+        }
     }
 
     // Маршруты строятся до назначения комнат: на каждом обычном этаже

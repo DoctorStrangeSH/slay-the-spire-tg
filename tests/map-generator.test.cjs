@@ -40,7 +40,7 @@ test('new map offers fair routes and correctly placed special rooms', () => {
     for (let seed = 0; seed < 80; seed++) {
         const map = new MapGenerator(1, seed);
         assert.equal(map.paths[0].length, 1);
-        assert.equal(map.paths[1].length, 3);
+        assert.ok(map.paths[1].length >= 3 && map.paths[1].length <= 4);
         assert.ok(map.paths[1].every(node => node.type === 'battle'));
         assert.deepEqual(Array.from(map.paths[8], node => node.type), ['treasure']);
         assert.deepEqual(Array.from(map.paths[14], node => node.type), ['rest']);
@@ -56,6 +56,24 @@ test('new map offers fair routes and correctly placed special rooms', () => {
             }
         }
     }
+});
+
+test('organic ascent changes horizontal positions without disconnected paths', () => {
+    const layouts = new Set();
+    for (let seed = 0; seed < 60; seed++) {
+        const map = new MapGenerator(1, seed);
+        layouts.add(map.paths.slice(1, 7).map(floor => floor.map(node => node.x).join(',')).join('|'));
+        assert.ok(map.paths.slice(1, 14).some(floor =>
+            floor.length >= 3 && floor.some(node => node.x >= 5)));
+        for (const node of map.allNodes) {
+            assert.ok(node.x >= 0 && node.x <= 6);
+            assert.equal(new Set(node.connections).size, node.connections.length);
+        }
+    }
+    assert.ok(layouts.size >= 40);
+    const previous = new MapGenerator(1, 'previous', { legacyBranchingLayout: true });
+    assert.equal(previous.paths[1].length, 3);
+    assert.notEqual(snapshot(previous), snapshot(new MapGenerator(1, 'previous')));
 });
 
 test('legacy map layout remains reproducible for old checkpoints', () => {
