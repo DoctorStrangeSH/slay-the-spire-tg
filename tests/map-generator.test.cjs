@@ -75,6 +75,21 @@ test('shops and elites vary by seed while staying in balanced act bands', () => 
     assert.ok(placements.size >= 8, 'different runs should offer varied room timing');
 });
 
+test('new routes never chain identical passive rooms back-to-back', () => {
+    for (let seed = 0; seed < 120; seed++) {
+        const map = new MapGenerator(1, seed);
+        for (const node of map.allNodes) {
+            if (!['event', 'rest'].includes(node.type)) continue;
+            for (const id of node.connections) {
+                const next = map.findNodeById(id);
+                assert.notEqual(next.type, node.type, `repeated ${node.type}: ${node.id} -> ${id} (seed ${seed})`);
+            }
+        }
+        assert.deepEqual(Array.from(map.paths[8], node => node.type), ['treasure']);
+        assert.deepEqual(Array.from(map.paths[14], node => node.type), ['rest']);
+    }
+});
+
 test('organic ascent changes horizontal positions without disconnected paths', () => {
     const layouts = new Set();
     for (let seed = 0; seed < 60; seed++) {
