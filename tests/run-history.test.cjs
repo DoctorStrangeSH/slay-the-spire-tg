@@ -140,6 +140,20 @@ test('hero title rewards unlock only for their matching challenges', () => {
     assert.equal(history.rewardForHero('engineer').title, 'Мастер механизмов');
     assert.equal(history.rewardForHero('psyker'), null);
     const achievement = history.achievements().find(item => item.name === 'Железная линия');
-    assert.equal(achievement.reward, 'Титул «Мастер механизмов»');
+    assert.equal(achievement.reward, 'Титул «Мастер механизмов» и металлический стиль карт');
     assert.equal(achievement.unlocked, true);
+});
+
+test('hero cosmetic card skins are tied to completed trials', () => {
+    const history = new RunHistory(memory());
+    for (const id of ['berserk', 'engineer', 'psyker']) {
+        assert.equal(history.rewardForHero(id), null);
+    }
+    history.unlockChallenge('berserk_last_breath');
+    assert.equal(history.rewardForHero('berserk').skin, 'berserk');
+    assert.equal(history.rewardForHero('engineer'), null);
+    history.unlockChallenge('engineer_iron_line');
+    assert.equal(history.rewardForHero('engineer').skin, 'engineer');
+    history.unlockChallenge('psyker_mind_chain');
+    assert.equal(history.rewardForHero('psyker').skin, 'psyker');
 });
