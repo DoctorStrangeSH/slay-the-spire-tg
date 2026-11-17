@@ -1981,3 +1981,7 @@ button:disabled { opacity: .42; filter: grayscale(.5); }
   .run-journal-content { max-height: 93dvh; padding: 16px; }
   .run-journal-button { margin-left: 4px; }
 }
+
+/* Хроника решений: текст выбора и эффект читаются отдельно на узком экране. */
+.run-journal-entry p { white-space: pre-line; }
+.run-journal-entry small { font-weight: 700; letter-spacing: .02em; }
