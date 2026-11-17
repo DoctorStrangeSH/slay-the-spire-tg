@@ -1218,58 +1218,108 @@ class Game {
         document.body.appendChild(modal);
     }
 
+    getShopPrice(card) {
+        const rarity = String(card?.rarity || 'common').toLowerCase();
+        if (rarity === 'rare') return 80;
+        if (rarity === 'uncommon') return 50;
+        return 30;
+    }
+
     openShop() {
-        const cards = getCardsForHero(this.player.heroId);
-        const cardIds = Object.keys(cards);
-        const shopCards = [];
-
-        for (let i = 0; i < 3; i++) {
-            const randomId = cardIds[Math.floor(Math.random() * cardIds.length)];
-            shopCards.push({ ...cards[randomId] });
+        const cards = Object.values(getCardsForHero(this.player.heroId));
+        // Sample without replacement: one visit should never offer the same card twice.
+        const pool = [...cards];
+        for (let i = pool.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [pool[i], pool[j]] = [pool[j], pool[i]];
         }
-
+        const offers = pool.slice(0, 4);
         const modal = document.createElement('div');
-        modal.className = 'modal';
-        modal.innerHTML = `
-            <div class="modal-content">
-                <h3>💰 Магазин</h3>
-                <p>У вас ${this.player.gold} золота</p>
-            </div>
-        `;
-
-        shopCards.forEach((card) => {
-            const shopItem = document.createElement('div');
-            shopItem.className = 'shop-item';
-            shopItem.innerHTML = `
-                <span>${card.emoji} ${card.name} (${card.cost}⚡)</span>
-                <span>Цена: 30 золота</span>
-            `;
-            const buyBtn = document.createElement('button');
-            buyBtn.textContent = 'Купить';
-            buyBtn.onclick = () => {
-                if (this.player.gold >= 30) {
-                    this.player.gold -= 30;
-                    this.player.deck.push(card);
-                    alert('Карта куплена!');
-                    document.body.removeChild(modal);
-                    this.continueJourney();
-                } else {
-                    alert('Недостаточно золота!');
-                }
-            };
-            shopItem.appendChild(buyBtn);
-            modal.querySelector('.modal-content').appendChild(shopItem);
-        });
-
-        const leaveBtn = document.createElement('button');
-        leaveBtn.textContent = 'Уйти';
-        leaveBtn.onclick = () => {
-            document.body.removeChild(modal);
-            this.continueJourney();
+        modal.className = 'modal merchant-modal';
+        modal.id = 'merchant-modal';
+        modal.setAttribute('role', 'dialog');
+        modal.setAttribute('aria-modal', 'true');
+        modal.setAttribute('aria-label', 'Магазин странствующего торговца');
+        const content = document.createElement('div');
+        content.className = 'modal-content merchant-content';
+        const heading = document.createElement('h3');
+        heading.textContent = '⚖️ Странствующий торговец';
+        const balance = document.createElement('p');
+        balance.className = 'merchant-balance';
+        const description = document.createElement('p');
+        description.className = 'merchant-description';
+        description.textContent = 'Выбирайте улучшения для своего забега. Можно купить несколько товаров.';
+        const shelf = document.createElement('div');
+        shelf.className = 'merchant-shelf';
+        const stock = [];
+        const renderBalance = () => {
+            balance.textContent = `💰 Ваше золото: ${this.player.gold}`;
+            stock.forEach(({ button, price, sold }) => {
+                button.disabled = sold() || this.player.gold < price;
+                if (!sold()) button.textContent = this.player.gold >= price ? `Купить · ${price} 💰` : `Нужно ${price} 💰`;
+            });
         };
-        modal.querySelector('.modal-content').appendChild(leaveBtn);
-
+        offers.forEach(card => {
+            const price = this.getShopPrice(card);
+            const item = document.createElement('article');
+            item.className = 'merchant-item';
+            const name = document.createElement('strong');
+            name.textContent = `${card.emoji || '🃏'} ${card.name}`;
+            const meta = document.createElement('small');
+            meta.textContent = `${CardArt.rarity(card).label} · Энергия: ${card.cost}`;
+            const effect = document.createElement('p');
+            effect.textContent = card.description || '';
+            const button = document.createElement('button');
+            button.type = 'button';
+            let purchased = false;
+            button.onclick = () => {
+                if (purchased || this.player.gold < price) return;
+                this.player.gold -= price;
+                this.player.deck.push({ ...card });
+                purchased = true;
+                button.textContent = '✓ Куплено';
+                renderBalance();
+            };
+            stock.push({ button, price, sold: () => purchased });
+            item.append(name, meta, effect, button);
+            shelf.appendChild(item);
+        });
+        const healPrice = 35;
+        const healAmount = Math.max(1, Math.floor(this.player.maxHp * 0.2));
+        const heal = document.createElement('article');
+        heal.className = 'merchant-item merchant-heal';
+        const healName = document.createElement('strong');
+        healName.textContent = '❤️ Зелье исцеления';
+        const healDesc = document.createElement('p');
+        healDesc.textContent = `Восстанавливает до ${healAmount} здоровья. Один раз за посещение.`;
+        const healButton = document.createElement('button');
+        healButton.type = 'button';
+        let healed = false;
+        healButton.onclick = () => {
+            if (healed || this.player.gold < healPrice || this.player.hp >= this.player.maxHp) return;
+            this.player.gold -= healPrice;
+            this.player.hp = Math.min(this.player.maxHp, this.player.hp + healAmount);
+            healed = true;
+            healButton.textContent = '✓ Выпито';
+            renderBalance();
+        };
+        stock.push({
+            button: healButton, price: healPrice,
+            sold: () => healed || this.player.hp >= this.player.maxHp
+        });
+        heal.append(healName, healDesc, healButton);
+        shelf.appendChild(heal);
+        const leave = document.createElement('button');
+        leave.type = 'button';
+        leave.className = 'merchant-leave';
+        leave.textContent = 'Продолжить путь →';
+        leave.onclick = () => { modal.remove(); this.continueJourney(); };
+        content.append(heading, balance, description, shelf, leave);
+        modal.appendChild(content);
         document.body.appendChild(modal);
+        renderBalance();
+        if (this.player.hp >= this.player.maxHp) healButton.textContent = 'Здоровье полное';
+        leave.focus();
     }
 
     continueJourney() {
