@@ -4,6 +4,7 @@ class MapGenerator {
         this.act = act;
         // Совместимость с чекпоинтами до появления отдельных сокровищниц.
         this.legacyTreasureShop = options.legacyTreasureShop === true;
+        this.legacyLayout = options.legacyLayout === true;
         // Один seed описывает целую карту; пригодится для повтора забега.
         this.seed = seed === null ? Math.floor(Math.random() * 0x100000000) : seed;
         this.random = createMapRandom(this.seed);
@@ -33,6 +34,10 @@ class MapGenerator {
     }
 
     generateMap() {
+        if (!this.legacyLayout) {
+            this.generateBranchingMap();
+            return;
+        }
         this.floorRestrictions.treasureFloor = this.floors - 1 - 7;
 
         this.createLayers();
@@ -41,6 +46,56 @@ class MapGenerator {
         this.fillRemainingNodes();
         this.connectNodes();
         this.validateMap();
+    }
+
+    // Маршруты строятся до назначения комнат: на каждом обычном этаже
+    // три осмысленные альтернативы, а ключевые комнаты имеют фиксированную роль.
+    generateBranchingMap() {
+        this.createLayers();
+        this.createNode(0, 0, NODE_TYPES.START, true);
+        const specialFloors = {
+            4: [NODE_TYPES.BATTLE, NODE_TYPES.SHOP, NODE_TYPES.EVENT],
+            6: [NODE_TYPES.ELITE, NODE_TYPES.REST, NODE_TYPES.BATTLE],
+            8: [NODE_TYPES.TREASURE],
+            10: [NODE_TYPES.SHOP, NODE_TYPES.BATTLE, NODE_TYPES.EVENT],
+            12: [NODE_TYPES.ELITE, NODE_TYPES.REST, NODE_TYPES.BATTLE],
+            14: [NODE_TYPES.REST]
+        };
+        for (let floor = 1; floor < this.floors - 1; floor++) {
+            const fixed = specialFloors[floor];
+            if (fixed) {
+                fixed.forEach((type, position) => this.createNode(floor, position, type));
+                continue;
+            }
+            for (let position = 0; position < 3; position++) {
+                let type = NODE_TYPES.BATTLE;
+                if (floor >= 2 && this.random() < 0.34) type = NODE_TYPES.EVENT;
+                if (floor >= 5 && this.random() < 0.12) type = NODE_TYPES.REST;
+                this.createNode(floor, position, type);
+            }
+        }
+        this.createNode(this.floors - 1, 0, NODE_TYPES.BOSS);
+        this.connectBranchingRoutes();
+    }
+
+    connectBranchingRoutes() {
+        for (let floor = 0; floor < this.floors - 1; floor++) {
+            const current = this.paths[floor];
+            const next = this.paths[floor + 1];
+            if (current.length === 1 || next.length === 1) {
+                for (const node of current) {
+                    for (const target of next) node.connections.push(target.id);
+                }
+                continue;
+            }
+            // Каждая колонка продолжает собственную линию; соседние развилки
+            // предлагают дополнительный выбор, не допуская пересечений.
+            current.forEach((node, index) => {
+                node.connections.push(next[index].id);
+            });
+            const branch = this.randomInt(0, current.length - 2);
+            current[branch].connections.push(next[branch + 1].id);
+        }
     }
 
     createLayers() {
