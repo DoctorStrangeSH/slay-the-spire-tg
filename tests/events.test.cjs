@@ -171,3 +171,24 @@ test('scribe does not charge on failed healing and can close debt by burning', (
     assert.equal(scribe.options[2].action(), true);
     assert.equal(state.player.archiveDebt, 'burned');
 });
+
+test('run journal summarizes open and resolved stories without mutating run state', () => {
+    const state = game(32, 50);
+    state.player.pilgrimChoice = 'helped';
+    state.player.obeliskDebt = 'redeemed';
+    state.player.archiveDebt = 'owed';
+    state.player.bloodMarkBattles = 2;
+    const snapshot = JSON.stringify(state.player);
+    const entries = state.getRunJournalEntries();
+    assert.equal(entries.length, 4);
+    assert.ok(entries.some(item => item.title === 'Паломник' && item.status === 'Ожидает продолжения'));
+    assert.ok(entries.some(item => item.title === 'Долг обелиска' && item.status === 'Завершено'));
+    assert.ok(entries.some(item => item.title === 'Запретный архив' && item.status === 'Ожидает продолжения'));
+    assert.ok(entries.some(item => item.title === 'Кровавая метка' && item.description.includes('2 боёв')));
+    assert.equal(JSON.stringify(state.player), snapshot);
+});
+
+test('run journal remains empty and safe for a legacy player without story flags', () => {
+    const state = game();
+    assert.equal(state.getRunJournalEntries().length, 0);
+});

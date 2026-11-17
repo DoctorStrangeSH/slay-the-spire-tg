@@ -406,7 +406,7 @@ test('recent encounters are distinct and survive player snapshot', () => {
     game.triggerEvent();
     assert.notEqual(selected[3], selected[2]);
     assert.notEqual(selected[3], selected[1]);
-    assert.equal(game.player.eventHistory.length, 3);
+    assert.equal(game.player.eventHistory.length, 4);
 });
 
 test('single eligible event remains available despite history', () => {

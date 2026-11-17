@@ -73,6 +73,7 @@ class Game {
         window._currentMapPaths = this.mapGenerator.paths;
         MapUI.render(this);
         this.renderMapRelicButton();
+        this.renderMapJournalButton();
         this.runSave.save(this);
     }
 
@@ -120,6 +121,99 @@ class Game {
             map.insertBefore(button, document.getElementById('map-nodes'));
         }
         button.textContent = `💎 Реликвии (${this.player.relics?.length || 0})`;
+    }
+
+    renderMapJournalButton() {
+        const map = document.getElementById('map-screen');
+        if (!map || !this.player) return;
+        let button = document.getElementById('map-journal-button');
+        if (!button) {
+            button = document.createElement('button');
+            button.id = 'map-journal-button';
+            button.className = 'relic-collection-button run-journal-button';
+            button.onclick = () => this.showRunJournal();
+            map.insertBefore(button, document.getElementById('map-nodes'));
+        }
+        button.textContent = '📜 Журнал забега';
+    }
+
+    getRunJournalEntries() {
+        if (!this.player) return [];
+        const player = this.player;
+        const entries = [];
+        const add = (title, status, description) => entries.push({ title, status, description });
+        if (player.pilgrimChoice === 'helped') add('Паломник', 'Ожидает продолжения', 'Вы помогли страннику. Возможно, ваши пути снова пересекутся.');
+        else if (player.pilgrimChoice === 'repaid') add('Паломник', 'Завершено', 'Паломник вернулся и отблагодарил вас.');
+        else if (player.pilgrimChoice === 'ignored') add('Паломник', 'Завершено', 'Вы прошли мимо нуждающегося странника.');
+        if (player.obeliskDebt === 'owed') add('Долг обелиска', 'Ожидает продолжения', 'Вы обменяли 4 максимальных HP на 85 золота. Хранитель может предложить вернуть силу.');
+        else if (player.obeliskDebt === 'redeemed') add('Долг обелиска', 'Завершено', 'Вы выкупили утраченную силу.');
+        else if (player.obeliskDebt === 'forgone') add('Долг обелиска', 'Завершено', 'Вы отказались от выкупа навсегда.');
+        if (player.archiveDebt === 'owed') add('Запретный архив', 'Ожидает продолжения', 'Кровь уже отдана за усиление карты. Чернильный Сборщик помнит этот долг.');
+        else if (player.archiveDebt === 'healed') add('Запретный архив', 'Завершено', 'Чернильный Сборщик залечил ваш шрам.');
+        else if (player.archiveDebt === 'sold') add('Запретный архив', 'Завершено', 'Вы продали страницу за золото и приняли кровавую метку.');
+        else if (player.archiveDebt === 'burned') add('Запретный архив', 'Завершено', 'Вы сожгли книгу и оборвали историю.');
+        const mark = Number(player.bloodMarkBattles) || 0;
+        if (mark > 0) add('Кровавая метка', 'Действует', `Потеря 4 HP в начале следующих ${mark} боёв.`);
+        const exhaustion = Number(player.exhaustionBattles) || 0;
+        if (exhaustion > 0) add('Истощение', 'Действует', `Ослабление силы ещё на ${exhaustion} боёв.`);
+        return entries;
+    }
+
+    showRunJournal() {
+        if (!this.player) return;
+        document.getElementById('run-journal-modal')?.remove();
+        const modal = document.createElement('div');
+        modal.id = 'run-journal-modal';
+        modal.className = 'modal run-journal-modal';
+        modal.setAttribute('role', 'dialog');
+        modal.setAttribute('aria-modal', 'true');
+        modal.setAttribute('aria-label', 'Журнал текущего забега');
+        const panel = document.createElement('div');
+        panel.className = 'modal-content run-journal-content';
+        const title = document.createElement('h3');
+        title.textContent = '📜 Журнал забега';
+        const place = document.createElement('p');
+        place.className = 'run-journal-place';
+        place.textContent = `Акт ${this.act} · Этаж ${this.floor + 1}`;
+        panel.append(title, place);
+        const section = (heading, lines, emptyMessage) => {
+            const label = document.createElement('h4');
+            label.textContent = heading;
+            panel.appendChild(label);
+            if (!lines.length) {
+                const empty = document.createElement('p');
+                empty.className = 'run-journal-empty';
+                empty.textContent = emptyMessage;
+                panel.appendChild(empty);
+            }
+            lines.forEach(line => {
+                const row = document.createElement('article');
+                row.className = 'run-journal-entry';
+                const name = document.createElement('strong');
+                name.textContent = line.title;
+                const status = document.createElement('small');
+                status.textContent = line.status;
+                const description = document.createElement('p');
+                description.textContent = line.description;
+                row.append(name, status, description);
+                panel.appendChild(row);
+            });
+        };
+        section('Важные решения', this.getRunJournalEntries(), 'Пока нет значимых решений.');
+        const recent = Array.isArray(this.player.eventHistory)
+            ? this.player.eventHistory.filter(name => typeof name === 'string').slice(-10).reverse()
+            : [];
+        section('Последние встречи', recent.map(name => ({ title: name, status: 'Встреча', description: '' })),
+            'Вы ещё не встречали случайных событий.');
+        const close = document.createElement('button');
+        close.type = 'button';
+        close.className = 'run-journal-close';
+        close.textContent = 'Вернуться к карте';
+        close.onclick = () => modal.remove();
+        panel.appendChild(close);
+        modal.appendChild(panel);
+        document.body.appendChild(modal);
+        close.focus();
     }
 
     showRelics() {
@@ -688,7 +782,7 @@ class Game {
         if (!event) return;
         if (this.player) {
             const previous = Array.isArray(this.player.eventHistory) ? this.player.eventHistory : [];
-            this.player.eventHistory = [...previous.slice(-2), event.name];
+            this.player.eventHistory = [...previous.slice(-19), event.name];
         }
         this.showEventModal(event);
     }
