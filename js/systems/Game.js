@@ -14,6 +14,8 @@ class Game {
         this.offeredCards = [];
         this.currentRewardIndex = -1;
         this.runSave = new RunSave();
+        this.runHistory = typeof RunHistory === 'function' ? new RunHistory() : null;
+        this.runId = null;
     }
 
     selectHero(heroId) {
@@ -44,6 +46,7 @@ class Game {
     startNewGame() {
         if (!this.player) return;
         this.runSave.clear();
+        this.runId = `run-${Date.now()}-${Math.random().toString(36).slice(2)}`;
 
         this.player.hp = this.player.maxHp;
         this.player.gold = 0;
@@ -87,6 +90,7 @@ class Game {
 
     continueSavedGame() {
         if (!this.runSave.restore(this)) return false;
+        this.runId = this.runSave.read()?.runId || `legacy-${this.act}-${this.floor}-${Date.now()}`;
         this.showMap();
         return true;
     }
@@ -114,6 +118,73 @@ class Game {
             <p>💎 Реликвий: ${this.player.relics.length}</p>
             <button onclick="game.showRelics()">💎 Мои реликвии</button>
         ` : '';
+    }
+
+    recordFinishedRun(victory) {
+        if (!this.player) return false;
+        if (!this.runId) this.runId = `legacy-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+        return this.runHistory?.record(this.getRunSummary(victory), this.player.heroId, this.runId) || false;
+    }
+
+    showRunHistory() {
+        document.getElementById('cathedral-history-modal')?.remove();
+        const data = this.runHistory.read();
+        const modal = document.createElement('div');
+        modal.id = 'cathedral-history-modal';
+        modal.className = 'modal run-journal-modal';
+        modal.setAttribute('role', 'dialog');
+        modal.setAttribute('aria-modal', 'true');
+        modal.setAttribute('aria-label', 'История восхождений');
+        const panel = document.createElement('div');
+        panel.className = 'modal-content run-journal-content';
+        const title = document.createElement('h3');
+        title.textContent = '🏆 История восхождений';
+        const summary = document.createElement('p');
+        summary.className = 'run-journal-place';
+        summary.textContent = `Забегов: ${data.runs} · Побед: ${data.victories} · Лучший счёт: ${data.bestScore}`;
+        panel.append(title, summary);
+        const achievements = document.createElement('h4');
+        achievements.textContent = 'Достижения';
+        panel.appendChild(achievements);
+        for (const achievement of this.runHistory.achievements(data)) {
+            const row = document.createElement('article');
+            row.className = 'run-journal-entry cathedral-achievement';
+            const name = document.createElement('strong');
+            name.textContent = `${achievement.unlocked ? '✦' : '◇'} ${achievement.name}`;
+            const description = document.createElement('p');
+            description.textContent = achievement.description;
+            row.classList.toggle('cathedral-achievement--locked', !achievement.unlocked);
+            row.append(name, description);
+            panel.appendChild(row);
+        }
+        const recentTitle = document.createElement('h4');
+        recentTitle.textContent = 'Последние забеги';
+        panel.appendChild(recentTitle);
+        if (!data.recent.length) {
+            const empty = document.createElement('p');
+            empty.className = 'run-journal-empty';
+            empty.textContent = 'Ещё нет завершённых путешествий.';
+            panel.appendChild(empty);
+        }
+        for (const run of [...data.recent].reverse()) {
+            const row = document.createElement('article');
+            row.className = 'run-journal-entry';
+            const name = document.createElement('strong');
+            name.textContent = `${run.victory ? '🏆 Победа' : '☽ Поражение'} · ${run.hero}`;
+            const detail = document.createElement('p');
+            detail.textContent = `Акт ${run.act}, этаж ${run.floor} · ${run.score} очков`;
+            row.append(name, detail);
+            panel.appendChild(row);
+        }
+        const close = document.createElement('button');
+        close.type = 'button';
+        close.className = 'run-journal-close';
+        close.textContent = 'Закрыть';
+        close.onclick = () => modal.remove();
+        panel.appendChild(close);
+        modal.appendChild(panel);
+        document.body.appendChild(modal);
+        close.focus();
     }
 
     // Коллекция доступна между комнатами и во время боя; не меняет состояние забега.
@@ -606,6 +677,7 @@ class Game {
                 }
             });
         } else {
+            this.recordFinishedRun(false);
             this.runSave.clear();
             BattleFeedback.result({
                 victory: false,
@@ -1762,6 +1834,7 @@ class Game {
             this.showMap();
             this.showActTransition(completedAct, false);
         } else {
+            this.recordFinishedRun(true);
             this.runSave.clear();
             this.showMenu();
             this.showActTransition(completedAct, true);
