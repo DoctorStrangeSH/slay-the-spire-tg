@@ -153,3 +153,12 @@ test('run checkpoint retains battle wins, elite wins and boss wins', () => {
     assert.equal(restored.player.eliteWins, 2);
     assert.equal(restored.player.bossWins, 1);
 });
+
+test('checkpoint retains the run id so outcomes are counted only once', () => {
+    const persistence = new RunSave(storage());
+    const original = game();
+    original.runId = 'stable-run-id';
+    assert.equal(persistence.save(original), true);
+    const restored = persistence.read();
+    assert.equal(restored.runId, 'stable-run-id');
+});

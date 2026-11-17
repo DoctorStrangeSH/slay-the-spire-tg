@@ -2002,3 +2002,6 @@ button:disabled { opacity: .42; filter: grayscale(.5); }
   color: #ffd991; font-weight: 800; text-align: center; }
 @media (max-width: 380px) { .cathedral-run-summary { padding: 11px; }
   .cathedral-run-summary-grid > div { padding: 7px; font-size: .72rem; } }
+
+.cathedral-achievement--locked { opacity: .55; filter: grayscale(.65); }
+.cathedral-achievement strong { color: #f8d69a; }

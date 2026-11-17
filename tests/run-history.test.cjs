@@ -1,0 +1,62 @@
+// node --test tests/run-history.test.cjs
+const test = require('node:test');
+const assert = require('node:assert/strict');
+const { readFileSync } = require('node:fs');
+const { join } = require('node:path');
+const vm = require('node:vm');
+
+const source = readFileSync(join(__dirname, '../js/systems/RunHistory.js'), 'utf8');
+const RunHistory = vm.runInNewContext(source + '\nRunHistory;', { Date, JSON, console });
+
+function memory() {
+    const values = new Map();
+    return {
+        getItem(key) { return values.get(key) ?? null; },
+        setItem(key, value) { values.set(key, value); }
+    };
+}
+function summary(victory = false, score = 250) {
+    return { victory, score, hero: 'Берсерк', act: 2, floor: 5, wins: 8 };
+}
+
+test('history keeps totals and best score across separate instances', () => {
+    const storage = memory();
+    const history = new RunHistory(storage);
+    assert.equal(history.record(summary(false, 300), 'berserk', 'run-1'), true);
+    assert.equal(history.record(summary(true, 1300), 'berserk', 'run-2'), true);
+    const next = new RunHistory(storage).read();
+    assert.equal(next.runs, 2);
+    assert.equal(next.victories, 1);
+    assert.equal(next.defeats, 1);
+    assert.equal(next.bestScore, 1300);
+    assert.equal(next.totalBattles, 16);
+    assert.equal(next.heroes.berserk, 2);
+});
+
+test('history ignores duplicate run ids and retains last 20', () => {
+    const history = new RunHistory(memory());
+    assert.equal(history.record(summary(), 'berserk', 'same'), true);
+    assert.equal(history.record(summary(true), 'berserk', 'same'), false);
+    for (let i = 0; i < 24; i++) history.record(summary(), 'berserk', 'run-' + i);
+    const data = history.read();
+    assert.equal(data.runs, 25);
+    assert.equal(data.recent.length, 20);
+    assert.equal(data.recent[0].id, 'run-4');
+    assert.equal(data.recent.at(-1).id, 'run-23');
+});
+
+test('achievements are derived from permanent totals', () => {
+    const history = new RunHistory(memory());
+    assert.equal(history.achievements().filter(a => a.unlocked).length, 0);
+    history.record(summary(true, 1300), 'berserk', 'winner');
+    const names = history.achievements().filter(a => a.unlocked).map(a => a.name);
+    assert.ok(names.includes('Первый шаг'));
+    assert.ok(names.includes('Покоритель шпиля'));
+    assert.ok(names.includes('Легенда'));
+});
+
+test('unavailable storage does not prevent the game from ending', () => {
+    const history = new RunHistory(null);
+    assert.equal(history.record(summary(), 'berserk', 'a'), false);
+    assert.equal(history.read().runs, 0);
+});
