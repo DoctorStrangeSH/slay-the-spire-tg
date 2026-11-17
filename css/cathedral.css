@@ -1829,3 +1829,24 @@ button:disabled { opacity: .42; filter: grayscale(.5); }
   .card-details-overlay { padding: max(12px, env(safe-area-inset-top)) 12px max(12px, env(safe-area-inset-bottom)); }
   .card-details-panel { width: min(100%, 380px); padding: 17px; }
 }
+
+/* Honest intent forecast: ranges and post-block damage remain legible on phones. */
+#enemy-intent.intent {
+  max-width: 100%;
+  box-sizing: border-box;
+  flex-wrap: wrap;
+  column-gap: 6px;
+  row-gap: 3px;
+}
+#enemy-intent .intent-caption {
+  flex: 1 1 100%;
+  letter-spacing: .02em;
+  text-transform: none;
+  line-height: 1.35;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+@media (max-width: 640px) {
+  #enemy-intent.intent { display: flex; padding: 5px 6px; }
+  #enemy-intent .intent-caption { font-size: 10px; }
+}

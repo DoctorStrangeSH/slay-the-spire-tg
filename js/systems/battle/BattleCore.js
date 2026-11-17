@@ -171,14 +171,30 @@ class BattleCore {
     getEnemyIntentInfo() {
         if (this.enemyIntent === 'attack') {
             let damage = Math.floor(this.enemy.damage + (this.statusEffects.enemy.strength || 0));
-            if (this.statusEffects.player.vulnerable > 0) damage = Math.floor(damage * 1.5);
-            if (this.statusEffects.enemy.weak > 0) damage = Math.floor(damage * 0.75);
-            return { type: 'attack', damage };
-        } else {
-            let blockAmount = 10;
-            if (this.enemy.specialAbility === 'rock_armor') blockAmount = 20;
-            return { type: 'defend', block: blockAmount };
+            let boosted = damage;
+            // Dark magic has a 30% chance to empower the hit before status modifiers.
+            if (this.enemy.specialAbility === 'dark_magic') boosted = Math.floor(boosted * 1.5);
+            const modify = value => {
+                if (this.statusEffects.player.vulnerable > 0) value = Math.floor(value * 1.5);
+                if (this.statusEffects.enemy.weak > 0) value = Math.floor(value * 0.75);
+                if (this.hasPower('invulnerability')) value = Math.max(0, value - 2);
+                return Math.max(0, value);
+            };
+            damage = modify(damage);
+            boosted = modify(boosted);
+            return {
+                type: 'attack', damage, maxDamage: boosted,
+                bonusChance: boosted > damage ? 0.3 : 0,
+                afterBlock: Math.max(0, damage - this.block),
+                maxAfterBlock: Math.max(0, boosted - this.block)
+            };
         }
+        let blockAmount = 10;
+        if (this.enemy.specialAbility === 'rock_armor') blockAmount = 20;
+        return {
+            type: 'defend', block: blockAmount,
+            poison: this.enemy.specialAbility === 'root_grasp' ? 2 : 0
+        };
     }
     
     getDeckInfo() {
