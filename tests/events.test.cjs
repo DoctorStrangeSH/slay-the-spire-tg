@@ -137,3 +137,37 @@ test('obelisk collector cannot charge without enough gold and can be refused', (
     assert.equal(collector.options[1].action(), true);
     assert.equal(state.player.obeliskDebt, 'forgone');
 });
+
+test('archive blood bargain unlocks a future scribe but not an immediate encounter', () => {
+    const state = game(55, 0);
+    state.act = 1;
+    state.floor = 2;
+    state.player.deck = [{ id: 'strike', name: 'Удар', damage: 6 }];
+    assert.equal(state.applyForbiddenManuscript(), true);
+    assert.equal(state.player.archiveDebt, 'owed');
+    assert.equal(state.getEventsForAct().some(event => event.name === 'Чернильный Сборщик'), false);
+    state.floor = 3;
+    assert.equal(state.canEncounterArchiveScribe(), true);
+    const scribe = state.getEventsForAct().find(event => event.name === 'Чернильный Сборщик');
+    assert.ok(scribe);
+    assert.equal(scribe.options[1].action(), true);
+    assert.equal(state.player.gold, 40);
+    assert.equal(state.player.bloodMarkBattles, 1);
+    assert.equal(state.player.archiveDebt, 'sold');
+    assert.equal(state.getEventsForAct().some(event => event.name === 'Чернильный Сборщик'), false);
+});
+
+test('scribe does not charge on failed healing and can close debt by burning', () => {
+    const state = game(20, 0);
+    state.player.archiveDebt = 'owed';
+    state.player.archiveDebtAct = 1;
+    state.player.archiveDebtFloor = 0;
+    state.floor = 1;
+    const scribe = state.getEventsForAct().find(event => event.name === 'Чернильный Сборщик');
+    assert.equal(scribe.options[0].action(), false);
+    assert.equal(state.player.gold, 0);
+    assert.equal(state.player.hp, 20);
+    assert.equal(state.player.archiveDebt, 'owed');
+    assert.equal(scribe.options[2].action(), true);
+    assert.equal(state.player.archiveDebt, 'burned');
+});
