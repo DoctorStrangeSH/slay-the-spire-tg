@@ -79,7 +79,7 @@ test('game loads feedback before controllers and invokes it after moves', () => 
     const html = fs.readFileSync(path.join(root, 'index.html'), 'utf8');
     const game = fs.readFileSync(path.join(root, 'js/systems/Game.js'), 'utf8');
     const css = fs.readFileSync(path.join(root, 'css/cathedral.css'), 'utf8');
-    assert.match(html, /js\/ui\/BattleFeedback\.js\?v=2026\.11\.17\.58/);
+    assert.match(html, /js\/ui\/BattleFeedback\.js\?v=2026\.11\.17\.59/);
     assert.match(game, /BattleFeedback\.snapshot\(this\.currentBattle\)/);
     assert.match(game, /BattleFeedback\.show\(before, this\.currentBattle\)/);
     assert.match(css, /prefers-reduced-motion: reduce/);
@@ -435,4 +435,44 @@ test('merchant deck thinning refuses short decks and insufficient gold', () => {
     button.onclick();
     assert.equal(game.player.deck.length, 5);
     assert.equal(game.player.gold, 50);
+});
+
+test('shop card upgrades change actual combat stats and cannot be bought twice', () => {
+    const makeElement = tag => ({
+        tag, children: [], attributes: {}, value: '0', disabled: false,
+        append(...nodes) { this.children.push(...nodes); },
+        appendChild(node) { this.children.push(node); },
+        setAttribute(k, v) { this.attributes[k] = v; },
+        focus() {}, remove() {}
+    });
+    const document = { createElement: makeElement, body: makeElement('body') };
+    const Game = vm.runInNewContext(
+        fs.readFileSync(path.join(root, 'js/systems/Game.js'), 'utf8') + '\nGame;',
+        { document, getCardsForHero: () => ({}), CardArt: { rarity: () => ({ label: 'Обычная' }) } }
+    );
+    const game = Object.create(Game.prototype);
+    game.player = { heroId: 'test', gold: 150, hp: 70, maxHp: 100, deck: [
+        { id: 'strike', name: 'Удар', damage: 6, cost: 1 },
+        { id: 'guard', name: 'Защита', block: 5, cost: 1 }
+    ] };
+    assert.deepEqual(JSON.parse(JSON.stringify(game.getCardUpgrade(game.player.deck[0]))), {
+        stat: 'damage', bonus: 3, label: 'Урон', current: 6, next: 9
+    });
+    game.openShop();
+    const shelf = document.body.children[0].children[0].children.find(n => n.className === 'merchant-shelf');
+    const upgrade = shelf.children.find(n => n.className === 'merchant-item merchant-upgrade');
+    const button = upgrade.children.at(-1);
+    const select = upgrade.children.find(n => n.tag === 'select');
+    select.value = '0';
+    button.onclick();
+    assert.equal(game.player.deck[0].damage, 9);
+    assert.equal(game.player.deck[0].name, 'Удар+');
+    assert.equal(game.player.gold, 75);
+    assert.equal(button.disabled, true);
+    button.onclick();
+    assert.equal(game.player.deck[0].damage, 9);
+    assert.equal(game.player.gold, 75);
+    assert.equal(game.getCardUpgrade(game.player.deck[0]), null);
+    assert.equal(game.upgradeCard(game.player.deck[1]), true);
+    assert.equal(game.player.deck[1].block, 8);
 });
