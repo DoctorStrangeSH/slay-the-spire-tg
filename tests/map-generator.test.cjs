@@ -109,6 +109,42 @@ test('available routes come only from current node, never from visited siblings'
     assert.deepEqual(Array.from(available, node => node.id), [map.paths[2][0].id]);
 });
 
+test('accessible route cards list only reachable rooms and activate chosen destination', () => {
+    const ui = readFileSync(join(__dirname, '../js/ui/MapUI.js'), 'utf8');
+    const makeElement = tag => ({
+        tag, children: [], attrs: {}, listeners: {},
+        appendChild(child) { this.children.push(child); },
+        setAttribute(key, value) { this.attrs[key] = value; },
+        addEventListener(type, handler) { this.listeners[type] = handler; }
+    });
+    const MapUI = vm.runInNewContext(constants + '\n' + ui + '\nMapUI;', {
+        window: {}, document: { createElement: makeElement }
+    });
+    const reachable = [{ id: 'rest', x: 5, type: 'rest' },
+        { id: 'elite', x: 1, type: 'elite' }];
+    let picked = null;
+    const game = {
+        currentNodeId: 'current',
+        mapGenerator: { getAvailableNodes: () => reachable },
+        selectMapNode(node) { picked = node; }
+    };
+    const host = makeElement('main');
+    MapUI.renderNextChoices(host, game);
+    assert.equal(host.children.length, 1);
+    const panel = host.children[0];
+    assert.equal(panel.attrs['aria-label'], 'Выбор следующей комнаты');
+    const list = panel.children[1];
+    assert.equal(list.children.length, 2);
+    assert.match(list.children[0].attrs['aria-label'], /Элитный бой/);
+    assert.match(list.children[1].attrs['aria-label'], /Привал/);
+    list.children[0].listeners.click();
+    assert.equal(picked.id, 'elite');
+    const emptyHost = makeElement('main');
+    game.mapGenerator.getAvailableNodes = () => [];
+    MapUI.renderNextChoices(emptyHost, game);
+    assert.equal(emptyHost.children.length, 0);
+});
+
 test('three acts have distinct visual banners while routes remain unchanged', () => {
     const ui = readFileSync(join(__dirname, '../js/ui/MapUI.js'), 'utf8');
     const MapUI = vm.runInNewContext(ui + '\nMapUI;', { window: {} });
