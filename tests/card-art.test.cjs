@@ -34,8 +34,8 @@ test('rendering known card types is safe and unknown old types fall back', () =>
 
 test('CardArt loads before BattleUI and all asset manifests are versioned', () => {
     assert.ok(html.indexOf('js/ui/CardArt.js') < html.indexOf('js/ui/BattleUI.js'));
-    assert.match(html, /js\/ui\/CardArt\.js\?v=2026\.11\.17\.49/);
-    assert.match(html, /css\/cathedral\.css\?v=2026\.11\.17\.49/);
+    assert.match(html, /js\/ui\/CardArt\.js\?v=2026\.11\.17\.50/);
+    assert.match(html, /css\/cathedral\.css\?v=2026\.11\.17\.50/);
 });
 
 test('combat and rewards use illustration registry consistently', () => {
