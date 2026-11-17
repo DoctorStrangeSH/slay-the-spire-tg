@@ -72,10 +72,22 @@ class RunSave {
 
         let map = new MapGenerator(data.act, data.map.seed);
         if (this.mapSignature(map) !== data.map.signature) {
-            // Предыдущая версия карты показывала сокровищницу как магазин.
-            // Восстанавливаем исходный граф, чтобы не терять старые забеги.
-            map = new MapGenerator(data.act, data.map.seed, { legacyTreasureShop: true });
-            if (this.mapSignature(map) !== data.map.signature) return false;
+            // Сохранения прежних версий содержали другую геометрию и типы комнат.
+            // Проверяем старые варианты прежде, чем отвергнуть чекпоинт.
+            const legacyOptions = [
+                { legacyLayout: true },
+                { legacyLayout: true, legacyTreasureShop: true }
+            ];
+            let recovered = false;
+            for (const options of legacyOptions) {
+                const candidate = new MapGenerator(data.act, data.map.seed, options);
+                if (this.mapSignature(candidate) === data.map.signature) {
+                    map = candidate;
+                    recovered = true;
+                    break;
+                }
+            }
+            if (!recovered) return false;
         }
         const current = map.findNodeById(data.currentNodeId);
         if (!current || current.floor !== data.floor ||
