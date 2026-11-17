@@ -71,3 +71,33 @@ test('second life resolves before a victory after mutual lethal damage', () => {
     assert.equal(state.player.hp, 10);
     assert.equal(state.player.relics.includes('secondLife'), false);
 });
+
+
+test('enemy attack forecast matches weakness, vulnerability and invulnerability', () => {
+    const coreSource = readFileSync(join(__dirname, '../js/systems/battle/BattleCore.js'), 'utf8');
+    const BattleCore = vm.runInNewContext(coreSource + '\nBattleCore;', { Math });
+    const state = battle({ enemy: { damage: 10, specialAbility: null } });
+    state.block = 7;
+    state.statusEffects.player.vulnerable = 1;
+    state.statusEffects.enemy.weak = 1;
+    state.player.relics.push('invulnerability');
+    const info = BattleCore.prototype.getEnemyIntentInfo.call(state);
+    assert.equal(info.damage, 9); // floor(floor(10 * 1.5) * .75) - 2
+    assert.equal(info.afterBlock, 2);
+    assert.equal(info.maxDamage, 9);
+});
+
+test('dark magic forecast shows real 30 percent risk and root grasp poison', () => {
+    const coreSource = readFileSync(join(__dirname, '../js/systems/battle/BattleCore.js'), 'utf8');
+    const BattleCore = vm.runInNewContext(coreSource + '\nBattleCore;', { Math });
+    const state = battle({ enemy: { damage: 10, specialAbility: 'dark_magic' } });
+    const info = BattleCore.prototype.getEnemyIntentInfo.call(state);
+    assert.equal(info.damage, 10);
+    assert.equal(info.maxDamage, 15);
+    assert.equal(info.bonusChance, 0.3);
+    state.enemyIntent = 'defend';
+    state.enemy.specialAbility = 'root_grasp';
+    const defend = BattleCore.prototype.getEnemyIntentInfo.call(state);
+    assert.equal(defend.block, 10);
+    assert.equal(defend.poison, 2);
+});
