@@ -113,3 +113,17 @@ test('checkpoint preserves unresolved obelisk bargain for a later event', () => 
     assert.equal(restored.player.obeliskDebtAct, 1);
     assert.equal(restored.player.obeliskDebtFloor, 0);
 });
+
+test('checkpoint remembers outstanding archive debt across a restore', () => {
+    const persistence = new RunSave(storage());
+    const original = game();
+    original.player.archiveDebt = 'owed';
+    original.player.archiveDebtAct = 1;
+    original.player.archiveDebtFloor = 0;
+    assert.equal(persistence.save(original), true);
+    const restored = { player: null };
+    assert.equal(persistence.restore(restored), true);
+    assert.equal(restored.player.archiveDebt, 'owed');
+    assert.equal(restored.player.archiveDebtAct, 1);
+    assert.equal(restored.player.archiveDebtFloor, 0);
+});
