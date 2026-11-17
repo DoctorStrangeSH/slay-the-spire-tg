@@ -271,3 +271,23 @@ test('berserk low HP boss victory unlocks only on the valid battle', () => {
     assert.equal(state.recordCombatChallenge(false), false);
     assert.equal(unlocked, 1);
 });
+
+test('engineer elite victory needs two surviving buildings', () => {
+    const state = game(40);
+    state.player.heroId = 'engineer';
+    state.currentBattleIsElite = true;
+    state.currentBattle = { enemy: { isBoss: false }, buildings: { buildings: [{ hp: 5 }, { hp: 0 }] } };
+    const achievements = [];
+    state.runHistory = { unlockChallenge: id => { achievements.push(id); return true; } };
+    assert.equal(state.recordCombatChallenge(true), false);
+    state.currentBattle.buildings.buildings[1].hp = 1;
+    assert.equal(state.recordCombatChallenge(true), true);
+    assert.equal(achievements[0], 'engineer_iron_line');
+    state.currentBattleIsElite = false;
+    assert.equal(state.recordCombatChallenge(true), false);
+    state.currentBattleIsElite = true;
+    assert.equal(state.recordCombatChallenge(false), false);
+    state.player.heroId = 'psyker';
+    assert.equal(state.recordCombatChallenge(true), false);
+    assert.equal(achievements.length, 1);
+});

@@ -58,7 +58,7 @@ class RunHistory {
     }
 
     unlockChallenge(id) {
-        if (id !== 'berserk_last_breath' || !this.storage) return false;
+        if (!['berserk_last_breath', 'engineer_iron_line'].includes(id) || !this.storage) return false;
         const data = this.read();
         if (data.challenges[id]) return false;
         data.challenges[id] = true;
@@ -82,7 +82,8 @@ class RunHistory {
             { name: 'Стальной разум', description: 'Победить Инженером', unlocked: (Number(data.heroVictories?.engineer) || 0) >= 1 },
             { name: 'Зрящий за гранью', description: 'Победить Псайкером', unlocked: (Number(data.heroVictories?.psyker) || 0) >= 1 },
             { name: 'Три судьбы', description: 'Победить каждым из трёх стартовых героев', unlocked: ['berserk', 'engineer', 'psyker'].every(id => (Number(data.heroVictories?.[id]) || 0) >= 1) },
-            { name: 'На последнем дыхании', description: 'Берсерком победить босса, имея не более 20% максимального HP', unlocked: data.challenges?.berserk_last_breath === true }
+            { name: 'На последнем дыхании', description: 'Берсерком победить босса, имея не более 20% максимального HP', unlocked: data.challenges?.berserk_last_breath === true },
+            { name: 'Железная линия', description: 'Инженером победить элитного врага, сохранив не менее двух конструкций', unlocked: data.challenges?.engineer_iron_line === true }
         ];
     }
 }
