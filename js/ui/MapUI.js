@@ -163,6 +163,7 @@ const MapUI = {
         line.setAttribute('fill', 'none');
         line.setAttribute('stroke-linecap', 'round');
         
+        line.setAttribute('class', 'spire-route');
         const isVisited = node1.visited && node2.visited;
         const isAvailable = node1.visited && !node2.visited;
         
@@ -205,6 +206,8 @@ const MapUI = {
         const isAvailable = availableNodes.includes(node);
         const isVisited = node.visited;
         const isFutureFloor = floorIndex > currentFloor;
+        group.setAttribute('class', 'spire-room spire-room--' + node.type +
+            (isVisited ? ' is-visited' : isAvailable ? ' is-available' : ' is-future'));
         
         if (isVisited) {
             circle.setAttribute('opacity', '0.6');
@@ -249,6 +252,7 @@ const MapUI = {
         
         // Иконка (не перехватывает клики)
         const icon = document.createElementNS(svgNS, 'text');
+        icon.setAttribute('class', 'spire-room-icon');
         icon.setAttribute('x', cx);
         icon.setAttribute('y', cy + 5);
         icon.setAttribute('text-anchor', 'middle');
