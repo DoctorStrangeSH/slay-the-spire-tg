@@ -79,7 +79,7 @@ test('game loads feedback before controllers and invokes it after moves', () => 
     const html = fs.readFileSync(path.join(root, 'index.html'), 'utf8');
     const game = fs.readFileSync(path.join(root, 'js/systems/Game.js'), 'utf8');
     const css = fs.readFileSync(path.join(root, 'css/cathedral.css'), 'utf8');
-    assert.match(html, /js\/ui\/BattleFeedback\.js\?v=2026\.11\.16\.42/);
+    assert.match(html, /js\/ui\/BattleFeedback\.js\?v=2026\.11\.17\.43/);
     assert.match(game, /BattleFeedback\.snapshot\(this\.currentBattle\)/);
     assert.match(game, /BattleFeedback\.show\(before, this\.currentBattle\)/);
     assert.match(css, /prefers-reduced-motion: reduce/);
