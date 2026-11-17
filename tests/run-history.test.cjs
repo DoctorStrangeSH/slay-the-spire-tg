@@ -118,3 +118,15 @@ test('psyker mind chain challenge stays unlocked after a new session', () => {
     assert.equal(new RunHistory(storage).achievements()
         .find(a => a.name === 'Разрыв сознания').unlocked, true);
 });
+
+test('achievement hall categories cover all achievements without duplicates', () => {
+    const history = new RunHistory(memory());
+    const list = history.achievements();
+    assert.equal(list.length, 12);
+    const tally = { general: 0, berserk: 0, engineer: 0, psyker: 0 };
+    for (const item of list) {
+        assert.ok(Object.hasOwn(tally, item.category));
+        tally[item.category]++;
+    }
+    assert.deepEqual(tally, { general: 6, berserk: 2, engineer: 2, psyker: 2 });
+});
