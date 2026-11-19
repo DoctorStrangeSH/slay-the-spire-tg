@@ -1078,3 +1078,33 @@ test('strategic shops and elites vary left-to-right without losing seeded determ
     assert.ok(shops.size >= 3, 'shop position varies across runs');
     assert.ok(elites.size >= 3, 'elite position varies across runs');
 });
+
+
+test('rare secret rooms are deterministic, optional, and preserve route reachability', () => {
+    let found = 0;
+    for (let seed = 0; seed < 300; seed++) {
+        const map = new MapGenerator(1, seed);
+        const replay = new MapGenerator(1, seed);
+        const secret = map.allNodes.filter(node => node.type === 'secret');
+        assert.ok(secret.length <= 1, 'at most one secret room per act');
+        assert.deepEqual(
+            map.allNodes.map(node => [node.id, node.type, node.connections]),
+            replay.allNodes.map(node => [node.id, node.type, node.connections])
+        );
+        for (const room of secret) {
+            found++;
+            assert.ok(room.floor >= 3 && room.floor <= 12);
+            assert.ok(map.paths[room.floor - 1].some(previous => previous.connections.includes(room.id)));
+            assert.ok(room.connections.length > 0);
+        }
+    }
+    assert.ok(found > 0, 'some seeded runs should contain a secret room');
+    assert.ok(found < 300, 'secret rooms should remain rare');
+});
+
+test('legacy organic map generation never injects secret rooms', () => {
+    for (let seed = 0; seed < 40; seed++) {
+        const map = new MapGenerator(1, seed, { legacyOrganicLayout: true });
+        assert.equal(map.allNodes.some(node => node.type === 'secret'), false);
+    }
+});
