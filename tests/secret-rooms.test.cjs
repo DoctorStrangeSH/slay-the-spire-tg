@@ -84,3 +84,37 @@ test('psyker secret inscription uses the forbidden manuscript upgrade mechanic',
     assert.equal(event.options[0].action(), true);
     assert.equal(game.player.secretRoomChoices, 1);
 });
+
+
+test('locked secret node cannot be entered without the Chronicle', () => {
+    const game = createGame();
+    game.player = { heroId: 'berserk', hp: 40, maxHp: 60, gold: 0, relics: [] };
+    const secret = { id: 'secret-node', floor: 4, type: 'secret', visited: false };
+    let visited = false;
+    game.mapGenerator = {
+        getAvailableNodes: () => [secret],
+        findNodeById: () => ({ floor: 3 }),
+        visitNode: () => { visited = true; }
+    };
+    game.currentNodeId = 'previous';
+    game.floor = 3;
+    game.selectMapNode(secret);
+    assert.equal(visited, false);
+    assert.equal(game.currentNodeId, 'previous');
+});
+
+test('secret-room risk checks reject lethal blood and manuscript payments', () => {
+    const game = createGame();
+    game.player = { heroId: 'berserk', hp: 8, maxHp: 60, gold: 0, relics: ['chronicle'] };
+    let event;
+    game.showEventModal = value => { event = value; };
+    game.triggerSecretRoom();
+    assert.equal(event.options[0].action(), false);
+    assert.equal(game.player.hp, 8);
+    game.player.heroId = 'psyker';
+    game.player.hp = 7;
+    game.applyForbiddenManuscript = () => false;
+    game.triggerSecretRoom();
+    assert.equal(event.options[0].action(), false);
+    assert.equal(game.player.hp, 7);
+});
