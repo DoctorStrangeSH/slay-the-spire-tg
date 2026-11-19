@@ -88,3 +88,40 @@ test('event journal names relics gained and lost, not only their count', () => {
     assert.match(game.player.journalLog[0].outcome, /получено: New Relic/);
     assert.match(game.player.journalLog[0].outcome, /потеряно: Old Relic/);
 });
+
+
+test('event journal records when a delayed story debt is resolved', () => {
+    const game = gameWith({
+        hp: 40, maxHp: 70, gold: 20,
+        deck: [{ id: 'strike' }], relics: [],
+        obeliskDebt: 'owed', journalLog: []
+    });
+    game.runId = 'story-run';
+    const before = game.snapshotJournalResources();
+    game.player.obeliskDebt = 'redeemed';
+    game.recordEventDecision(
+        { name: 'Хранитель Расколотого Обелиска' },
+        { text: 'Выкупить силу' },
+        before
+    );
+
+    assert.match(game.player.journalLog[0].outcome, /сюжет: долг обелиска погашен/);
+});
+
+test('event journal records a deferred pilgrim reunion without changing resources', () => {
+    const game = gameWith({
+        hp: 40, maxHp: 70, gold: 20,
+        deck: [{ id: 'strike' }], relics: [],
+        pilgrimChoice: 'helped', journalLog: []
+    });
+    game.runId = 'story-run';
+    const before = game.snapshotJournalResources();
+    game.player.pilgrimChoice = 'repaid';
+    game.recordEventDecision(
+        { name: 'Возвращение паломника' },
+        { text: 'Принять благодарность' },
+        before
+    );
+
+    assert.match(game.player.journalLog[0].outcome, /сюжет: долг паломника возвращён/);
+});
