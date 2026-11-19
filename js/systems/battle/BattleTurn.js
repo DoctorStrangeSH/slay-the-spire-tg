@@ -97,7 +97,8 @@ class BattleTurn {
         enemy.pattern = nextPhase === 2
             ? ['attack', 'defend', 'attack']
             : ['attack', 'attack', 'defend', 'attack'];
-        enemy.patternIndex = 0;
+        enemy.patternIndex = 1;
+        battle.enemyIntent = enemy.pattern[0];
 
         if (nextPhase === 2) {
             battle.enemyBlock += 12;
