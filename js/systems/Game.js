@@ -301,11 +301,16 @@ class Game {
 
     snapshotJournalResources() {
         const player = this.player || {};
+        const identity = item => String(item?.id || item?.name || item?.cardId || 'unknown');
         return {
             hp: Number(player.hp) || 0,
             maxHp: Number(player.maxHp) || 0,
             gold: Number(player.gold) || 0,
-            cards: Array.isArray(player.deck) ? player.deck.length : 0
+            cards: Array.isArray(player.deck) ? player.deck.length : 0,
+            deckSignature: Array.isArray(player.deck)
+                ? player.deck.map(card => `${identity(card)}:${card?.upgraded ? 1 : 0}`).sort().join('|')
+                : '',
+            relics: Array.isArray(player.relics) ? player.relics.map(identity).sort() : []
         };
     }
 
@@ -316,9 +321,13 @@ class Game {
             ['HP', after.hp - before.hp],
             ['макс. HP', after.maxHp - before.maxHp],
             ['золото', after.gold - before.gold],
-            ['карты', after.cards - before.cards]
+            ['карт в колоде', after.cards - before.cards],
+            ['реликвий', after.relics.length - (before.relics?.length || 0)]
         ].filter(([, delta]) => delta !== 0)
             .map(([label, delta]) => `${label}: ${delta > 0 ? '+' : ''}${delta}`);
+        if (before.deckSignature !== after.deckSignature && after.cards === before.cards) {
+            deltas.push('состав колоды изменён');
+        }
         const previous = Array.isArray(this.player.journalLog) ? this.player.journalLog : [];
         this.player.journalLog = [...previous.slice(-49), {
             act: this.act,
