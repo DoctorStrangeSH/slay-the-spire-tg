@@ -70,3 +70,17 @@ test('short mobile viewports retain scrollable combat and visible touch actions'
     assert.match(compact, /env\(safe-area-inset-bottom\)/);
     assert.match(compact, /\.play-btn, #action-buttons \.end-btn\s*\{\s*min-height:\s*44px/);
 });
+
+
+test('atlas uses distinct illustrated materials for each act', () => {
+    const sections = ['garden', 'depths', 'citadel'].map(act => {
+        const selector = '#map-screen[data-act-theme="' + act + '"] #map-nodes';
+        const start = css.lastIndexOf(selector);
+        assert.ok(start >= 0, 'missing themed atlas: ' + act);
+        const rule = css.slice(start, css.indexOf('}', start));
+        assert.match(rule, /background:/);
+        assert.match(rule, /border-color:/);
+        return rule;
+    });
+    assert.equal(new Set(sections).size, 3);
+});
