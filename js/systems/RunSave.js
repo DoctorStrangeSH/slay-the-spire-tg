@@ -78,10 +78,10 @@ class RunSave {
             const legacyOptions = [
                 { enableSecretRooms: false },
                 { legacyCrossingLayout: true, enableSecretRooms: false },
-                { legacyOrganicLayout: true },
-                { legacyBranchingLayout: true },
-                { legacyLayout: true },
-                { legacyLayout: true, legacyTreasureShop: true }
+                { legacyOrganicLayout: true, enableSecretRooms: false },
+                { legacyBranchingLayout: true, enableSecretRooms: false },
+                { legacyLayout: true, enableSecretRooms: false },
+                { legacyLayout: true, legacyTreasureShop: true, enableSecretRooms: false }
             ];
             let recovered = false;
             for (const options of legacyOptions) {
