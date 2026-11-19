@@ -373,7 +373,7 @@ const MapUI = {
         line.setAttribute('stroke-linecap', 'round');
         
         line.setAttribute('class', 'spire-route' +
-            (node1.type === NODE_TYPES.SECRET && node2.floor > node1.floor + 1 ? ' spire-route--secret' : ''));
+            (node1.type === 'secret' && node2.floor > node1.floor + 1 ? ' spire-route--secret' : ''));
         line.setAttribute('data-route-from', node1.id);
         line.setAttribute('data-route-to', node2.id);
         const isVisited = node1.visited && node2.visited;
