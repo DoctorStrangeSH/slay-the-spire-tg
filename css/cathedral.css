@@ -2572,3 +2572,21 @@ button:disabled { opacity: .42; filter: grayscale(.5); }
   border-radius: 50%;
   box-shadow: 0 0 24px var(--event-glow), inset 0 0 25px var(--event-glow);
 }
+
+
+/* Secret shortcuts visibly bypass one floor and reconnect to the main route. */
+.spire-route--secret {
+  stroke: #b99ae8 !important;
+  stroke-width: 3.5 !important;
+  stroke-dasharray: 3 7 !important;
+  opacity: .9 !important;
+  filter: drop-shadow(0 0 5px #9b75d488);
+}
+.spire-room--secret.is-available circle {
+  stroke: #e4d1ff;
+  stroke-width: 3;
+  filter: drop-shadow(0 0 12px #a98be8cc);
+}
+.spire-room--secret.is-available .spire-room-icon {
+  filter: drop-shadow(0 0 5px #c6a6ff);
+}
