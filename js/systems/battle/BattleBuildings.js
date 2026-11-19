@@ -128,27 +128,29 @@ class BattleBuildings {
     
     // Срабатывание статусов на конструкциях в конце хода
     triggerStatusEffects(battle) {
-        this.buildings.forEach((building, index) => {
-            // Яд на конструкции
+        // Iterate backwards: removing a destroyed building must not skip the next
+        // building when multiple structures expire during the same end-of-turn tick.
+        for (let index = this.buildings.length - 1; index >= 0; index--) {
+            const building = this.buildings[index];
+
             if (building.statusEffects.poison > 0) {
                 building.hp -= building.statusEffects.poison;
                 building.statusEffects.poison--;
-                
+
                 if (building.hp <= 0) {
                     this.buildings.splice(index, 1);
                     if (battle.hasPower('systemOverload')) {
                         battle.enemy.hp -= 3;
                         battle.enemy.hp = Math.max(0, battle.enemy.hp);
                     }
-                    return;
+                    continue;
                 }
             }
-            
-            // Кровотечение на конструкции
+
             if (building.statusEffects.bleed > 0) {
                 building.hp -= building.statusEffects.bleed;
                 building.statusEffects.bleed--;
-                
+
                 if (building.hp <= 0) {
                     this.buildings.splice(index, 1);
                     if (battle.hasPower('systemOverload')) {
@@ -157,9 +159,9 @@ class BattleBuildings {
                     }
                 }
             }
-        });
+        }
     }
-    
+
     triggerEndOfTurn(battle) {
         const hasNexus = this.buildings.some(b => b.cardId === 'nexus');
         const doubleTrigger = battle.hasPower('totalAutomation');
