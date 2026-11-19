@@ -2097,3 +2097,22 @@ button:disabled { opacity: .42; filter: grayscale(.5); }
   #action-buttons .relic-btn, #action-buttons .deck-btn,
   #action-buttons .discard-btn { min-height: 36px; }
 }
+
+
+/* A route card previews the exact room and connecting edge on the atlas. */
+#map-nodes svg .spire-room.is-route-preview circle {
+  stroke: #fff0b8;
+  stroke-width: 5;
+  filter: drop-shadow(0 0 9px #f5bf72);
+}
+#map-nodes svg .spire-route.is-route-preview {
+  stroke: #f3d19a;
+  stroke-width: 5;
+  opacity: 1;
+  stroke-dasharray: none;
+  filter: drop-shadow(0 0 5px #edbd7e);
+}
+@media (prefers-reduced-motion: reduce) {
+  #map-nodes svg .spire-room.is-route-preview circle,
+  #map-nodes svg .spire-route.is-route-preview { transition: none; }
+}
