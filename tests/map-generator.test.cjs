@@ -991,3 +991,24 @@ test('singleton boss and treasure rooms are centred in the organic atlas', () =>
     assert.equal(MapUI.getNodeX(treasure, 520, 24), 260);
     assert.equal(MapUI.getNodeX(boss, 520, 24), 260);
 });
+
+
+test('organic atlas avoids long diagonal jumps on 500 seeded maps', () => {
+    const ui = readFileSync(join(__dirname, '../js/ui/MapUI.js'), 'utf8');
+    const window = { _currentMapOrganicLayout: true };
+    const MapUI = vm.runInNewContext(constants + '\n' + ui + '\nMapUI;', { window });
+    for (let seed = 0; seed < 500; seed++) {
+        const map = new MapGenerator(1, seed);
+        window._currentMapPaths = map.paths;
+        for (const room of map.allNodes) {
+            for (const id of room.connections) {
+                const next = map.findNodeById(id);
+                const distance = Math.abs(
+                    MapUI.getNodeX(room, 520, 24) -
+                    MapUI.getNodeX(next, 520, 24));
+                assert.ok(distance < 190,
+                    `wide map connection: seed ${seed}, ${room.id} -> ${id}: ${distance}`);
+            }
+        }
+    }
+});
