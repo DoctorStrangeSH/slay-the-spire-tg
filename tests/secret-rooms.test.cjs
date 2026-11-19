@@ -118,3 +118,19 @@ test('secret-room risk checks reject lethal blood and manuscript payments', () =
     assert.equal(event.options[0].action(), false);
     assert.equal(game.player.hp, 7);
 });
+
+
+test('map UI visibly seals the room and disables its route choice without the relic', () => {
+    const ui = readFileSync(join(__dirname, '../js/ui/MapUI.js'), 'utf8');
+    const styles = readFileSync(join(__dirname, '../css/cathedral.css'), 'utf8');
+    assert.ok(ui.includes('const isSecretLocked = node.type === NODE_TYPES.SECRET && !hasChronicle'));
+    assert.ok(ui.includes('button.disabled = secretLocked'));
+    assert.ok(ui.includes("hint = 'Запечатано · нужна Хроника предвидения'"));
+    assert.ok(styles.includes('.spire-room.is-sealed'));
+    assert.ok(styles.includes('.spire-next-card--secret'));
+});
+
+test('Chronicle of Foresight advertises its hidden-room discovery effect', () => {
+    const relics = readFileSync(join(__dirname, '../js/data/relics.js'), 'utf8');
+    assert.match(relics, /Хроника предвидения[\s\S]*?позволяет находить запечатанные тайные комнаты/);
+});
