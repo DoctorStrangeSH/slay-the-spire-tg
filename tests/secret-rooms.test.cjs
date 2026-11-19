@@ -268,3 +268,27 @@ test('settled and defaulted contracts produce different secret boss profiles', (
     assert.ok(settled.openingBlock > defaulted.openingBlock);
     assert.equal(defaulted.merchantConsequence, 'defaulted');
 });
+
+
+test('act three keeps its normal boss when the player never met the Veiled Merchant', () => {
+    const game = createGame();
+    game.player = { heroId: 'berserk', relics: [], veiledMerchantDeals: 0, veiledMerchantDebt: null };
+    game.act = 3;
+    let selected = null;
+    game.beginEncounter = enemy => { selected = enemy; };
+    game.startBossBattle();
+    assert.equal(selected.id, 'castleBoss');
+});
+
+test('secret boss victory is recorded in the run journal and reset for a fresh run', () => {
+    const game = createGame();
+    game.player = {
+        heroId: 'berserk', hp: 40, maxHp: 60, gold: 100, deck: [], relics: [],
+        secretBossDefeated: true
+    };
+    assert.ok(game.getRunJournalEntries().some(entry => entry.title === 'Сборщик Последнего Долга'));
+    game.generateNewMap = () => {};
+    game.showMap = () => {};
+    game.startNewGame();
+    assert.equal(game.player.secretBossDefeated, false);
+});
