@@ -176,3 +176,30 @@ test('achievement hall includes the flawless elite trial without changing legacy
     assert.equal(achievements.length, 13);
     assert.equal(achievements.find(item => item.name === 'Без единой царапины').unlocked, false);
 });
+
+
+test('flawless elite trial grants a universal title and obsidian card skin', () => {
+    const storage = memory();
+    const history = new RunHistory(storage);
+    assert.equal(history.rewardForHero('berserk'), null);
+    assert.equal(history.rewardForHero('engineer'), null);
+    assert.equal(history.rewardForHero('psyker'), null);
+
+    history.unlockChallenge('flawless_elite');
+    for (const heroId of ['berserk', 'engineer', 'psyker']) {
+        assert.deepEqual(history.rewardForHero(heroId), {
+            title: 'Непоколебимый', sigil: '✧', skin: 'flawless'
+        });
+    }
+    const achievement = history.achievements().find(item => item.name === 'Без единой царапины');
+    assert.equal(achievement.reward, 'Титул «Непоколебимый» и обсидиановый стиль карт');
+});
+
+test('class mastery reward takes priority over the universal flawless cosmetic', () => {
+    const history = new RunHistory(memory());
+    history.unlockChallenge('flawless_elite');
+    history.unlockChallenge('engineer_iron_line');
+    assert.equal(history.rewardForHero('engineer').title, 'Мастер механизмов');
+    assert.equal(history.rewardForHero('engineer').skin, 'engineer');
+    assert.equal(history.rewardForHero('berserk').skin, 'flawless');
+});
