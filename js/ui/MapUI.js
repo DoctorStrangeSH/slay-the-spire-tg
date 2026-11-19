@@ -398,6 +398,8 @@ const MapUI = {
         const title = document.createElementNS(svgNS, 'title');
         title.textContent = this.getNodeLabel(node.type) + (isAvailable ? ' — доступно' : isVisited ? ' — пройдено' : '');
         group.appendChild(title);
+        const ornament = this.createRoomOrnament(node.type, cx, cy, svgNS);
+        if (ornament) group.appendChild(ornament);
         group.appendChild(circle);
         
         // Иконка (не перехватывает клики)
@@ -427,6 +429,26 @@ const MapUI = {
         return group;
     },
     
+    createRoomOrnament(type, x, y, svgNS) {
+        // Silhouettes remain visible around the circular tap target.
+        // Decoration is non-interactive and cannot intercept room selection.
+        const designs = {
+            elite: `M ${x} ${y - 27} L ${x + 27} ${y} L ${x} ${y + 27} L ${x - 27} ${y} Z`,
+            shop: `M ${x - 24} ${y - 24} H ${x + 24} V ${y + 24} H ${x - 24} Z`,
+            rest: `M ${x - 26} ${y + 5} A 27 27 0 0 1 ${x + 26} ${y + 5}`,
+            treasure: `M ${x - 25} ${y - 12} L ${x} ${y - 27} L ${x + 25} ${y - 12} L ${x + 25} ${y + 12} L ${x} ${y + 27} L ${x - 25} ${y + 12} Z`,
+            boss: `M ${x - 32} ${y - 19} L ${x - 20} ${y - 32} L ${x} ${y - 24} L ${x + 20} ${y - 32} L ${x + 32} ${y - 19} L ${x + 28} ${y + 24} L ${x} ${y + 33} L ${x - 28} ${y + 24} Z`
+        };
+        if (!designs[type]) return null;
+        const ornament = document.createElementNS(svgNS, 'path');
+        ornament.setAttribute('class', 'spire-room-ornament spire-room-ornament--' + type);
+        ornament.setAttribute('d', designs[type]);
+        ornament.setAttribute('fill', 'none');
+        ornament.setAttribute('pointer-events', 'none');
+        ornament.setAttribute('aria-hidden', 'true');
+        return ornament;
+    },
+
     getNodeX(node, width, marginX) {
         const floorNodes = window._currentMapPaths?.[node.floor] || [];
         const availableWidth = width - 2 * marginX;
