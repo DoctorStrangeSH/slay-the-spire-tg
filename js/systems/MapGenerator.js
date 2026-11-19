@@ -75,8 +75,13 @@ class MapGenerator {
             const columns = [0, 1, 2, 3, 4, 5, 6];
             shuffleArray(columns, this.random);
             const positions = columns.slice(0, count).sort((a, b) => a - b);
+            // Strategic rooms keep their floor and quotas, but not a predictable
+            // left/middle/right slot on every new run. Legacy saves stay unchanged.
+            const roomTypes = special[floor] && !this.legacyOrganicLayout
+                ? shuffleArray([...special[floor]], this.random)
+                : special[floor];
             positions.forEach((position, index) => {
-                let type = special[floor]?.[index] || NODE_TYPES.BATTLE;
+                let type = roomTypes?.[index] || NODE_TYPES.BATTLE;
                 if (!special[floor] && floor > 1) {
                     const chance = this.random();
                     if (chance < 0.25) type = NODE_TYPES.EVENT;
