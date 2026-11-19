@@ -59,3 +59,14 @@ test('menu provides a route back from hero selection', () => {
     assert.match(html, /id="hero-back-button"/);
     assert.match(html, /onclick="game\.showMenu\(\)"/);
 });
+
+
+test('short mobile viewports retain scrollable combat and visible touch actions', () => {
+    const compact = css.slice(css.lastIndexOf('/* Compact landscape and small Telegram WebViews:'));
+    assert.match(compact, /@media \(max-width: 640px\) and \(max-height: 520px\)/);
+    assert.match(compact, /#battle-screen\s*\{[^}]*overflow-y:\s*auto/);
+    assert.match(compact, /#action-buttons\s*\{[^}]*position:\s*sticky;[^}]*bottom:\s*0/);
+    assert.match(compact, /#hand-area\s*\{[^}]*height:\s*112px/);
+    assert.match(compact, /env\(safe-area-inset-bottom\)/);
+    assert.match(compact, /\.play-btn, #action-buttons \.end-btn\s*\{\s*min-height:\s*44px/);
+});
