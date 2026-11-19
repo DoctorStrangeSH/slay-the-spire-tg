@@ -699,6 +699,9 @@ class Game {
 
     beginEncounter(enemy) {
         this.currentBattle = new BattleSystem(this.player, enemy);
+        if (enemy.isSecretBoss && Number(enemy.openingBlock) > 0) {
+            this.currentBattle.enemyBlock += Math.floor(enemy.openingBlock);
+        }
         // Благословение срабатывает только в первый ход боя, до появления экрана.
         const charges = Number(this.player?.blessingBattles) || 0;
         if (Number.isInteger(charges) && charges > 0) {
