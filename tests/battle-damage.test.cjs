@@ -50,7 +50,7 @@ test('self-damage uses the same cumulative tracker as incoming damage', () => {
 
 
 const turnSource = readFileSync(join(__dirname, '../js/systems/battle/BattleTurn.js'), 'utf8');
-const BattleTurn = vm.runInNewContext(turnSource + '\\nBattleTurn;', { Math });
+const BattleTurn = vm.runInNewContext(turnSource + '\nBattleTurn;', { Math });
 
 test('enemy attack records only health damage after block is absorbed', () => {
     const battle = {
