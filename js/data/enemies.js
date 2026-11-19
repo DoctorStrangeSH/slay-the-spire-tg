@@ -98,6 +98,40 @@ function getBossForAct(act) {
     return { ...ENEMIES[bossId] };
 }
 
+// Тайный босс появляется только после контакта с Безликим Торговцем.
+// Его исходные параметры отражают выбор игрока, а фазы развиваются в бою.
+function getVeiledBossForRun(player = {}) {
+    const consequence = ['owed', 'settled', 'defaulted', 'declined', 'purchased']
+        .includes(player.veiledMerchantDebt) ? player.veiledMerchantDebt : 'purchased';
+    const profiles = {
+        owed: { hp: 390, damage: 27, phaseBonus: 4, openingBlock: 0 },
+        settled: { hp: 330, damage: 22, phaseBonus: 2, openingBlock: 8 },
+        defaulted: { hp: 430, damage: 30, phaseBonus: 5, openingBlock: 0 },
+        declined: { hp: 360, damage: 25, phaseBonus: 3, openingBlock: 0 },
+        purchased: { hp: 380, damage: 26, phaseBonus: 4, openingBlock: 0 }
+    };
+    const profile = profiles[consequence];
+    return {
+        id: 'veiledCollector',
+        name: 'Сборщик Последнего Долга',
+        emoji: '⚖️',
+        maxHp: profile.hp,
+        hp: profile.hp,
+        damage: profile.damage,
+        baseDamage: profile.damage,
+        pattern: ['attack', 'defend', 'attack', 'attack'],
+        patternIndex: 0,
+        isBoss: true,
+        isSecretBoss: true,
+        specialAbility: 'debt_collector',
+        phase: 1,
+        phaseDamageBonus: profile.phaseBonus,
+        openingBlock: profile.openingBlock,
+        merchantConsequence: consequence,
+        merchantDeals: Math.max(0, Number(player.veiledMerchantDeals) || 0)
+    };
+}
+
 // Получить случайного врага
 function getRandomEnemy() {
     const regularEnemies = Object.values(ENEMIES).filter(e => !e.isBoss);
