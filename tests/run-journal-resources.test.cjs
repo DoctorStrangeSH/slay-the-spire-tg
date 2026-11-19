@@ -60,3 +60,31 @@ test('event journal keeps legacy entries and still reports resource deltas', () 
     assert.equal(game.player.journalLog.length, 2);
     assert.match(game.player.journalLog[1].outcome, /золото: \+15/);
 });
+
+
+test('event journal assigns a stable run-scoped id and ignores duplicate decisions', () => {
+    const game = gameWith({
+        hp: 40, maxHp: 70, gold: 20,
+        deck: [{ id: 'strike' }], relics: [], journalLog: []
+    });
+    game.runId = 'run-test-1';
+    const before = game.snapshotJournalResources();
+    assert.equal(game.recordEventDecision({ name: 'Fountain' }, { text: 'Drink' }, before), true);
+    assert.equal(game.recordEventDecision({ name: 'Fountain' }, { text: 'Drink again' }, before), false);
+    assert.equal(game.player.journalLog.length, 1);
+    assert.equal(game.player.journalLog[0].id, 'run-test-1:1:3:fountain');
+});
+
+test('event journal names relics gained and lost, not only their count', () => {
+    const game = gameWith({
+        hp: 40, maxHp: 70, gold: 20,
+        deck: [{ id: 'strike' }],
+        relics: [{ id: 'old-relic', name: 'Old Relic' }],
+        journalLog: []
+    });
+    const before = game.snapshotJournalResources();
+    game.player.relics = [{ id: 'new-relic', name: 'New Relic' }];
+    game.recordEventDecision({ name: 'Relic Trade' }, { text: 'Trade' }, before);
+    assert.match(game.player.journalLog[0].outcome, /получено: New Relic/);
+    assert.match(game.player.journalLog[0].outcome, /потеряно: Old Relic/);
+});
