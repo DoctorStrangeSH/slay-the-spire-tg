@@ -8,6 +8,7 @@ const vm = require('node:vm');
 const root = join(__dirname, '..');
 const source = [
     'js/config/constants.js',
+    'js/data/enemies.js',
     'js/data/relics.js',
     'js/systems/Game.js'
 ].map(path => readFileSync(join(root, path), 'utf8')).join('\n');
@@ -236,4 +237,34 @@ test('merchant encounter scenes and follow-up are registered in the event presen
     assert.ok(source.includes("'Сборщик Долгов': { style: 'debt-collector'"));
     assert.ok(styles.includes('data-event-scene="veiled-merchant"'));
     assert.ok(styles.includes('data-event-scene="debt-collector"'));
+});
+
+
+test('merchant purchase and refusal both leave a trace that unlocks the secret final boss', () => {
+    for (const choice of ['purchase', 'decline']) {
+        const game = createGame();
+        game.player = { heroId: 'berserk', hp: 40, maxHp: 60, gold: 100, relics: [], veiledMerchantDebt: null, veiledMerchantDeals: 0 };
+        game.act = 1;
+        const event = game.getRareEventsForAct().find(item => item.name === 'Безликий Торговец');
+        const option = choice === 'purchase' ? event.options[1] : event.options[2];
+        assert.equal(option.action(), true);
+        assert.ok(game.player.veiledMerchantDeals > 0);
+        if (choice === 'purchase') assert.equal(game.player.veiledMerchantDebt, 'purchased');
+        else assert.equal(game.player.veiledMerchantDebt, 'declined');
+        game.act = 3;
+        let selected = null;
+        game.beginEncounter = enemy => { selected = enemy; };
+        game.startBossBattle();
+        assert.equal(selected.id, 'veiledCollector');
+        assert.equal(selected.merchantConsequence, game.player.veiledMerchantDebt);
+    }
+});
+
+test('settled and defaulted contracts produce different secret boss profiles', () => {
+    const settled = getVeiledBossForRun({ veiledMerchantDebt: 'settled', veiledMerchantDeals: 1 });
+    const defaulted = getVeiledBossForRun({ veiledMerchantDebt: 'defaulted', veiledMerchantDeals: 1 });
+    assert.ok(defaulted.maxHp > settled.maxHp);
+    assert.ok(defaulted.damage > settled.damage);
+    assert.ok(settled.openingBlock > defaulted.openingBlock);
+    assert.equal(defaulted.merchantConsequence, 'defaulted');
 });
