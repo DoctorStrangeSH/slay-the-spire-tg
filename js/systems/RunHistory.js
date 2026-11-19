@@ -21,6 +21,7 @@ class RunHistory {
                 heroes: data.heroes && typeof data.heroes === 'object' && !Array.isArray(data.heroes) ? data.heroes : {},
                 heroVictories: data.heroVictories && typeof data.heroVictories === 'object' && !Array.isArray(data.heroVictories) ? data.heroVictories : {},
                 challenges: data.challenges && typeof data.challenges === 'object' && !Array.isArray(data.challenges) ? data.challenges : {},
+                selectedRewards: data.selectedRewards && typeof data.selectedRewards === 'object' && !Array.isArray(data.selectedRewards) ? data.selectedRewards : {},
                 recent: data.recent.slice(-RunHistory.MAX_RECENT) };
         } catch (_) {
             return this.empty();
@@ -71,21 +72,44 @@ class RunHistory {
         }
     }
 
-    rewardForHero(heroId, data = this.read()) {
+    availableRewardsForHero(heroId, data = this.read()) {
         const rewards = {
-            berserk: { challenge: 'berserk_last_breath', title: 'Клятвопреступник', sigil: '🩸', skin: 'berserk' },
-            engineer: { challenge: 'engineer_iron_line', title: 'Мастер механизмов', sigil: '⚙️', skin: 'engineer' },
-            psyker: { challenge: 'psyker_mind_chain', title: 'Разрушитель разума', sigil: '🔮', skin: 'psyker' }
+            berserk: { id: 'berserk_last_breath', challenge: 'berserk_last_breath', title: 'Клятвопреступник', sigil: '🩸', skin: 'berserk' },
+            engineer: { id: 'engineer_iron_line', challenge: 'engineer_iron_line', title: 'Мастер механизмов', sigil: '⚙️', skin: 'engineer' },
+            psyker: { id: 'psyker_mind_chain', challenge: 'psyker_mind_chain', title: 'Разрушитель разума', sigil: '🔮', skin: 'psyker' }
         };
-        const reward = rewards[heroId];
-        // Class mastery cosmetics take priority; the flawless trial is a universal fallback.
-        if (reward && data.challenges?.[reward.challenge] === true) {
-            return { title: reward.title, sigil: reward.sigil, skin: reward.skin };
+        const result = [];
+        const mastery = rewards[heroId];
+        if (mastery && data.challenges?.[mastery.challenge] === true) {
+            result.push({ id: mastery.id, title: mastery.title, sigil: mastery.sigil, skin: mastery.skin });
         }
         if (data.challenges?.flawless_elite === true) {
-            return { title: 'Непоколебимый', sigil: '✧', skin: 'flawless' };
+            result.push({ id: 'flawless_elite', title: 'Непоколебимый', sigil: '✧', skin: 'flawless' });
         }
-        return null;
+        return result;
+    }
+
+    equipReward(heroId, rewardId) {
+        if (!['berserk', 'engineer', 'psyker'].includes(heroId) || !this.storage) return false;
+        const data = this.read();
+        const available = this.availableRewardsForHero(heroId, data);
+        if (!available.some(reward => reward.id === rewardId)) return false;
+        data.selectedRewards[heroId] = rewardId;
+        try {
+            this.storage.setItem(RunHistory.KEY, JSON.stringify(data));
+            return true;
+        } catch (error) {
+            console.warn('Не удалось сохранить выбранную награду:', error);
+            return false;
+        }
+    }
+
+    rewardForHero(heroId, data = this.read()) {
+        const available = this.availableRewardsForHero(heroId, data);
+        if (!available.length) return null;
+        const selected = available.find(reward => reward.id === data.selectedRewards?.[heroId]);
+        // Keep the historical class-first default for profiles created before cosmetic selection.
+        return selected || available[0];
     }
 
     achievements(data = this.read()) {
