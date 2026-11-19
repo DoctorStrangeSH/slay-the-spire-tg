@@ -37,7 +37,10 @@ class Game {
             bossWins: 0,
             pilgrimChoice: null,
             obeliskDebt: null,
-            archiveDebt: null
+            archiveDebt: null,
+            classEventDebt: null,
+            classEventDebtAct: null,
+            classEventDebtFloor: null
         };
 
         this.startNewGame();
@@ -64,6 +67,9 @@ class Game {
         this.player.archiveDebt = null;
         this.player.archiveDebtAct = null;
         this.player.archiveDebtFloor = null;
+        this.player.classEventDebt = null;
+        this.player.classEventDebtAct = null;
+        this.player.classEventDebtFloor = null;
         this.act = 1;
         this.floor = 0;
 
@@ -366,6 +372,10 @@ class Game {
         else if (player.archiveDebt === 'healed') add('Запретный архив', 'Завершено', 'Чернильный Сборщик залечил ваш шрам.');
         else if (player.archiveDebt === 'sold') add('Запретный архив', 'Завершено', 'Вы продали страницу за золото и приняли кровавую метку.');
         else if (player.archiveDebt === 'burned') add('Запретный архив', 'Завершено', 'Вы сожгли книгу и оборвали историю.');
+        if (player.classEventDebt === 'berserk') add('Круг Кровавой Клятвы', 'Ожидает продолжения', 'Чемпион услышал твою клятву. Его эхо ждёт тебя глубже в шпиле.');
+        else if (player.classEventDebt === 'engineer') add('Мастерская Последнего Механика', 'Ожидает продолжения', 'Ты забрал чертёж. В мастерской обещали передать тебе оставшийся механизм.');
+        else if (player.classEventDebt === 'psyker') add('Шёпот Между Созвездиями', 'Ожидает продолжения', 'Ты коснулся звёздного разлома. Теперь он зовёт тебя снова.');
+        else if (['berserk-resolved', 'engineer-resolved', 'psyker-resolved'].includes(player.classEventDebt)) add('Классовое испытание', 'Завершено', 'Последствия твоего решения стали частью истории этого забега.');
         const mark = Number(player.bloodMarkBattles) || 0;
         if (mark > 0) add('Кровавая метка', 'Действует', `Потеря 4 HP в начале следующих ${mark} боёв.`);
         const exhaustion = Number(player.exhaustionBattles) || 0;
@@ -1331,6 +1341,15 @@ class Game {
             && (this.act > act || (this.act === act && this.floor > floor));
     }
 
+    canEncounterClassEventFollowUp() {
+        const pending = ['berserk', 'engineer', 'psyker'].includes(this.player?.classEventDebt);
+        if (!pending) return false;
+        const act = Number(this.player.classEventDebtAct);
+        const floor = Number(this.player.classEventDebtFloor);
+        return Number.isInteger(act) && Number.isInteger(floor)
+            && (this.act > act || (this.act === act && this.floor > floor));
+    }
+
     getEventsForAct() {
         const commonEvents = [
             {
@@ -1419,6 +1438,9 @@ class Game {
                         action: () => {
                             if (this.player.gold < 35) { alert('Недостаточно золота!'); return false; }
                             this.player.gold -= 35;
+                            this.player.classEventDebt = 'engineer';
+                            this.player.classEventDebtAct = this.act;
+                            this.player.classEventDebtFloor = this.floor;
                             this.offerCard();
                             return 'deferred';
                         }
@@ -1685,6 +1707,9 @@ class Game {
                             if (!relic) { alert('В круге не осталось реликвий, достойных тебя.'); return false; }
                             this.player.hp -= 8;
                             this.player.relics.push(relic.id);
+                            this.player.classEventDebt = 'berserk';
+                            this.player.classEventDebtAct = this.act;
+                            this.player.classEventDebtFloor = this.floor;
                             return true;
                         }
                     },
@@ -1719,9 +1744,12 @@ class Game {
                         text: 'Открыть разум (−7 HP, улучшить случайную карту)',
                         action: () => {
                             if (!this.applyForbiddenManuscript()) {
-                                alert('Нужно больше 7 HP и хотя бы одна карта для изменения!'); 
+                                alert('Нужно больше 7 HP и хотя бы одна карта для изменения!');
                                 return false;
                             }
+                            this.player.classEventDebt = 'psyker';
+                            this.player.classEventDebtAct = this.act;
+                            this.player.classEventDebtFloor = this.floor;
                             return true;
                         }
                     },
@@ -1735,6 +1763,64 @@ class Game {
         };
         const classEvent = classEvents[this.player?.heroId];
         if (classEvent) commonEvents.push(classEvent);
+
+        // A class decision can unlock one later encounter in the same run.
+        if (this.canEncounterClassEventFollowUp()) {
+            const followUps = {
+                berserk: {
+                    name: 'Эхо Павшего Чемпиона',
+                    description: 'В глубине шпиля кровь на твоих руках вспыхивает алым светом. Призрак чемпиона склоняет голову: клятва услышана. Он предлагает последнюю проверку — не силу удара, а цену, которую ты готов заплатить.',
+                    options: [
+                        { text: 'Принять благословение (+18 HP)', action: () => {
+                            this.player.hp = Math.min(this.player.maxHp, this.player.hp + 18);
+                            this.player.classEventDebt = 'berserk-resolved';
+                            return true;
+                        } },
+                        { text: 'Забрать трофей (+45 золота)', action: () => {
+                            this.player.gold += 45;
+                            this.player.classEventDebt = 'berserk-resolved';
+                            return true;
+                        } }
+                    ]
+                },
+                engineer: {
+                    name: 'Наследие Последнего Механика',
+                    description: 'На верстаке лежит запечатанный ящик. Чертёж, который ты купил, был лишь первой частью схемы. Внутри — механизм, способный усилить твоё снаряжение или оплатить следующую переделку.',
+                    options: [
+                        { text: 'Забрать механизм (+1 реликвия)', action: () => {
+                            const relic = chooseRelic(this.player.relics, Math.random, this.player.heroId);
+                            if (!relic) { alert('Подходящих реликвий больше нет.'); return false; }
+                            this.player.relics.push(relic.id);
+                            this.player.classEventDebt = 'engineer-resolved';
+                            return true;
+                        } },
+                        { text: 'Продать детали (+55 золота)', action: () => {
+                            this.player.gold += 55;
+                            this.player.classEventDebt = 'engineer-resolved';
+                            return true;
+                        } }
+                    ]
+                },
+                psyker: {
+                    name: 'Ответ Звёздного Разлома',
+                    description: 'Разлом раскрылся вновь. Теперь голос не требует крови — он предлагает выбрать, что оставить в памяти: ясность мысли или знание, которое можно обменять на золото.',
+                    options: [
+                        { text: 'Укрепить разум (+15 HP)', action: () => {
+                            this.player.hp = Math.min(this.player.maxHp, this.player.hp + 15);
+                            this.player.classEventDebt = 'psyker-resolved';
+                            return true;
+                        } },
+                        { text: 'Извлечь звёздный осколок (+40 золота)', action: () => {
+                            this.player.gold += 40;
+                            this.player.classEventDebt = 'psyker-resolved';
+                            return true;
+                        } }
+                    ]
+                }
+            };
+            const followUp = followUps[this.player.classEventDebt];
+            if (followUp) commonEvents.push(followUp);
+        }
 
         return actEvents[this.act] ? [...commonEvents, actEvents[this.act]] : commonEvents;
     }
