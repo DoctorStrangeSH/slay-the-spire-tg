@@ -209,3 +209,29 @@ test('Veiled Merchant refuses duplicate contracts and journals all outcomes', ()
         assert.ok(game.getRunJournalEntries().some(entry => entry.title === 'Договор с Безликим Торговцем'));
     }
 });
+
+
+test('new runs clear Veiled Merchant debt and deal history', () => {
+    const game = createGame();
+    game.player = {
+        heroId: 'berserk', hp: 30, maxHp: 60, gold: 90, deck: [], relics: [],
+        veiledMerchantDebt: 'defaulted', veiledMerchantAct: 1,
+        veiledMerchantFloor: 5, veiledMerchantDeals: 2
+    };
+    game.generateNewMap = () => {};
+    game.showMap = () => {};
+    game.startNewGame();
+    assert.equal(game.player.veiledMerchantDebt, null);
+    assert.equal(game.player.veiledMerchantAct, null);
+    assert.equal(game.player.veiledMerchantFloor, null);
+    assert.equal(game.player.veiledMerchantDeals, 0);
+});
+
+test('merchant encounter scenes and follow-up are registered in the event presentation', () => {
+    const source = readFileSync(join(__dirname, '../js/systems/Game.js'), 'utf8');
+    const styles = readFileSync(join(__dirname, '../css/cathedral.css'), 'utf8');
+    assert.ok(source.includes("'Безликий Торговец': { style: 'veiled-merchant'"));
+    assert.ok(source.includes("'Сборщик Долгов': { style: 'debt-collector'"));
+    assert.ok(styles.includes('data-event-scene="veiled-merchant"'));
+    assert.ok(styles.includes('data-event-scene="debt-collector"'));
+});
