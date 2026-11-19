@@ -40,6 +40,7 @@ test('all poisoned buildings are processed when multiple structures die together
 test('destroyed building is removed once and surviving neighbours still receive their status tick', () => {
     const system = new BattleBuildings();
     const survivor = structure(2, { poison: 1, bleed: 1 });
+    survivor.hp = 3;
     system.buildings = [
         structure(1, { poison: 3 }),
         survivor,
@@ -49,7 +50,7 @@ test('destroyed building is removed once and surviving neighbours still receive 
     system.triggerStatusEffects(battle());
 
     assert.deepEqual(Array.from(system.buildings, item => item.id), [2, 3]);
-    assert.equal(survivor.hp, 0);
+    assert.equal(survivor.hp, 1);
     assert.equal(survivor.statusEffects.poison, 0);
     assert.equal(survivor.statusEffects.bleed, 1);
     assert.equal(system.buildings[1].hp, 1);
