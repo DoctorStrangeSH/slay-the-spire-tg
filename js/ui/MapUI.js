@@ -250,7 +250,7 @@ const MapUI = {
         svg.setAttribute('width', '100%');
         svg.setAttribute('height', height);
         svg.setAttribute('viewBox', `0 0 ${width} ${height}`);
-        svg.setAttribute('role', 'img');
+        svg.setAttribute('role', 'group');
         svg.setAttribute('aria-label', 'Карта восхождения: двигайтесь снизу вверх по светящимся развилкам');
         
         // getNodeX needs the actual floor membership to centre single-room milestones.
@@ -376,22 +376,34 @@ const MapUI = {
             animate.setAttribute('repeatCount', 'indefinite');
             circle.appendChild(animate);
             
-            // Клик по кругу
-            circle.addEventListener('click', (e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                game.selectMapNode(node);
-            });
-            
-            // Клик по группе
+            // A forgiving transparent target makes narrow mobile atlas branches tappable.
+            // The visible circle and all decorative elements keep their original size.
+            const hitTarget = document.createElementNS(svgNS, 'circle');
+            hitTarget.setAttribute('class', 'spire-room-hit-target');
+            hitTarget.setAttribute('cx', cx);
+            hitTarget.setAttribute('cy', cy);
+            hitTarget.setAttribute('r', Math.max(radius, 30));
+            hitTarget.setAttribute('fill', 'transparent');
+            hitTarget.setAttribute('pointer-events', 'all');
+            group.appendChild(hitTarget);
+
+            group.setAttribute('role', 'button');
+            group.setAttribute('tabindex', '0');
+            const details = this.getRoomDetails(node.type);
+            group.setAttribute('aria-label', details.label + ' — доступно. ' + details.hint);
             group.addEventListener('click', (e) => {
                 e.preventDefault();
                 e.stopPropagation();
                 game.selectMapNode(node);
             });
-            
-            // Click уже работает с сенсорным вводом; отдельный touchend
-            // вызывал двойное открытие комнаты на некоторых WebView.
+            group.addEventListener('keydown', (e) => {
+                if (e.key !== 'Enter' && e.key !== ' ') return;
+                e.preventDefault();
+                e.stopPropagation();
+                game.selectMapNode(node);
+            });
+
+            // A click already covers touch input: touchend would select twice.
             group.style.pointerEvents = 'all';
         } else if (!isVisited && !isAvailable) {
             circle.setAttribute('opacity', '0.4');
