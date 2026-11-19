@@ -255,3 +255,31 @@ test('legacy history without cosmetic selections keeps its default reward priori
     assert.equal(history.rewardForHero('berserk').skin, 'berserk');
     assert.equal(JSON.stringify(history.read().selectedRewards), '{}');
 });
+
+
+test('cosmetic gallery reveals every reward, its condition and unlock state', () => {
+    const history = new RunHistory(memory());
+    const initial = history.cosmeticCollection();
+    assert.equal(initial.length, 4);
+    assert.equal(initial.filter(item => item.unlocked).length, 0);
+    assert.equal(initial.find(item => item.id === 'flawless_elite').requirement,
+        'Победить элиту, не потеряв HP за весь бой');
+
+    history.unlockChallenge('flawless_elite');
+    const unlocked = history.cosmeticCollection();
+    const flawless = unlocked.find(item => item.id === 'flawless_elite');
+    assert.equal(flawless.unlocked, true);
+    assert.equal(flawless.equipped, true);
+    assert.equal(unlocked.find(item => item.id === 'berserk_last_breath').unlocked, false);
+});
+
+test('cosmetic gallery marks the selected class reward as equipped', () => {
+    const history = new RunHistory(memory());
+    history.unlockChallenge('flawless_elite');
+    history.unlockChallenge('engineer_iron_line');
+    assert.equal(history.equipReward('engineer', 'engineer_iron_line'), true);
+    const gallery = history.cosmeticCollection();
+    assert.equal(gallery.find(item => item.id === 'engineer_iron_line').equipped, true);
+    assert.equal(gallery.find(item => item.id === 'flawless_elite').equipped, true);
+    assert.equal(gallery.find(item => item.id === 'psyker_mind_chain').unlocked, false);
+});
