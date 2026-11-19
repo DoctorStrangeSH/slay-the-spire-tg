@@ -148,12 +148,17 @@ class BattleCards {
         
         const sortedIndices = [...battle.selectedCards].sort((a, b) => b - a);
         
-        sortedIndices.forEach(cardIndex => {
-            if (battle.hand[cardIndex]) {
-                this.playCard(battle, cardIndex);
+        // Route every card through BattleSystem.playCard, including its
+        // after-play effects (adaptation, onslaught, versatility and relics).
+        for (const cardIndex of sortedIndices) {
+            if (!battle.hand[cardIndex]) continue;
+            const result = battle.playCard(cardIndex);
+            if (!result.success) {
+                battle.selectedCards = [];
+                return result;
             }
-        });
-        
+        }
+
         battle.selectedCards = [];
         return { success: true };
     }
