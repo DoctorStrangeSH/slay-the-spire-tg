@@ -223,7 +223,7 @@ const BattleUI = {
         handArea.innerHTML = '';
 
         battle.hand.forEach((card, index) => {
-            const cardEl = this.createCardElement(card, index, battle);
+            const cardEl = this.createCardElement(card, index, battle, game);
             handArea.appendChild(cardEl);
         });
         handArea.scrollLeft = scrollLeft;
@@ -233,7 +233,7 @@ const BattleUI = {
         }
     },
     
-    createCardElement(card, index, battle) {
+    createCardElement(card, index, battle, game) {
         const cardDiv = document.createElement('div');
         const rarity = CardArt.rarity(card);
         cardDiv.className = `card card-type-${card.type} card-rarity-${rarity.key}`;
@@ -272,6 +272,7 @@ const BattleUI = {
 
         cardDiv.onclick = () => game.selectCard(index);
         cardDiv.onkeydown = event => {
+            if (event.target !== cardDiv) return;
             if (event.key === 'Enter' || event.key === ' ') {
                 event.preventDefault();
                 cardDiv.click();
