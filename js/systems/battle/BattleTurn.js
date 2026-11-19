@@ -41,6 +41,14 @@ class BattleTurn {
             battle.enemy.hp = Math.max(0, battle.enemy.hp);
         }
         
+        // Яд врага наносит периодический урон в конце его хода.
+        // Сначала проходит атака/защита, затем яд и кровотечение, как и остальные DOT-эффекты.
+        if (battle.statusEffects.enemy.poison > 0) {
+            battle.enemy.hp -= Math.floor(battle.statusEffects.enemy.poison);
+            battle.enemy.hp = Math.max(0, Math.floor(battle.enemy.hp));
+            battle.statusEffects.enemy.poison--;
+        }
+
         // Кровотечение врага
         if (battle.statusEffects.enemy.bleed > 0) {
             battle.enemy.hp -= Math.floor(battle.statusEffects.enemy.bleed);
