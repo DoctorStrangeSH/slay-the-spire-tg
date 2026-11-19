@@ -310,7 +310,9 @@ class Game {
             deckSignature: Array.isArray(player.deck)
                 ? player.deck.map(card => `${identity(card)}:${card?.upgraded ? 1 : 0}`).sort().join('|')
                 : '',
-            relics: Array.isArray(player.relics) ? player.relics.map(identity).sort() : []
+            relics: Array.isArray(player.relics)
+                ? player.relics.map(item => String(item?.name || item?.id || item?.relicId || 'unknown')).sort()
+                : []
         };
     }
 
