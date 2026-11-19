@@ -2503,3 +2503,42 @@ button:disabled { opacity: .42; filter: grayscale(.5); }
   border-radius: 50%;
   box-shadow: 0 0 24px var(--event-glow), inset 0 0 25px var(--event-glow);
 }
+
+
+/* Rare secret rooms are sealed until the Chronicle of Foresight is owned. */
+#map-nodes svg .spire-room.is-sealed {
+  opacity: .48;
+  cursor: not-allowed;
+}
+#map-nodes svg .spire-room.is-sealed circle {
+  stroke: #b6a0dc;
+  stroke-dasharray: 3 4;
+  filter: drop-shadow(0 0 5px #72579b66);
+}
+#map-nodes svg .spire-room.is-sealed .spire-room-ornament {
+  stroke: #8e78b8;
+  stroke-dasharray: 4 4;
+}
+#map-nodes svg .spire-room-ornament--secret {
+  stroke: #c2a9f2;
+  stroke-width: 3;
+  filter: drop-shadow(0 0 9px #8d6dc8aa);
+}
+#map-nodes svg .spire-room.is-available.spire-room--secret circle {
+  stroke: #e0caff;
+  stroke-width: 3;
+  filter: drop-shadow(0 0 12px #a98be8cc);
+}
+.spire-next-card--secret {
+  border-color: #8d76b7;
+  background: linear-gradient(145deg, #30283d, #15131d);
+}
+.spire-next-card--secret .spire-next-icon {
+  color: #d7c0ff;
+  text-shadow: 0 0 12px #a98be8;
+}
+.spire-next-card:disabled {
+  opacity: .58;
+  cursor: not-allowed;
+  filter: grayscale(.35);
+}
