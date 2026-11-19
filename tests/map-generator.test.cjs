@@ -942,3 +942,23 @@ test('atlas renders legible floor indices and marks major milestones', () => {
         assert.match(markers[floor].attrs.class, /is-milestone/);
     }
 });
+
+
+test('important rooms have distinct non-interactive atlas silhouettes', () => {
+    const ui = readFileSync(join(__dirname, '../js/ui/MapUI.js'), 'utf8');
+    const document = {
+        createElementNS(namespace, tag) {
+            return {
+                tag, attrs: {},
+                setAttribute(name, value) { this.attrs[name] = value; }
+            };
+        }
+    };
+    const MapUI = vm.runInNewContext(ui + '\nMapUI;', { document, window: {} });
+    const types = ['elite', 'shop', 'rest', 'treasure', 'boss'];
+    const ornaments = types.map(type => MapUI.createRoomOrnament(type, 100, 100, 'svg'));
+    assert.equal(new Set(ornaments.map(ornament => ornament.attrs.d)).size, types.length);
+    assert.ok(ornaments.every(ornament => ornament.attrs['pointer-events'] === 'none'));
+    assert.ok(ornaments.every(ornament => ornament.attrs['aria-hidden'] === 'true'));
+    assert.equal(MapUI.createRoomOrnament('battle', 100, 100, 'svg'), null);
+});
