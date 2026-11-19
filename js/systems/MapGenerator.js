@@ -97,15 +97,28 @@ class MapGenerator {
         if (this.enableSecretRooms && !this.legacyOrganicLayout && !this.legacyBranchingLayout && !this.legacyCrossingLayout) this.placeSecretRoom();
     }
 
-    // Один редкий тайник может скрыться среди обычных событий на каждом акте.
-    // Мы переиспользуем узел, чтобы не менять геометрию и связность карты.
+    // Редкая тайная комната становится отдельной развилкой:
+    // её вход заменяет событие, а выход перескакивает через один этаж.
     placeSecretRoom() {
         if (this.random() >= 0.22) return false;
         const candidates = this.allNodes.filter(node =>
-            node.floor >= 3 && node.floor <= 12 && node.type === NODE_TYPES.EVENT);
+            node.floor >= 3 && node.floor <= 12 &&
+            node.type === NODE_TYPES.EVENT &&
+            this.paths[node.floor + 2]?.length > 0);
         if (!candidates.length) return false;
+
         const chosen = candidates[this.randomInt(0, candidates.length - 1)];
+        const exits = this.paths[chosen.floor + 2];
+        if (!exits?.length) return false;
+
         chosen.type = NODE_TYPES.SECRET;
+        chosen.secretRoute = true;
+        chosen.skippedFloor = chosen.floor + 1;
+        chosen.connections = [];
+
+        // The secret route is a shortcut, not a dead end. It reconnects to
+        // every room on the floor after the skipped one so no lane is isolated.
+        for (const exit of exits) chosen.connections.push(exit.id);
         return true;
     }
 
