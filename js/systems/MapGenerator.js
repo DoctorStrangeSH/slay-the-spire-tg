@@ -114,11 +114,13 @@ class MapGenerator {
         chosen.type = NODE_TYPES.SECRET;
         chosen.secretRoute = true;
         chosen.skippedFloor = chosen.floor + 1;
-        chosen.connections = [];
 
-        // The secret route is a shortcut, not a dead end. It reconnects to
-        // every room on the floor after the skipped one so no lane is isolated.
-        for (const exit of exits) chosen.connections.push(exit.id);
+        // Keep the original next-floor exits and add a second, optional exit
+        // beyond the skipped floor. The player chooses the shortcut after
+        // resolving the secret chamber, so existing lanes stay reachable.
+        for (const exit of exits) {
+            if (!chosen.connections.includes(exit.id)) chosen.connections.push(exit.id);
+        }
         return true;
     }
 
