@@ -115,3 +115,13 @@ test('card inspection keeps description readable and separate from selection', (
     assert.match(styles, /\.card-inspect-button/);
     assert.match(styles, /\.card-details-description/);
 });
+
+test('compact mobile hand reserves space for art, card names and effects', () => {
+    const css = fs.readFileSync(path.join(root, 'css/cathedral.css'), 'utf8');
+    const mobile = css.slice(css.indexOf('/* Compact card anatomy:'));
+    assert.match(mobile, /@media \(max-width: 640px\)/);
+    assert.match(mobile, /#hand-area \.card-art-frame[\s\S]*?height: clamp\(34px, 8dvh, 51px\)/);
+    assert.match(mobile, /#hand-area \.card-name[\s\S]*?-webkit-line-clamp: 2/);
+    assert.match(mobile, /#hand-area \.card-description[\s\S]*?-webkit-line-clamp: 2/);
+    assert.match(mobile, /#hand-area \.card-inspect-button[\s\S]*?28px/);
+});
