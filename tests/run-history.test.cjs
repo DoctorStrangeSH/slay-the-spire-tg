@@ -157,3 +157,22 @@ test('hero cosmetic card skins are tied to completed trials', () => {
     history.unlockChallenge('psyker_mind_chain');
     assert.equal(history.rewardForHero('psyker').skin, 'psyker');
 });
+
+
+test('flawless elite achievement is permanent and unlocks only once', () => {
+    const storage = memory();
+    const history = new RunHistory(storage);
+    assert.equal(history.unlockChallenge('flawless_elite'), true);
+    assert.equal(history.unlockChallenge('flawless_elite'), false);
+    const reopened = new RunHistory(storage);
+    const achievement = reopened.achievements().find(item => item.name === 'Без единой царапины');
+    assert.equal(achievement.unlocked, true);
+    assert.equal(achievement.category, 'general');
+});
+
+test('achievement hall includes the flawless elite trial without changing legacy totals', () => {
+    const history = new RunHistory(memory());
+    const achievements = history.achievements();
+    assert.equal(achievements.length, 13);
+    assert.equal(achievements.find(item => item.name === 'Без единой царапины').unlocked, false);
+});
