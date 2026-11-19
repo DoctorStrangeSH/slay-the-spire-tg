@@ -44,7 +44,8 @@ class Game {
             veiledMerchantDebt: null,
             veiledMerchantAct: null,
             veiledMerchantFloor: null,
-            veiledMerchantDeals: 0
+            veiledMerchantDeals: 0,
+            secretBossDefeated: false
         };
 
         this.startNewGame();
@@ -78,6 +79,7 @@ class Game {
         this.player.veiledMerchantAct = null;
         this.player.veiledMerchantFloor = null;
         this.player.veiledMerchantDeals = 0;
+        this.player.secretBossDefeated = false;
         this.act = 1;
         this.floor = 0;
 
@@ -388,6 +390,8 @@ class Game {
         else if (player.veiledMerchantDebt === 'settled') add('Договор с Безликим Торговцем', 'Оплачен', 'Ты вернул долг и сохранил своё имя.');
         else if (player.veiledMerchantDebt === 'defaulted') add('Договор с Безликим Торговцем', 'Нарушен', 'Ты отказался платить. Секретный босс узнает о твоём предательстве и станет сильнее.');
         else if (player.veiledMerchantDebt === 'declined') add('Безликий Торговец', 'Предложение отвергнуто', 'Ты не стал заключать договор.');
+        else if (player.veiledMerchantDebt === 'purchased') add('Безликий Торговец', 'Покупка совершена', 'Ты приобрёл реликвию. Торговец запомнил сделку.');
+        if (player.secretBossDefeated) add('Сборщик Последнего Долга', 'Побеждён', 'Ты разорвал контракт и победил взыскателя в его истинной форме.');
         const secretRooms = Number(player.secretRoomsFound) || 0;
         if (secretRooms > 0) add('Тайные комнаты', 'Обнаружено', `Найдено скрытых комнат: ${secretRooms}. Выборов сделано: ${Number(player.secretRoomChoices) || 0}.`);
         const mark = Number(player.bloodMarkBattles) || 0;
@@ -685,7 +689,11 @@ class Game {
 
     startBossBattle() {
         this.currentBattleIsElite = false;
-        const boss = getBossForAct(this.act);
+        const merchantTouched = (Number(this.player?.veiledMerchantDeals) || 0) > 0 ||
+            ['owed', 'settled', 'defaulted', 'declined', 'purchased'].includes(this.player?.veiledMerchantDebt);
+        const boss = this.act === 3 && merchantTouched
+            ? getVeiledBossForRun(this.player)
+            : getBossForAct(this.act);
         this.beginEncounter(boss);
     }
 
@@ -901,7 +909,10 @@ class Game {
             this.player.battleWins = (Number(this.player.battleWins) || 0) + 1;
             if (elite) this.player.eliteWins = (Number(this.player.eliteWins) || 0) + 1;
             if (boss) this.player.bossWins = (Number(this.player.bossWins) || 0) + 1;
+            const secretBoss = this.currentBattle?.enemy?.isSecretBoss === true;
+            if (secretBoss) this.player.secretBossDefeated = true;
             let goldReward = Math.floor(Math.random() * 20) + (elite ? 25 : 10);
+            if (secretBoss) goldReward += 80;
             let relic = null;
             if (elite) {
                 relic = chooseRelic(this.player.relics, Math.random, this.player.heroId);
@@ -1412,11 +1423,13 @@ class Game {
                         this.player.gold -= 65;
                         this.player.relics.push(relic.id);
                         this.player.veiledMerchantDeals = (Number(this.player.veiledMerchantDeals) || 0) + 1;
+                        if (!this.player.veiledMerchantDebt) this.player.veiledMerchantDebt = 'purchased';
                         return true;
                     }
                 },
                 { text: 'Отказаться от сделки', action: () => {
                     this.player.veiledMerchantDebt = this.player.veiledMerchantDebt || 'declined';
+                    this.player.veiledMerchantDeals = (Number(this.player.veiledMerchantDeals) || 0) + 1;
                     return true;
                 } }
             ]
