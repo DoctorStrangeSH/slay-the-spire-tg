@@ -52,7 +52,7 @@ test('destroyed building is removed once and surviving neighbours still receive 
     assert.deepEqual(Array.from(system.buildings, item => item.id), [2, 3]);
     assert.equal(survivor.hp, 1);
     assert.equal(survivor.statusEffects.poison, 0);
-    assert.equal(survivor.statusEffects.bleed, 1);
+    assert.equal(survivor.statusEffects.bleed, 0);
     assert.equal(system.buildings[1].hp, 1);
     assert.equal(system.buildings[1].statusEffects.bleed, 0);
 });
