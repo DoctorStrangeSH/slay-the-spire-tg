@@ -43,8 +43,6 @@ const BattleUI = {
         } else {
             enemyArea.removeAttribute('data-boss-consequence');
         }
-        if (enemy.isSecretBoss) enemyArea.setAttribute('data-boss-phase', String(enemy.phase || 1));
-        else enemyArea.removeAttribute('data-boss-phase');
         
         document.getElementById('enemy-hp-text').innerHTML = 
             `❤️ <span class="hp-current">${Math.floor(enemy.hp)}</span>/${Math.floor(enemy.maxHp)}`;
