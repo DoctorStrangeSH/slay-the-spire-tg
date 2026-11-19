@@ -2542,3 +2542,33 @@ button:disabled { opacity: .42; filter: grayscale(.5); }
   cursor: not-allowed;
   filter: grayscale(.35);
 }
+
+
+/* Each hidden chamber carries a distinct visual signature. */
+.cathedral-event-modal[data-event-scene="secret-blood-vault"] {
+  --event-accent: #ef8e98;
+  --event-glow: #8e253d99;
+}
+.cathedral-event-modal[data-event-scene="secret-blood-vault"] .cathedral-event-halo {
+  border: 3px double var(--event-accent);
+  border-radius: 50%;
+  box-shadow: 0 0 26px var(--event-glow), inset 0 0 22px var(--event-glow);
+}
+.cathedral-event-modal[data-event-scene="secret-arsenal"] {
+  --event-accent: #e7c17d;
+  --event-glow: #80603799;
+}
+.cathedral-event-modal[data-event-scene="secret-arsenal"] .cathedral-event-halo {
+  border: 5px double var(--event-accent);
+  border-radius: 10px;
+  box-shadow: 0 0 24px var(--event-glow);
+}
+.cathedral-event-modal[data-event-scene="secret-astral-crypt"] {
+  --event-accent: #c1aafa;
+  --event-glow: #55418f99;
+}
+.cathedral-event-modal[data-event-scene="secret-astral-crypt"] .cathedral-event-halo {
+  border: 2px solid var(--event-accent);
+  border-radius: 50%;
+  box-shadow: 0 0 24px var(--event-glow), inset 0 0 25px var(--event-glow);
+}
