@@ -225,7 +225,9 @@ const MapUI = {
             button.type = 'button';
             button.disabled = secretLocked;
             button.className = 'spire-next-card spire-next-card--' + node.type;
-            const forecast = this.getRouteForecast(node, game.mapGenerator);
+            const forecast = secretLocked
+                ? 'Содержимое прохода скрыто до получения Хроники предвидения'
+                : this.getRouteForecast(node, game.mapGenerator);
             const advice = this.getRouteAdvice(node.type, game.player);
             const outlook = this.getRouteOutlook(node, game.mapGenerator);
             button.setAttribute('aria-label', details.label + '. ' + details.hint +
@@ -330,9 +332,12 @@ const MapUI = {
             svg.appendChild(label);
         }
 
-        // Рисуем соединения
+        // Пока Хроника не найдена, запечатанный узел не раскрывает свои выходы.
+        const hasChronicle = Array.isArray(game.player?.relics) &&
+            game.player.relics.includes('chronicle');
         game.mapGenerator.paths.forEach((floorNodes) => {
             floorNodes.forEach(node => {
+                if (node.type === NODE_TYPES.SECRET && !hasChronicle) return;
                 node.connections.forEach(connId => {
                     const targetNode = game.mapGenerator.findNodeById(connId);
                     if (targetNode) {
