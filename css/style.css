@@ -1017,3 +1017,27 @@ body {
 }
 .relic-entry strong { color: #ffdd91; font-size: 15px; }
 .relic-entry span { color: #e4dfea; font-size: 13px; }
+
+
+/* Secret final boss: a distinct fourth act-theme within the existing battle screen. */
+#enemy-area.boss-secret {
+  border-color: rgba(183, 151, 220, .82);
+  background:
+    radial-gradient(ellipse at 50% 18%, rgba(124, 83, 161, .3), transparent 58%),
+    linear-gradient(155deg, rgba(31, 22, 43, .98), rgba(12, 10, 18, .98));
+  box-shadow: 0 0 0 1px rgba(196, 161, 235, .18), 0 0 34px rgba(113, 72, 153, .22),
+    inset 0 0 30px rgba(109, 72, 145, .12);
+}
+#enemy-area.boss-secret::before {
+  content: attr(data-boss-title);
+  color: #d9c4f3;
+  text-shadow: 0 0 12px rgba(172, 132, 216, .55);
+}
+#enemy-area.boss-secret[data-boss-phase="2"] {
+  border-color: rgba(205, 157, 112, .9);
+  box-shadow: 0 0 34px rgba(167, 108, 66, .25), inset 0 0 30px rgba(167, 108, 66, .13);
+}
+#enemy-area.boss-secret[data-boss-phase="3"] {
+  border-color: rgba(220, 91, 105, .95);
+  box-shadow: 0 0 42px rgba(186, 55, 76, .32), inset 0 0 34px rgba(186, 55, 76, .18);
+}
