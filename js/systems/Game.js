@@ -187,6 +187,16 @@ class Game {
                     if (this.player?.heroId === id && this.gameState === 'battle') {
                         document.getElementById('battle-screen').dataset.cardSkin = equipped?.skin || '';
                     }
+                    const equippedIds = new Set(this.runHistory.cosmeticCollection()
+                        .filter(item => item.equipped).map(item => item.id));
+                    panel.querySelectorAll('.cathedral-cosmetic-card').forEach(card => {
+                        card.querySelector('.cathedral-cosmetic-equipped')?.remove();
+                        if (!equippedIds.has(card.dataset.cosmeticId)) return;
+                        const badge = document.createElement('span');
+                        badge.className = 'cathedral-cosmetic-equipped';
+                        badge.textContent = 'Надето';
+                        card.appendChild(badge);
+                    });
                 });
             }
             row.appendChild(rewardSelect);
@@ -206,6 +216,7 @@ class Game {
         for (const cosmetic of collection) {
             const card = document.createElement('article');
             card.className = 'cathedral-cosmetic-card';
+            card.dataset.cosmeticId = cosmetic.id;
             card.classList.toggle('cathedral-cosmetic-card--locked', !cosmetic.unlocked);
             const heading = document.createElement('strong');
             heading.textContent = `${cosmetic.unlocked ? cosmetic.sigil : '🔒'} ${cosmetic.unlocked ? cosmetic.title : '???'}`;
