@@ -160,6 +160,28 @@ const MapUI = {
             (branchCount > 1 ? ` · ${branchCount} варианта пути` : ' · один путь');
     },
 
+    getRouteOutlook(node, mapGenerator) {
+        if (!node || !Array.isArray(node.connections) || !mapGenerator) return '';
+        // Two moves after the selected room. Count *reachable* rooms, not
+        // every room on that floor: crossing to another lane is not allowed.
+        const first = node.connections.map(id => mapGenerator.findNodeById(id)).filter(Boolean);
+        const second = [...new Map(first.flatMap(room => (room.connections || [])
+            .map(id => mapGenerator.findNodeById(id))
+            .filter(Boolean)).map(room => [room.id, room])).values()];
+        if (!second.length) return '';
+        const priorities = [NODE_TYPES.REST, NODE_TYPES.SHOP, NODE_TYPES.ELITE, NODE_TYPES.TREASURE, NODE_TYPES.BOSS];
+        const available = priorities.filter(type => second.some(room => room.type === type));
+        if (!available.length) return '';
+        const guaranteed = second.every(room => room.type === available[0]);
+        if (guaranteed) {
+            return 'Через 2 перехода: ' + this.getNodeIcon(available[0]) + ' ' +
+                this.getNodeLabel(available[0]) + ' — неизбежно';
+        }
+        return 'Через 2 перехода возможны: ' + available.slice(0, 2)
+            .map(type => this.getNodeIcon(type) + ' ' + this.getNodeLabel(type)).join(' · ') +
+            (available.length > 2 ? ' · ещё варианты' : '');
+    },
+
     renderNextChoices(container, game) {
         const choices = game.mapGenerator.getAvailableNodes(game.currentNodeId)
             .sort((a, b) => a.x - b.x);
@@ -180,8 +202,10 @@ const MapUI = {
             button.className = 'spire-next-card spire-next-card--' + node.type;
             const forecast = this.getRouteForecast(node, game.mapGenerator);
             const advice = this.getRouteAdvice(node.type, game.player);
+            const outlook = this.getRouteOutlook(node, game.mapGenerator);
             button.setAttribute('aria-label', details.label + '. ' + details.hint +
-                (forecast ? '. ' + forecast : '') + (advice ? '. ' + advice : ''));
+                (forecast ? '. ' + forecast : '') + (outlook ? '. ' + outlook : '') +
+                (advice ? '. ' + advice : ''));
             const icon = document.createElement('span');
             icon.className = 'spire-next-icon';
             icon.textContent = this.getNodeIcon(node.type);
@@ -201,6 +225,12 @@ const MapUI = {
                 context.className = 'spire-next-advice';
                 context.textContent = advice;
                 copy.appendChild(context);
+            }
+            if (outlook) {
+                const longView = document.createElement('span');
+                longView.className = 'spire-next-forecast';
+                longView.textContent = outlook;
+                copy.appendChild(longView);
             }
             if (forecast) {
                 const future = document.createElement('span');
