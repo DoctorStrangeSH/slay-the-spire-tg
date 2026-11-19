@@ -2166,3 +2166,24 @@ button:disabled { opacity: .42; filter: grayscale(.5); }
   border-color: #9e7ba988;
   box-shadow: inset 0 0 55px #090712, 0 16px 38px #0008;
 }
+
+
+/* Room silhouettes add a second visual cue beyond colour and emoji. */
+#map-nodes svg .spire-room-ornament {
+  stroke: #d7bd8d;
+  stroke-width: 2.5;
+  opacity: .9;
+  stroke-linejoin: round;
+  filter: drop-shadow(0 2px 4px #000c);
+}
+#map-nodes svg .spire-room-ornament--elite { stroke: #f0bc6b; stroke-width: 3; }
+#map-nodes svg .spire-room-ornament--shop { stroke: #88b5cb; stroke-dasharray: 5 3; }
+#map-nodes svg .spire-room-ornament--rest { stroke: #a0dab8; stroke-width: 3.5; }
+#map-nodes svg .spire-room-ornament--treasure { stroke: #eac77a; stroke-width: 3; }
+#map-nodes svg .spire-room-ornament--boss {
+  stroke: #ed8893;
+  stroke-width: 3.5;
+  filter: drop-shadow(0 0 8px #a53b4d77);
+}
+#map-nodes svg .spire-room.is-future .spire-room-ornament { opacity: .44; }
+#map-nodes svg .spire-room.is-route-preview .spire-room-ornament { opacity: 1; stroke: #fff1b9; }
