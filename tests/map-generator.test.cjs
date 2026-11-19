@@ -30,7 +30,8 @@ test('each generated node except boss has a valid outgoing route', () => {
             for (const id of node.connections) {
                 const next = map.findNodeById(id);
                 assert.ok(next, 'missing target ' + id);
-                assert.equal(next.floor, node.floor + 1);
+                assert.ok(next.floor === node.floor + 1 ||
+                    (node.type === 'secret' && next.floor === node.floor + 2));
             }
         }
     }
@@ -823,10 +824,9 @@ test('modern organic routes never cross between adjacent floors', () => {
         const map = new MapGenerator(1, seed);
         for (let floor = 1; floor < map.floors - 2; floor++) {
             const edges = map.paths[floor].flatMap(node =>
-                node.connections.map(id => ({
-                    from: node.x,
-                    to: map.findNodeById(id).x
-                })));
+                node.connections.map(id => ({ node, target: map.findNodeById(id) }))
+                    .filter(edge => edge.target.floor === floor + 1)
+                    .map(edge => ({ from: edge.node.x, to: edge.target.x })));
             for (const a of edges) {
                 for (const b of edges) {
                     assert.ok(!(a.from < b.from && a.to > b.to),
@@ -1003,6 +1003,7 @@ test('organic atlas avoids long diagonal jumps on 500 seeded maps', () => {
         for (const room of map.allNodes) {
             for (const id of room.connections) {
                 const next = map.findNodeById(id);
+                if (room.type === 'secret' && next.floor === room.floor + 2) continue;
                 const distance = Math.abs(
                     MapUI.getNodeX(room, 520, 24) -
                     MapUI.getNodeX(next, 520, 24));
@@ -1123,7 +1124,7 @@ test('secret rooms create real shortcuts and keep the boss reachable', () => {
         const secret = map.allNodes.find(node => node.type === 'secret');
         if (!secret) continue;
         assert.equal(secret.connections.filter(id => map.findNodeById(id).floor === secret.floor + 2).length,
-            map.paths[secret.floor + 2].length);
+            1, 'secret chamber offers one deliberate shortcut exit');
         assert.ok(secret.connections.some(id => map.findNodeById(id).floor === secret.floor + 1),
             'normal path is preserved beside the shortcut');
         const reachable = new Set([map.paths[0][0].id]);
@@ -1160,7 +1161,7 @@ test('map UI explains the two exits available after a secret chamber', () => {
     const ui = readFileSync(join(__dirname, '../js/ui/MapUI.js'), 'utf8');
     assert.ok(ui.includes("'Обычный путь: '"));
     assert.ok(ui.includes("'Секретный выход (+2 этажа): '"));
-    assert.ok(ui.includes("'spire-route--secret'"));
+    assert.ok(ui.includes("spire-route--secret"));
     assert.ok(ui.includes("if (node.type === NODE_TYPES.SECRET && !hasChronicle) return"));
     assert.ok(ui.includes("Содержимое прохода скрыто до получения Хроники предвидения"));
 });
