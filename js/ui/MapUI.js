@@ -257,6 +257,22 @@ const MapUI = {
         const currentNode = game.mapGenerator.findNodeById(game.currentNodeId);
         const currentFloor = currentNode ? currentNode.floor : 0;
         
+        // Нумерация этажей — ориентир на длинной вертикальной карте.
+        // Значимые этапы получают более заметную печать на полях.
+        for (let floor = 0; floor < game.mapGenerator.floors; floor++) {
+            const y = marginY + (game.mapGenerator.floors - 1 - floor) * floorHeight;
+            const milestone = [0, 8, 14, game.mapGenerator.floors - 1].includes(floor);
+            const label = document.createElementNS(svgNS, 'text');
+            label.setAttribute('class', 'spire-floor-marker' +
+                (milestone ? ' is-milestone' : '') +
+                (floor === currentFloor ? ' is-current' : ''));
+            label.setAttribute('x', '13');
+            label.setAttribute('y', String(y + 4));
+            label.setAttribute('text-anchor', 'start');
+            label.textContent = String(floor + 1).padStart(2, '0');
+            svg.appendChild(label);
+        }
+
         // Рисуем соединения
         game.mapGenerator.paths.forEach((floorNodes) => {
             floorNodes.forEach(node => {
