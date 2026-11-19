@@ -43,6 +43,10 @@ test('history ignores duplicate run ids and retains last 20', () => {
     assert.equal(data.recent.length, 20);
     assert.equal(data.recent[0].id, 'run-4');
     assert.equal(data.recent.at(-1).id, 'run-23');
+    // The first run has left the visible 20-entry history, but must never count twice.
+    assert.equal(history.record(summary(true, 9999), 'berserk', 'same'), false);
+    assert.equal(history.read().runs, 25);
+    assert.ok(history.read().recordedRunIds.includes('same'));
 });
 
 test('achievements are derived from permanent totals', () => {
