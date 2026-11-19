@@ -157,6 +157,10 @@ const MapUI = {
         // Видимость развилки важна не меньше типа следующей комнаты:
         // несколько узлов одного типа — всё равно разные маршруты.
         const branchCount = destinations.length;
+        if (node.type === NODE_TYPES.SECRET) {
+            return 'После тайного прохода (этаж +2): ' + labels.join(' · ') +
+                (branchCount > 1 ? ` · ${branchCount} выхода` : ' · один выход');
+        }
         return 'После: ' + labels.join(' · ') +
             (branchCount > 1 ? ` · ${branchCount} варианта пути` : ' · один путь');
     },
@@ -198,9 +202,14 @@ const MapUI = {
         list.className = 'spire-next-list';
         choices.forEach(node => {
             const details = this.getRoomDetails(node.type);
-            const secretLocked = node.type === NODE_TYPES.SECRET &&
-                !(Array.isArray(game.player?.relics) && game.player.relics.includes('chronicle'));
-            if (secretLocked) {
+            const hasChronicle = Array.isArray(game.player?.relics) &&
+                game.player.relics.includes('chronicle');
+            const secretLocked = node.type === NODE_TYPES.SECRET && !hasChronicle;
+            if (node.type === NODE_TYPES.SECRET && !secretLocked) {
+                details.label = 'Тайный маршрут';
+                details.hint = 'Обходит один этаж и ведёт к следующей развилке';
+                details.risk = 'Скрытый путь · повышенная награда';
+            } else if (secretLocked) {
                 details.hint = 'Запечатано · нужна Хроника предвидения';
                 details.risk = 'Скрытый путь';
             }
@@ -350,7 +359,8 @@ const MapUI = {
         line.setAttribute('fill', 'none');
         line.setAttribute('stroke-linecap', 'round');
         
-        line.setAttribute('class', 'spire-route');
+        line.setAttribute('class', 'spire-route' +
+            (node1.type === NODE_TYPES.SECRET && node2.floor > node1.floor + 1 ? ' spire-route--secret' : ''));
         line.setAttribute('data-route-from', node1.id);
         line.setAttribute('data-route-to', node2.id);
         const isVisited = node1.visited && node2.visited;
