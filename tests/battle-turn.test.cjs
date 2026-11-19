@@ -16,7 +16,7 @@ function battle(overrides = {}) {
         enemyIntent: 'attack', hand: [{ id: 'strike' }], discardPile: [],
         statusEffects: {
             player: { poison: 0, vulnerable: 0, thorns: 0 },
-            enemy: { paralysis: 0, bleed: 0, weak: 0, strength: 0 }
+            enemy: { paralysis: 0, poison: 0, bleed: 0, weak: 0, strength: 0 }
         },
         hasPower(id) { return player.relics.includes(id); },
         isEnemyParalyzed() { return this.statusEffects.enemy.paralysis > 0; },
@@ -103,4 +103,49 @@ test('dark magic forecast shows real 30 percent risk and root grasp poison', () 
     const defend = BattleCore.prototype.getEnemyIntentInfo.call(state);
     assert.equal(defend.block, 10);
     assert.equal(defend.poison, 2);
+});
+
+
+test('enemy poison deals damage and loses one stack at end of turn', () => {
+    const state = battle({
+        enemy: { hp: 20 },
+        statusEffects: {
+            player: { poison: 0, vulnerable: 0, thorns: 0 },
+            enemy: { paralysis: 0, poison: 4, bleed: 0, weak: 0, strength: 0 }
+        }
+    });
+    const outcome = new BattleTurn().endTurn(state, effects);
+    assert.equal(outcome.battleEnded, false);
+    assert.equal(state.enemy.hp, 16);
+    assert.equal(state.statusEffects.enemy.poison, 3);
+});
+
+test('enemy poison and bleed both resolve once without skipping either status', () => {
+    const state = battle({
+        enemy: { hp: 20 },
+        statusEffects: {
+            player: { poison: 0, vulnerable: 0, thorns: 0 },
+            enemy: { paralysis: 0, poison: 4, bleed: 3, weak: 0, strength: 0 }
+        }
+    });
+    new BattleTurn().endTurn(state, effects);
+    assert.equal(state.enemy.hp, 13);
+    assert.equal(state.statusEffects.enemy.poison, 3);
+    assert.equal(state.statusEffects.enemy.bleed, 2);
+});
+
+test('simultaneous lethal enemy poison and player poison resolves as defeat', () => {
+    const state = battle({
+        player: { hp: 2 },
+        enemy: { hp: 2, damage: 0 },
+        statusEffects: {
+            player: { poison: 2, vulnerable: 0, thorns: 0 },
+            enemy: { paralysis: 0, poison: 2, bleed: 0, weak: 0, strength: 0 }
+        }
+    });
+    const outcome = new BattleTurn().endTurn(state, effects);
+    assert.equal(outcome.battleEnded, true);
+    assert.equal(outcome.victory, false);
+    assert.equal(state.player.hp, 0);
+    assert.equal(state.enemy.hp, 0);
 });
