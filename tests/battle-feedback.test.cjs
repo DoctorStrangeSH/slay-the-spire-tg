@@ -569,3 +569,13 @@ test('campfire disables full-health rest and unavailable upgrades safely', () =>
     assert.equal(journeys, 1);
     assert.equal(game.player.hp, 100);
 });
+
+test('mobile battle prioritizes two large actions without hiding the three utilities', () => {
+    const css = fs.readFileSync(path.join(root, 'css/cathedral.css'), 'utf8');
+    const hierarchy = css.slice(css.indexOf('/* Battle decision hierarchy:'));
+    assert.match(hierarchy, /@media \(max-width: 640px\)/);
+    assert.match(hierarchy, /grid-template-columns: repeat\(6, minmax\(0, 1fr\)\)/);
+    assert.match(hierarchy, /\.play-btn,[\s\S]*?\.end-btn[\s\S]*?grid-column: span 3/);
+    assert.match(hierarchy, /\.relic-btn,[\s\S]*?\.deck-btn,[\s\S]*?\.discard-btn[\s\S]*?grid-column: span 2/);
+    assert.match(hierarchy, /:focus-visible/);
+});
