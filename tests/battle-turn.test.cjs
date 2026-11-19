@@ -21,6 +21,9 @@ function battle(overrides = {}) {
         hasPower(id) { return player.relics.includes(id); },
         isEnemyParalyzed() { return this.statusEffects.enemy.paralysis > 0; },
         startTurn() { this.started = true; },
+        takeDamage(amount) {
+            this.player.hp = Math.max(0, this.player.hp - Math.max(0, Math.floor(amount)));
+        },
         ...overrides,
         player, enemy
     };
