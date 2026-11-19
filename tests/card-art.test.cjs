@@ -125,3 +125,38 @@ test('compact mobile hand reserves space for art, card names and effects', () =>
     assert.match(mobile, /#hand-area \.card-description[\s\S]*?-webkit-line-clamp: 2/);
     assert.match(mobile, /#hand-area \.card-inspect-button[\s\S]*?28px/);
 });
+
+test('card inspection keyboard events never select a card or rely on global game', () => {
+    const source = fs.readFileSync(path.join(root, 'js/ui/BattleUI.js'), 'utf8');
+    const document = {
+        createElement(tag) {
+            return {
+                tag, dataset: {}, attrs: {}, children: [], classList: { add() {} },
+                setAttribute(name, value) { this.attrs[name] = value; },
+                appendChild(child) { this.children.push(child); },
+                click() { this.onclick(); }
+            };
+        }
+    };
+    const context = vm.createContext({ document, CardArt: {
+        rarity: () => ({ key: 'common', label: 'Обычная', sigil: '✦' }),
+        markup: () => '<img>'
+    } });
+    const ui = vm.runInContext(source + '\nBattleUI;', context);
+    const selections = [];
+    const game = { selectCard(index) { selections.push(index); } };
+    const card = ui.createCardElement(
+        { name: 'Удар', type: 'attack', cost: 1, description: 'Урон' },
+        2, { selectedCards: [], energy: 3 }, game
+    );
+    const inspect = card.children[0];
+    let prevented = false;
+    card.onkeydown({ key: 'Enter', target: inspect, preventDefault() { prevented = true; } });
+    assert.deepEqual(selections, []);
+    assert.equal(prevented, false);
+    card.onkeydown({ key: 'Enter', target: card, preventDefault() { prevented = true; } });
+    assert.deepEqual(selections, [2]);
+    assert.equal(prevented, true);
+    card.onclick();
+    assert.deepEqual(selections, [2, 2]);
+});
