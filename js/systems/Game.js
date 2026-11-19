@@ -192,6 +192,38 @@ class Game {
             row.appendChild(rewardSelect);
             panel.appendChild(row);
         }
+
+        const collection = this.runHistory.cosmeticCollection(data);
+        const collectionSection = document.createElement('section');
+        collectionSection.className = 'cathedral-cosmetic-gallery';
+        const collectionTitle = document.createElement('h4');
+        collectionTitle.textContent = '✧ Коллекция обликов';
+        const collectionProgress = document.createElement('p');
+        collectionProgress.className = 'cathedral-challenge-progress-label';
+        const unlockedCosmetics = collection.filter(item => item.unlocked).length;
+        collectionProgress.textContent = `Открыто ${unlockedCosmetics} из ${collection.length}`;
+        collectionSection.append(collectionTitle, collectionProgress);
+        for (const cosmetic of collection) {
+            const card = document.createElement('article');
+            card.className = 'cathedral-cosmetic-card';
+            card.classList.toggle('cathedral-cosmetic-card--locked', !cosmetic.unlocked);
+            const heading = document.createElement('strong');
+            heading.textContent = `${cosmetic.unlocked ? cosmetic.sigil : '🔒'} ${cosmetic.unlocked ? cosmetic.title : '???'}`;
+            const owner = document.createElement('small');
+            owner.textContent = cosmetic.hero;
+            const requirement = document.createElement('p');
+            requirement.textContent = cosmetic.unlocked ? 'Открыто · можно экипировать в разделе героя' : `Условие: ${cosmetic.requirement}`;
+            card.append(heading, owner, requirement);
+            if (cosmetic.equipped) {
+                const equipped = document.createElement('span');
+                equipped.className = 'cathedral-cosmetic-equipped';
+                equipped.textContent = 'Надето';
+                card.appendChild(equipped);
+            }
+            collectionSection.appendChild(card);
+        }
+        panel.appendChild(collectionSection);
+
         const achievements = this.runHistory.achievements(data);
         const unlocked = achievements.filter(item => item.unlocked).length;
         const hall = document.createElement('section');
