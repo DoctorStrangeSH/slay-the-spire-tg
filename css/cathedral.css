@@ -2116,3 +2116,23 @@ button:disabled { opacity: .42; filter: grayscale(.5); }
   #map-nodes svg .spire-room.is-route-preview circle,
   #map-nodes svg .spire-route.is-route-preview { transition: none; }
 }
+
+
+/* Floor index in the atlas margin: faint normally, illuminated on milestones. */
+#map-nodes svg .spire-floor-marker {
+  fill: #a79b8b;
+  opacity: .72;
+  font: 700 12px/1 system-ui, sans-serif;
+  letter-spacing: .02em;
+  pointer-events: none;
+}
+#map-nodes svg .spire-floor-marker.is-milestone {
+  fill: #e6c68c;
+  opacity: 1;
+  font-weight: 900;
+}
+#map-nodes svg .spire-floor-marker.is-current {
+  fill: #a9f0d9;
+  opacity: 1;
+  filter: drop-shadow(0 0 4px #7ad9bd);
+}
