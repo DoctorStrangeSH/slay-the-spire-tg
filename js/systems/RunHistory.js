@@ -9,7 +9,7 @@ class RunHistory {
 
     empty() {
         return { version: 1, runs: 0, victories: 0, defeats: 0,
-            bestScore: 0, bestAct: 0, totalBattles: 0, heroes: {}, heroVictories: {}, challenges: {}, selectedRewards: {}, recent: [] };
+            bestScore: 0, bestAct: 0, totalBattles: 0, heroes: {}, heroVictories: {}, challenges: {}, selectedRewards: {}, recordedRunIds: [], recent: [] };
     }
 
     read() {
@@ -22,6 +22,12 @@ class RunHistory {
                 heroVictories: data.heroVictories && typeof data.heroVictories === 'object' && !Array.isArray(data.heroVictories) ? data.heroVictories : {},
                 challenges: data.challenges && typeof data.challenges === 'object' && !Array.isArray(data.challenges) ? data.challenges : {},
                 selectedRewards: data.selectedRewards && typeof data.selectedRewards === 'object' && !Array.isArray(data.selectedRewards) ? data.selectedRewards : {},
+                // Older profiles only remember the last 20 IDs; preserve those while
+                // tracking every new completed run independently of the visible history.
+                recordedRunIds: [...new Set([
+                    ...(Array.isArray(data.recordedRunIds) ? data.recordedRunIds.filter(id => typeof id === 'string') : []),
+                    ...data.recent.filter(item => item && typeof item.id === 'string').map(item => item.id)
+                ])],
                 recent: data.recent.slice(-RunHistory.MAX_RECENT) };
         } catch (_) {
             return this.empty();
@@ -31,9 +37,10 @@ class RunHistory {
     record(summary, heroId, runId) {
         if (!summary || !this.storage || !runId) return false;
         const data = this.read();
-        if (data.recent.some(item => item.id === runId)) return false;
+        const stableRunId = String(runId);
+        if (data.recordedRunIds.includes(stableRunId)) return false;
         const entry = {
-            id: String(runId), victory: Boolean(summary.victory),
+            id: stableRunId, victory: Boolean(summary.victory),
             hero: String(summary.hero || 'Герой'), heroId: String(heroId || 'unknown'),
             act: Number(summary.act) || 1, floor: Number(summary.floor) || 1,
             score: Math.max(0, Number(summary.score) || 0),
@@ -48,6 +55,7 @@ class RunHistory {
         data.totalBattles += entry.wins;
         data.heroes[entry.heroId] = (Number(data.heroes[entry.heroId]) || 0) + 1;
         if (entry.victory) data.heroVictories[entry.heroId] = (Number(data.heroVictories[entry.heroId]) || 0) + 1;
+        data.recordedRunIds.push(stableRunId);
         data.recent = [...data.recent, entry].slice(-RunHistory.MAX_RECENT);
         try {
             this.storage.setItem(RunHistory.KEY, JSON.stringify(data));
