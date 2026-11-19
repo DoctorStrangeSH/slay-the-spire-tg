@@ -100,3 +100,16 @@ test('normal enemies do not enter secret boss phases', () => {
     assert.equal(enemy.phase, undefined);
     assert.equal(enemy.damage, 5);
 });
+
+test('secret boss phase transitions only once and updates its attack pattern', () => {
+    const boss = getVeiledBossForRun({ veiledMerchantDebt: 'purchased' });
+    boss.hp = Math.floor(boss.maxHp * 0.6);
+    const state = makeBattle(boss);
+    const turn = new BattleTurn();
+    turn.advanceSecretBossPhase(state);
+    assert.equal(boss.phase, 2);
+    const guardAfterFirstTransition = state.enemyBlock;
+    turn.advanceSecretBossPhase(state);
+    assert.equal(state.enemyBlock, guardAfterFirstTransition);
+    assert.equal(boss.phase, 2);
+});
