@@ -913,3 +913,32 @@ test('route preview highlights only the selected room and current connecting edg
     assert.equal(target.active(), false);
     assert.equal(activeLine.active(), false);
 });
+
+
+test('atlas renders legible floor indices and marks major milestones', () => {
+    const ui = readFileSync(join(__dirname, '../js/ui/MapUI.js'), 'utf8');
+    const document = {
+        createElementNS(namespace, tag) {
+            return {
+                tag, attrs: {}, children: [],
+                setAttribute(name, value) { this.attrs[name] = value; },
+                appendChild(child) { this.children.push(child); }
+            };
+        }
+    };
+    const MapUI = vm.runInNewContext(ui + '\nMapUI;', { document, window: {} });
+    const generator = {
+        floors: 16,
+        paths: Array.from({ length: 16 }, () => []),
+        getAvailableNodes: () => [],
+        findNodeById: () => null
+    };
+    const svg = MapUI.createSVG({ mapGenerator: generator, currentNodeId: 'none' });
+    const markers = svg.children.filter(child => child.attrs.class?.includes('spire-floor-marker'));
+    assert.equal(markers.length, 16);
+    assert.equal(markers[0].textContent, '01');
+    assert.equal(markers[15].textContent, '16');
+    for (const floor of [0, 8, 14, 15]) {
+        assert.match(markers[floor].attrs.class, /is-milestone/);
+    }
+});
