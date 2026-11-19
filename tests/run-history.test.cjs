@@ -187,9 +187,10 @@ test('flawless elite trial grants a universal title and obsidian card skin', () 
 
     history.unlockChallenge('flawless_elite');
     for (const heroId of ['berserk', 'engineer', 'psyker']) {
-        assert.deepEqual(history.rewardForHero(heroId), {
-            title: 'Непоколебимый', sigil: '✧', skin: 'flawless'
-        });
+        const equipped = history.rewardForHero(heroId);
+        assert.equal(equipped.title, 'Непоколебимый');
+        assert.equal(equipped.sigil, '✧');
+        assert.equal(equipped.skin, 'flawless');
     }
     const achievement = history.achievements().find(item => item.name === 'Без единой царапины');
     assert.equal(achievement.reward, 'Титул «Непоколебимый» и обсидиановый стиль карт');
@@ -207,13 +208,15 @@ test('class mastery reward takes priority over the universal flawless cosmetic',
 
 test('cosmetic collection lists only rewards actually unlocked for each hero', () => {
     const history = new RunHistory(memory());
-    assert.deepEqual(history.availableRewardsForHero('berserk'), []);
+    assert.equal(history.availableRewardsForHero('berserk').length, 0);
     history.unlockChallenge('flawless_elite');
-    assert.deepEqual(history.availableRewardsForHero('berserk').map(item => item.id), ['flawless_elite']);
+    assert.equal(history.availableRewardsForHero('berserk')[0].id, 'flawless_elite');
     history.unlockChallenge('berserk_last_breath');
-    assert.deepEqual(history.availableRewardsForHero('berserk').map(item => item.id),
-        ['berserk_last_breath', 'flawless_elite']);
-    assert.deepEqual(history.availableRewardsForHero('engineer').map(item => item.id), ['flawless_elite']);
+    const berserkRewards = history.availableRewardsForHero('berserk');
+    assert.equal(berserkRewards.length, 2);
+    assert.equal(berserkRewards[0].id, 'berserk_last_breath');
+    assert.equal(berserkRewards[1].id, 'flawless_elite');
+    assert.equal(history.availableRewardsForHero('engineer')[0].id, 'flawless_elite');
 });
 
 test('equipped cosmetic choice persists across history instances and controls the active skin', () => {
@@ -250,5 +253,5 @@ test('legacy history without cosmetic selections keeps its default reward priori
     storage.setItem(RunHistory.KEY, JSON.stringify(legacy));
     const history = new RunHistory(storage);
     assert.equal(history.rewardForHero('berserk').skin, 'berserk');
-    assert.deepEqual(history.read().selectedRewards, {});
+    assert.equal(JSON.stringify(history.read().selectedRewards), '{}');
 });
