@@ -253,6 +253,8 @@ const MapUI = {
         svg.setAttribute('role', 'img');
         svg.setAttribute('aria-label', 'Карта восхождения: двигайтесь снизу вверх по светящимся развилкам');
         
+        // getNodeX needs the actual floor membership to centre single-room milestones.
+        window._currentMapPaths = game.mapGenerator.paths;
         const availableNodes = game.mapGenerator.getAvailableNodes(game.currentNodeId);
         const currentNode = game.mapGenerator.findNodeById(game.currentNodeId);
         const currentFloor = currentNode ? currentNode.floor : 0;
