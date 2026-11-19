@@ -40,7 +40,11 @@ class Game {
             archiveDebt: null,
             classEventDebt: null,
             classEventDebtAct: null,
-            classEventDebtFloor: null
+            classEventDebtFloor: null,
+            veiledMerchantDebt: null,
+            veiledMerchantAct: null,
+            veiledMerchantFloor: null,
+            veiledMerchantDeals: 0
         };
 
         this.startNewGame();
@@ -70,6 +74,10 @@ class Game {
         this.player.classEventDebt = null;
         this.player.classEventDebtAct = null;
         this.player.classEventDebtFloor = null;
+        this.player.veiledMerchantDebt = null;
+        this.player.veiledMerchantAct = null;
+        this.player.veiledMerchantFloor = null;
+        this.player.veiledMerchantDeals = 0;
         this.act = 1;
         this.floor = 0;
 
@@ -376,6 +384,10 @@ class Game {
         else if (player.classEventDebt === 'engineer') add('Мастерская Последнего Механика', 'Ожидает продолжения', 'Ты забрал чертёж. В мастерской обещали передать тебе оставшийся механизм.');
         else if (player.classEventDebt === 'psyker') add('Шёпот Между Созвездиями', 'Ожидает продолжения', 'Ты коснулся звёздного разлома. Теперь он зовёт тебя снова.');
         else if (['berserk-resolved', 'engineer-resolved', 'psyker-resolved'].includes(player.classEventDebt)) add('Классовое испытание', 'Завершено', 'Последствия твоего решения стали частью истории этого забега.');
+        if (player.veiledMerchantDebt === 'owed') add('Договор с Безликим Торговцем', 'Ожидает оплаты', 'Ты занял 80 золота. Сборщик Долгов уже ищет тебя; уплата 100 золота закроет договор.');
+        else if (player.veiledMerchantDebt === 'settled') add('Договор с Безликим Торговцем', 'Оплачен', 'Ты вернул долг и сохранил своё имя.');
+        else if (player.veiledMerchantDebt === 'defaulted') add('Договор с Безликим Торговцем', 'Нарушен', 'Ты отказался платить. Секретный босс узнает о твоём предательстве и станет сильнее.');
+        else if (player.veiledMerchantDebt === 'declined') add('Безликий Торговец', 'Предложение отвергнуто', 'Ты не стал заключать договор.');
         const secretRooms = Number(player.secretRoomsFound) || 0;
         if (secretRooms > 0) add('Тайные комнаты', 'Обнаружено', `Найдено скрытых комнат: ${secretRooms}. Выборов сделано: ${Number(player.secretRoomChoices) || 0}.`);
         const mark = Number(player.bloodMarkBattles) || 0;
@@ -1195,7 +1207,8 @@ class Game {
             const followUpNames = [
                 'Возвращение паломника',
                 'Хранитель Расколотого Обелиска',
-                'Чернильный Сборщик'
+                'Чернильный Сборщик',
+                'Сборщик Долгов'
             ];
             const followUps = availableEvents.filter(candidate => followUpNames.includes(candidate.name));
             if (followUps.length && Math.random() < 0.55) {
@@ -1366,7 +1379,56 @@ class Game {
                 },
                 { text: 'Отвергнуть печать', action: () => true }
             ]
+        }, {
+            name: 'Безликий Торговец',
+            description: 'В проходе без дверей стоит торговец в гладкой белой маске. Он предлагает золото без процентов — но договор будет взыскан не монетой, а судьбой. Его чернильная книга уже знает твоё имя.',
+            rare: true,
+            options: [
+                {
+                    text: 'Взять аванс (+80 золота, долг на будущее)',
+                    action: () => {
+                        if (this.player.veiledMerchantDebt === 'owed') {
+                            alert('У тебя уже есть неоплаченный договор.');
+                            return false;
+                        }
+                        if (['settled', 'defaulted'].includes(this.player.veiledMerchantDebt)) {
+                            alert('Торговец не заключает второй договор в одном забеге.');
+                            return false;
+                        }
+                        this.player.gold += 80;
+                        this.player.veiledMerchantDebt = 'owed';
+                        this.player.veiledMerchantAct = this.act;
+                        this.player.veiledMerchantFloor = this.floor;
+                        this.player.veiledMerchantDeals = (Number(this.player.veiledMerchantDeals) || 0) + 1;
+                        return true;
+                    }
+                },
+                {
+                    text: 'Купить реликвию (65 золота, без долга)',
+                    action: () => {
+                        if (this.player.gold < 65) { alert('Недостаточно золота!'); return false; }
+                        const relic = chooseRelic(this.player.relics, Math.random, this.player.heroId);
+                        if (!relic) { alert('У торговца больше нет реликвий для тебя.'); return false; }
+                        this.player.gold -= 65;
+                        this.player.relics.push(relic.id);
+                        this.player.veiledMerchantDeals = (Number(this.player.veiledMerchantDeals) || 0) + 1;
+                        return true;
+                    }
+                },
+                { text: 'Отказаться от сделки', action: () => {
+                    this.player.veiledMerchantDebt = this.player.veiledMerchantDebt || 'declined';
+                    return true;
+                } }
+            ]
         }];
+    }
+
+    canEncounterVeiledMerchantCollector() {
+        if (this.player?.veiledMerchantDebt !== 'owed') return false;
+        const act = Number(this.player.veiledMerchantAct);
+        const floor = Number(this.player.veiledMerchantFloor);
+        return Number.isInteger(act) && Number.isInteger(floor) &&
+            (this.act > act || (this.act === act && this.floor > floor));
     }
 
     applyAltarBargain() {
@@ -1841,6 +1903,25 @@ class Game {
         const classEvent = classEvents[this.player?.heroId];
         if (classEvent) commonEvents.push(classEvent);
 
+        if (this.canEncounterVeiledMerchantCollector()) {
+            commonEvents.push({
+                name: 'Сборщик Долгов',
+                description: 'Безликий Торговец прислал своего взыскателя. Он раскрывает договор: аванс уже стал частью твоей судьбы. Можно вернуть долг с надбавкой или отказаться — но тогда имя попадёт в книгу будущего противника.',
+                options: [
+                    { text: 'Закрыть договор (100 золота)', action: () => {
+                        if (this.player.gold < 100) { alert('Недостаточно золота для полного расчёта.'); return false; }
+                        this.player.gold -= 100;
+                        this.player.veiledMerchantDebt = 'settled';
+                        return true;
+                    } },
+                    { text: 'Отказаться платить (секретный босс усилится)', action: () => {
+                        this.player.veiledMerchantDebt = 'defaulted';
+                        return true;
+                    } }
+                ]
+            });
+        }
+
         // A class decision can unlock one later encounter in the same run.
         if (this.canEncounterClassEventFollowUp()) {
             const followUps = {
@@ -1930,7 +2011,9 @@ class Game {
             'Ответ Звёздного Разлома': { style: 'rift-answer', sigil: '✧', caption: 'ОТВЕТ ИЗ-ЗА ГРАНИ', hint: 'Теперь ты сам решаешь, что вынести из разлома.' },
             'Кровавая сокровищница': { style: 'secret-blood-vault', sigil: '🩸', caption: 'ЗАПЕЧАТАННАЯ СОКРОВИЩНИЦА', hint: 'Кровь открывает то, что золото не купит.' },
             'Забытый арсенал': { style: 'secret-arsenal', sigil: '⚙', caption: 'СКРЫТЫЙ АРСЕНАЛ', hint: 'За стеной всё ещё работают древние механизмы.' },
-            'Звёздная крипта': { style: 'secret-astral-crypt', sigil: '✧', caption: 'ЗВЁЗДНАЯ КРИПТА', hint: 'Знание ждёт тех, кто осмелится прочесть.' }
+            'Звёздная крипта': { style: 'secret-astral-crypt', sigil: '✧', caption: 'ЗВЁЗДНАЯ КРИПТА', hint: 'Знание ждёт тех, кто осмелится прочесть.' },
+            'Безликий Торговец': { style: 'veiled-merchant', sigil: '◇', caption: 'СДЕЛКА БЕЗ ИМЕНИ', hint: 'Золото можно занять. Последствия — нет.' },
+            'Сборщик Долгов': { style: 'debt-collector', sigil: '⚖', caption: 'СРОК РАСПЛАТЫ', hint: 'Долг можно закрыть. Последствия останутся в памяти шпиля.' }
         };
         return scenes[name] || { style: 'mystery', sigil: '✦', caption: 'НЕИЗВЕСТНАЯ ВСТРЕЧА', hint: 'Выбери свой путь.' };
     }
