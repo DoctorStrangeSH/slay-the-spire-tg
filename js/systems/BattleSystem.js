@@ -83,6 +83,12 @@ class BattleSystem extends BattleCore {
     }
     
     endTurn() {
+        // A card or external effect may already have ended the battle.
+        // Resolve the terminal outcome before any Engineer building can act.
+        if (this.player.hp <= 0 || this.enemy.hp <= 0) {
+            return this.turnManager.endTurn(this, this.effects);
+        }
+
         // Конструкции срабатывают в конце хода
         if (this.buildings) {
             this.buildings.triggerEndOfTurn(this);
