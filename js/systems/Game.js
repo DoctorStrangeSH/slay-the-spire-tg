@@ -157,7 +157,9 @@ class Game {
             const name = document.createElement('strong');
             name.textContent = label;
             const detail = document.createElement('small');
-            detail.textContent = `Забегов: ${Number(data.heroes[id]) || 0} · Побед: ${Number(data.heroVictories[id]) || 0}`;
+            const cosmetic = this.runHistory.rewardForHero(id, data);
+            detail.textContent = `Забегов: ${Number(data.heroes[id]) || 0} · Побед: ${Number(data.heroVictories[id]) || 0}`
+                + (cosmetic ? ` · ${cosmetic.sigil} ${cosmetic.title}` : '');
             row.append(name, detail);
             panel.appendChild(row);
         }
