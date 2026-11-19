@@ -817,3 +817,22 @@ test('rare events scale by act and never offer the forge without a curse', () =>
     game.triggerEvent();
     assert.equal(selected.rare, true);
 });
+
+test('modern organic routes never cross between adjacent floors', () => {
+    for (let seed = 0; seed < 1000; seed++) {
+        const map = new MapGenerator(1, seed);
+        for (let floor = 1; floor < map.floors - 2; floor++) {
+            const edges = map.paths[floor].flatMap(node =>
+                node.connections.map(id => ({
+                    from: node.x,
+                    to: map.findNodeById(id).x
+                })));
+            for (const a of edges) {
+                for (const b of edges) {
+                    assert.ok(!(a.from < b.from && a.to > b.to),
+                        `crossing routes at seed ${seed}, floor ${floor}`);
+                }
+            }
+        }
+    }
+});
