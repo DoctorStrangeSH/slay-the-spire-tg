@@ -312,7 +312,12 @@ class Game {
                 : '',
             relics: Array.isArray(player.relics)
                 ? player.relics.map(item => String(item?.name || item?.id || item?.relicId || 'unknown')).sort()
-                : []
+                : [],
+            storyFlags: {
+                pilgrimChoice: player.pilgrimChoice || null,
+                obeliskDebt: player.obeliskDebt || null,
+                archiveDebt: player.archiveDebt || null
+            }
         };
     }
 
@@ -345,6 +350,18 @@ class Game {
         if (removedRelics.length) deltas.push(`потеряно: ${removedRelics.join(', ')}`);
         if (before.deckSignature !== after.deckSignature && after.cards === before.cards) {
             deltas.push('состав колоды изменён');
+        }
+        const storyLabels = {
+            pilgrimChoice: { helped: 'помощь паломнику', ignored: 'отказ помочь паломнику', repaid: 'долг паломника возвращён' },
+            obeliskDebt: { owed: 'долг обелиска принят', redeemed: 'долг обелиска погашен', forgone: 'выкуп силы отклонён' },
+            archiveDebt: { owed: 'долг запретного архива принят', healed: 'долг архива закрыт исцелением', sold: 'страница продана, принята кровавая метка', burned: 'запретный архив уничтожен' }
+        };
+        for (const [key, labels] of Object.entries(storyLabels)) {
+            const previousState = before.storyFlags?.[key] || null;
+            const nextState = after.storyFlags?.[key] || null;
+            if (previousState !== nextState && nextState && labels[nextState]) {
+                deltas.push(`сюжет: ${labels[nextState]}`);
+            }
         }
         this.player.journalLog = [...previous.slice(-49), {
             id: entryId,
