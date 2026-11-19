@@ -2270,3 +2270,51 @@ button:disabled { opacity: .42; filter: grayscale(.5); }
     height: min(18dvh, 116px);
   }
 }
+
+/* Compact card anatomy: art must not push the name and effect below the hand. */
+@media (max-width: 640px) {
+  #battle-screen #hand-area .card {
+    position: relative;
+    overflow: hidden;
+  }
+  #battle-screen #hand-area .card-art-frame {
+    box-sizing: border-box;
+    height: clamp(34px, 8dvh, 51px);
+    min-height: 0;
+    margin: 3px auto 4px;
+  }
+  #battle-screen #hand-area .card-name {
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    overflow: hidden;
+    overflow-wrap: anywhere;
+    margin: 3px 0 0;
+    font-size: 11px;
+    line-height: 1.12;
+  }
+  #battle-screen #hand-area .card-description {
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    overflow: hidden;
+    margin: 3px 0 0;
+    padding-right: 19px;
+    font-size: 9px;
+    line-height: 1.2;
+  }
+  #battle-screen #hand-area .card-inspect-button {
+    z-index: 2;
+    right: 4px;
+    bottom: 4px;
+    width: 28px;
+    min-width: 28px;
+    height: 28px;
+  }
+}
+@media (max-width: 640px) and (max-height: 640px) {
+  #battle-screen #hand-area .card-art-frame {
+    height: 33px;
+    margin: 2px auto 3px;
+  }
+}
