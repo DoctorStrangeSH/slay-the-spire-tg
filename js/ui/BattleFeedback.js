@@ -44,7 +44,8 @@ const BattleFeedback = Object.freeze({
         const attacks = {
             forestBoss: ['roots', '♣'],
             caveBoss: ['stone', '◆'],
-            castleBoss: ['curse', '✶']
+            castleBoss: ['curse', '✶'],
+            veiledCollector: ['curse', '⚖']
         };
         if (!Object.prototype.hasOwnProperty.call(attacks, enemyId)) return;
         const screen = document.getElementById('battle-screen');
