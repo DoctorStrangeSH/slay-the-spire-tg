@@ -70,3 +70,22 @@ test('legacy organic checkpoints keep their previous strategic room layout', () 
     assert.equal(oldA.paths[4].filter(node => node.type === 'shop').length, 1);
     assert.equal(oldA.paths[6].filter(node => node.type === 'elite').length, 1);
 });
+
+
+test('all three acts preserve route reachability and strategic room guarantees across seeds', () => {
+    for (const act of [1, 2, 3]) {
+        for (let seed = 0; seed < 100; seed++) {
+            const map = new MapGenerator(act, `act-${act}-seed-${seed}`);
+            const reachable = reachableFromStart(map);
+            assert.equal(map.floors, 16, `floor count for act ${act}, seed ${seed}`);
+            assert.ok(reachable.has(map.paths[15][0].id), `boss unreachable in act ${act}, seed ${seed}`);
+            assert.equal(map.paths[8][0].type, 'treasure');
+            assert.equal(map.paths[14][0].type, 'rest');
+            assert.equal(map.paths[15][0].type, 'boss');
+            assert.equal(map.allNodes.filter(node => node.type === 'shop').length, 2);
+            assert.equal(map.allNodes.filter(node => node.type === 'elite').length, 2);
+            assert.ok(map.allNodes.every(node => reachable.has(node.id)),
+                `unreachable node in act ${act}, seed ${seed}`);
+        }
+    }
+});
