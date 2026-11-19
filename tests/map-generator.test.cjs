@@ -1095,7 +1095,14 @@ test('rare secret rooms are deterministic, optional, and preserve route reachabi
             found++;
             assert.ok(room.floor >= 3 && room.floor <= 12);
             assert.ok(map.paths[room.floor - 1].some(previous => previous.connections.includes(room.id)));
+            assert.equal(room.secretRoute, true);
+            assert.equal(room.skippedFloor, room.floor + 1);
             assert.ok(room.connections.length > 0);
+            for (const exitId of room.connections) {
+                const exit = map.findNodeById(exitId);
+                assert.ok(exit, 'secret route exit exists');
+                assert.equal(exit.floor, room.floor + 2, 'secret route skips exactly one floor');
+            }
         }
     }
     assert.ok(found > 0, 'some seeded runs should contain a secret room');
@@ -1104,6 +1111,40 @@ test('rare secret rooms are deterministic, optional, and preserve route reachabi
 
 test('legacy organic map generation never injects secret rooms', () => {
     for (let seed = 0; seed < 40; seed++) {
+        const map = new MapGenerator(1, seed, { legacyOrganicLayout: true });
+        assert.equal(map.allNodes.some(node => node.type === 'secret'), false);
+    }
+});
+
+
+test('secret rooms create real shortcuts and keep the boss reachable', () => {
+    for (let seed = 0; seed < 500; seed++) {
+        const map = new MapGenerator(1, seed);
+        const secret = map.allNodes.find(node => node.type === 'secret');
+        if (!secret) continue;
+        assert.equal(secret.connections.length, map.paths[secret.floor + 2].length);
+        const reachable = new Set([map.paths[0][0].id]);
+        let changed = true;
+        while (changed) {
+            changed = false;
+            for (const node of map.allNodes) {
+                if (!reachable.has(node.id)) continue;
+                for (const id of node.connections) {
+                    if (!reachable.has(id)) {
+                        reachable.add(id);
+                        changed = true;
+                    }
+                }
+            }
+        }
+        assert.ok(reachable.has(map.paths[15][0].id), 'boss remains reachable after the shortcut is added');
+        assert.ok(map.paths[secret.floor + 1].every(node =>
+            !secret.connections.includes(node.id)), 'secret route does not enter the skipped floor');
+    }
+});
+
+test('secret shortcut stays disabled for legacy organic maps', () => {
+    for (let seed = 0; seed < 60; seed++) {
         const map = new MapGenerator(1, seed, { legacyOrganicLayout: true });
         assert.equal(map.allNodes.some(node => node.type === 'secret'), false);
     }
