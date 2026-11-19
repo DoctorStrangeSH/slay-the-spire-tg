@@ -37,6 +37,12 @@ const BattleUI = {
         document.getElementById('enemy-name').textContent = enemy.isSecretBoss
             ? `${enemy.name} · ФАЗА ${enemy.phase || 1}/3`
             : enemy.name;
+        if (enemy.isSecretBoss) {
+            enemyArea.setAttribute('data-boss-phase', String(enemy.phase || 1));
+            enemyArea.setAttribute('data-boss-consequence', enemy.merchantConsequence || 'unknown');
+        } else {
+            enemyArea.removeAttribute('data-boss-consequence');
+        }
         if (enemy.isSecretBoss) enemyArea.setAttribute('data-boss-phase', String(enemy.phase || 1));
         else enemyArea.removeAttribute('data-boss-phase');
         
