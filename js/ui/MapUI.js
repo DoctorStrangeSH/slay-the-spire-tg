@@ -114,6 +114,8 @@ const MapUI = {
             [NODE_TYPES.BATTLE]: { label: 'Обычный бой', hint: 'Золото и выбор карты', risk: 'Умеренный риск' },
             [NODE_TYPES.ELITE]: { label: 'Элитный бой', hint: 'Опасный враг и реликвия', risk: 'Высокий риск' },
             [NODE_TYPES.EVENT]: { label: 'Неизвестное событие', hint: 'Выбор, награда или испытание', risk: 'Неизвестный исход' },
+            [NODE_TYPES.SECRET]: { label: 'Запечатанный проход', hint: 'Нужна Хроника предвидения', risk: 'Скрытая комната' },
+            [NODE_TYPES.SECRET]: { label: 'Запечатанный проход', hint: 'Нужна Хроника предвидения', risk: 'Скрытая комната' },
             [NODE_TYPES.REST]: { label: 'Привал', hint: 'Возможность восстановиться', risk: 'Безопасная комната' },
             [NODE_TYPES.SHOP]: { label: 'Магазин', hint: 'Карты и полезные покупки', risk: 'Без боя' },
             [NODE_TYPES.TREASURE]: { label: 'Сокровищница', hint: 'Ценная награда', risk: 'Без боя' },
@@ -197,8 +199,15 @@ const MapUI = {
         list.className = 'spire-next-list';
         choices.forEach(node => {
             const details = this.getRoomDetails(node.type);
+            const secretLocked = node.type === NODE_TYPES.SECRET &&
+                !(Array.isArray(game.player?.relics) && game.player.relics.includes('chronicle'));
+            if (secretLocked) {
+                details.hint = 'Запечатано · нужна Хроника предвидения';
+                details.risk = 'Скрытый путь';
+            }
             const button = document.createElement('button');
             button.type = 'button';
+            button.disabled = secretLocked;
             button.className = 'spire-next-card spire-next-card--' + node.type;
             const forecast = this.getRouteForecast(node, game.mapGenerator);
             const advice = this.getRouteAdvice(node.type, game.player);
@@ -384,12 +393,14 @@ const MapUI = {
         circle.setAttribute('stroke', this.getNodeStroke(node));
         circle.setAttribute('stroke-width', '2');
         
-        const isAvailable = availableNodes.includes(node);
+        const hasChronicle = Array.isArray(game.player?.relics) && game.player.relics.includes('chronicle');
+        const isSecretLocked = node.type === NODE_TYPES.SECRET && !hasChronicle;
+        const isAvailable = availableNodes.includes(node) && !isSecretLocked;
         const isVisited = node.visited;
         const isFutureFloor = floorIndex > currentFloor;
         group.setAttribute('data-route-to', node.id);
         group.setAttribute('class', 'spire-room spire-room--' + node.type +
-            (isVisited ? ' is-visited' : isAvailable ? ' is-available' : ' is-future'));
+            (isVisited ? ' is-visited' : isAvailable ? ' is-available' : isSecretLocked ? ' is-sealed' : ' is-future'));
         
         if (isVisited) {
             circle.setAttribute('opacity', '0.6');
@@ -480,6 +491,7 @@ const MapUI = {
             elite: `M ${x} ${y - 27} L ${x + 27} ${y} L ${x} ${y + 27} L ${x - 27} ${y} Z`,
             shop: `M ${x - 24} ${y - 24} H ${x + 24} V ${y + 24} H ${x - 24} Z`,
             rest: `M ${x - 26} ${y + 5} A 27 27 0 0 1 ${x + 26} ${y + 5}`,
+            secret: `M ${x} ${y - 30} L ${x + 24} ${y - 12} L ${x + 18} ${y + 20} L ${x} ${y + 30} L ${x - 18} ${y + 20} L ${x - 24} ${y - 12} Z`,
             treasure: `M ${x - 25} ${y - 12} L ${x} ${y - 27} L ${x + 25} ${y - 12} L ${x + 25} ${y + 12} L ${x} ${y + 27} L ${x - 25} ${y + 12} Z`,
             boss: `M ${x - 32} ${y - 19} L ${x - 20} ${y - 32} L ${x} ${y - 24} L ${x + 20} ${y - 32} L ${x + 32} ${y - 19} L ${x + 28} ${y + 24} L ${x} ${y + 33} L ${x - 28} ${y + 24} Z`
         };
@@ -520,6 +532,7 @@ const MapUI = {
             case NODE_TYPES.ELITE: return '#d7b17a';
             case NODE_TYPES.REST: return '#8bbfba';
             case NODE_TYPES.EVENT: return '#8c6ea8';
+            case NODE_TYPES.SECRET: return '#8d78b8';
             case NODE_TYPES.TREASURE: return '#d7aa64';
             case NODE_TYPES.SHOP: return '#668da4';
             case NODE_TYPES.BOSS: return '#a83848';
@@ -539,6 +552,7 @@ const MapUI = {
             case NODE_TYPES.ELITE: return '👑';
             case NODE_TYPES.REST: return '🏕️';
             case NODE_TYPES.EVENT: return '❓';
+            case NODE_TYPES.SECRET: return '✧';
             case NODE_TYPES.TREASURE: return '🎁';
             case NODE_TYPES.SHOP: return '💰';
             case NODE_TYPES.BOSS: return '💀';
@@ -553,6 +567,7 @@ const MapUI = {
             case NODE_TYPES.ELITE: return 'Элита';
             case NODE_TYPES.REST: return 'Отдых';
             case NODE_TYPES.EVENT: return 'Событие';
+            case NODE_TYPES.SECRET: return 'Тайная комната';
             case NODE_TYPES.TREASURE: return 'Сокровищница';
             case NODE_TYPES.SHOP: return 'Магазин';
             case NODE_TYPES.BOSS: return 'Босс';
@@ -568,6 +583,7 @@ const MapUI = {
             <span>👑 Элита</span>
             <span>🏕️ Отдых</span>
             <span>❓ Событие</span>
+            <span>✧ Тайная комната</span>
             <span>🎁 Сокровище</span>
             <span>💰 Магазин</span>
             <span>💀 Босс</span>
