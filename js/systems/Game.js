@@ -829,6 +829,8 @@ class Game {
 
             if (this.currentBattle.enemy.hp <= 0) {
                 this.endBattle(true);
+            } else if (this.currentBattle.player.hp <= 0) {
+                this.endBattle(false);
             }
         } else {
             alert(result.message);
