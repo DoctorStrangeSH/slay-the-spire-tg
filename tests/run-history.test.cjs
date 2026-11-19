@@ -203,3 +203,52 @@ test('class mastery reward takes priority over the universal flawless cosmetic',
     assert.equal(history.rewardForHero('engineer').skin, 'engineer');
     assert.equal(history.rewardForHero('berserk').skin, 'flawless');
 });
+
+
+test('cosmetic collection lists only rewards actually unlocked for each hero', () => {
+    const history = new RunHistory(memory());
+    assert.deepEqual(history.availableRewardsForHero('berserk'), []);
+    history.unlockChallenge('flawless_elite');
+    assert.deepEqual(history.availableRewardsForHero('berserk').map(item => item.id), ['flawless_elite']);
+    history.unlockChallenge('berserk_last_breath');
+    assert.deepEqual(history.availableRewardsForHero('berserk').map(item => item.id),
+        ['berserk_last_breath', 'flawless_elite']);
+    assert.deepEqual(history.availableRewardsForHero('engineer').map(item => item.id), ['flawless_elite']);
+});
+
+test('equipped cosmetic choice persists across history instances and controls the active skin', () => {
+    const storage = memory();
+    const history = new RunHistory(storage);
+    history.unlockChallenge('flawless_elite');
+    history.unlockChallenge('berserk_last_breath');
+    assert.equal(history.rewardForHero('berserk').skin, 'berserk');
+    assert.equal(history.equipReward('berserk', 'flawless_elite'), true);
+
+    const reopened = new RunHistory(storage);
+    assert.equal(reopened.rewardForHero('berserk').title, 'Непоколебимый');
+    assert.equal(reopened.rewardForHero('berserk').skin, 'flawless');
+    assert.equal(reopened.rewardForHero('engineer').skin, 'flawless');
+});
+
+test('cosmetic collection rejects locked rewards and invalid hero ids', () => {
+    const history = new RunHistory(memory());
+    assert.equal(history.equipReward('berserk', 'flawless_elite'), false);
+    assert.equal(history.equipReward('unknown', 'flawless_elite'), false);
+    history.unlockChallenge('flawless_elite');
+    assert.equal(history.equipReward('unknown', 'flawless_elite'), false);
+    assert.equal(history.equipReward('berserk', 'not-a-reward'), false);
+    assert.equal(history.rewardForHero('berserk').skin, 'flawless');
+});
+
+test('legacy history without cosmetic selections keeps its default reward priority', () => {
+    const storage = memory();
+    const legacy = {
+        version: 1, runs: 0, victories: 0, defeats: 0, bestScore: 0,
+        bestAct: 0, totalBattles: 0, heroes: {}, heroVictories: {},
+        challenges: { berserk_last_breath: true, flawless_elite: true }, recent: []
+    };
+    storage.setItem(RunHistory.KEY, JSON.stringify(legacy));
+    const history = new RunHistory(storage);
+    assert.equal(history.rewardForHero('berserk').skin, 'berserk');
+    assert.deepEqual(history.read().selectedRewards, {});
+});
