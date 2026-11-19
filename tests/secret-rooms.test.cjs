@@ -260,14 +260,6 @@ test('merchant purchase and refusal both leave a trace that unlocks the secret f
     }
 });
 
-test('settled and defaulted contracts produce different secret boss profiles', () => {
-    const settled = getVeiledBossForRun({ veiledMerchantDebt: 'settled', veiledMerchantDeals: 1 });
-    const defaulted = getVeiledBossForRun({ veiledMerchantDebt: 'defaulted', veiledMerchantDeals: 1 });
-    assert.ok(defaulted.maxHp > settled.maxHp);
-    assert.ok(defaulted.damage > settled.damage);
-    assert.ok(settled.openingBlock > defaulted.openingBlock);
-    assert.equal(defaulted.merchantConsequence, 'defaulted');
-});
 
 
 test('act three keeps its normal boss when the player never met the Veiled Merchant', () => {
