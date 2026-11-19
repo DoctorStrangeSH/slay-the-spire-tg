@@ -94,7 +94,7 @@ class MapGenerator {
         this.createNode(this.floors - 1, 0, NODE_TYPES.BOSS);
         this.connectOrganicRoutes();
         if (!this.legacyOrganicLayout) this.removeRepetitiveRoutes(new Set(Object.keys(special).map(Number)));
-        if (this.enableSecretRooms) this.placeSecretRoom();
+        if (this.enableSecretRooms && !this.legacyOrganicLayout && !this.legacyBranchingLayout && !this.legacyCrossingLayout) this.placeSecretRoom();
     }
 
     // Один редкий тайник может скрыться среди обычных событий на каждом акте.
