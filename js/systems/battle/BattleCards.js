@@ -160,7 +160,7 @@ class BattleCards {
                 return result;
             }
             // Stop resolving queued cards as soon as either side is defeated.
-            if (battle.player.hp <= 0 || battle.enemy.hp <= 0) break;
+            if ((battle.player && battle.player.hp <= 0) || (battle.enemy && battle.enemy.hp <= 0)) break;
         }
 
         battle.selectedCards = [];
