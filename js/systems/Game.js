@@ -317,6 +317,18 @@ class Game {
     recordEventDecision(event, option, before) {
         if (!this.player) return;
         const after = this.snapshotJournalResources();
+        const eventKey = String(event?.id || event?.name || 'unknown-event')
+            .normalize('NFKD').replace(/[^a-zA-Z0-9а-яА-Я_-]+/g, '-').toLowerCase();
+        const entryId = [
+            this.runId || 'legacy-run',
+            this.act,
+            this.floor + 1,
+            eventKey
+        ].join(':');
+        const previous = Array.isArray(this.player.journalLog) ? this.player.journalLog : [];
+        // A room decision is recorded once even if its UI callback is invoked again.
+        if (previous.some(entry => entry?.id === entryId)) return false;
+
         const deltas = [
             ['HP', after.hp - before.hp],
             ['макс. HP', after.maxHp - before.maxHp],
@@ -325,17 +337,23 @@ class Game {
             ['реликвий', after.relics.length - (before.relics?.length || 0)]
         ].filter(([, delta]) => delta !== 0)
             .map(([label, delta]) => `${label}: ${delta > 0 ? '+' : ''}${delta}`);
+        const addedRelics = after.relics.filter(id => !before.relics.includes(id));
+        const removedRelics = before.relics.filter(id => !after.relics.includes(id));
+        if (addedRelics.length) deltas.push(`получено: ${addedRelics.join(', ')}`);
+        if (removedRelics.length) deltas.push(`потеряно: ${removedRelics.join(', ')}`);
         if (before.deckSignature !== after.deckSignature && after.cards === before.cards) {
             deltas.push('состав колоды изменён');
         }
-        const previous = Array.isArray(this.player.journalLog) ? this.player.journalLog : [];
         this.player.journalLog = [...previous.slice(-49), {
+            id: entryId,
+            runId: this.runId || null,
             act: this.act,
             floor: this.floor + 1,
             event: event.name,
             choice: option.text,
             outcome: deltas.join(' · ') || 'Без немедленных изменений'
         }];
+        return true;
     }
 
     showRunJournal() {
