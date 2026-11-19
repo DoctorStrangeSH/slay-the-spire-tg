@@ -78,8 +78,14 @@ class RunHistory {
             psyker: { challenge: 'psyker_mind_chain', title: 'Разрушитель разума', sigil: '🔮', skin: 'psyker' }
         };
         const reward = rewards[heroId];
-        return reward && data.challenges?.[reward.challenge] === true
-            ? { title: reward.title, sigil: reward.sigil, skin: reward.skin } : null;
+        // Class mastery cosmetics take priority; the flawless trial is a universal fallback.
+        if (reward && data.challenges?.[reward.challenge] === true) {
+            return { title: reward.title, sigil: reward.sigil, skin: reward.skin };
+        }
+        if (data.challenges?.flawless_elite === true) {
+            return { title: 'Непоколебимый', sigil: '✧', skin: 'flawless' };
+        }
+        return null;
     }
 
     achievements(data = this.read()) {
@@ -106,7 +112,8 @@ class RunHistory {
             reward: {
                 'На последнем дыхании': 'Титул «Клятвопреступник» и кровавый стиль карт',
                 'Железная линия': 'Титул «Мастер механизмов» и металлический стиль карт',
-                'Разрыв сознания': 'Титул «Разрушитель разума» и мистический стиль карт'
+                'Разрыв сознания': 'Титул «Разрушитель разума» и мистический стиль карт',
+                'Без единой царапины': 'Титул «Непоколебимый» и обсидиановый стиль карт'
             }[entry.name] || null }));
     }
 }
