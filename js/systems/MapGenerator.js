@@ -118,8 +118,11 @@ class MapGenerator {
         // Keep the original next-floor exits and add a second, optional exit
         // beyond the skipped floor. The player chooses the shortcut after
         // resolving the secret chamber, so existing lanes stay reachable.
-        for (const exit of exits) {
-            if (!chosen.connections.includes(exit.id)) chosen.connections.push(exit.id);
+        const shortcutExit = [...exits].sort((a, b) =>
+            Math.abs(a.x - chosen.x) - Math.abs(b.x - chosen.x) || a.x - b.x
+        )[0];
+        if (shortcutExit && !chosen.connections.includes(shortcutExit.id)) {
+            chosen.connections.push(shortcutExit.id);
         }
         return true;
     }
