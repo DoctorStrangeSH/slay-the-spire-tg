@@ -1055,3 +1055,26 @@ test('available atlas rooms have mobile-sized tap targets and keyboard activatio
     group.handlers.click(event());
     assert.equal(selected.length, 3);
 });
+
+test('strategic shops and elites vary left-to-right without losing seeded determinism', () => {
+    const shops = new Set();
+    const elites = new Set();
+    for (let seed = 0; seed < 240; seed++) {
+        const map = new MapGenerator(1, seed);
+        const replay = new MapGenerator(1, seed);
+        assert.deepEqual(
+            map.paths.map(floor => floor.map(node => [node.x, node.type, node.connections])),
+            replay.paths.map(floor => floor.map(node => [node.x, node.type, node.connections]))
+        );
+        const shop = map.paths.slice(4, 6).flat().find(node => node.type === 'shop');
+        const elite = map.paths.slice(6, 8).flat().find(node => node.type === 'elite');
+        assert.ok(shop, 'early shop remains available in its strategic band');
+        assert.ok(elite, 'early elite remains available in its strategic band');
+        const shopFloor = map.paths[shop.floor];
+        const eliteFloor = map.paths[elite.floor];
+        shops.add(shopFloor.findIndex(node => node.id === shop.id));
+        elites.add(eliteFloor.findIndex(node => node.id === elite.id));
+    }
+    assert.ok(shops.size >= 3, 'shop position varies across runs');
+    assert.ok(elites.size >= 3, 'elite position varies across runs');
+});
