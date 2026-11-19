@@ -2590,3 +2590,24 @@ button:disabled { opacity: .42; filter: grayscale(.5); }
 .spire-room--secret.is-available .spire-room-icon {
   filter: drop-shadow(0 0 5px #c6a6ff);
 }
+
+
+/* The veiled merchant's contract and its later collector are distinct encounters. */
+.cathedral-event-modal[data-event-scene="veiled-merchant"] {
+  --event-accent: #d7c28e;
+  --event-glow: #8e744499;
+}
+.cathedral-event-modal[data-event-scene="veiled-merchant"] .cathedral-event-halo {
+  border: 2px solid var(--event-accent);
+  border-radius: 50%;
+  box-shadow: 0 0 28px var(--event-glow), inset 0 0 22px var(--event-glow);
+}
+.cathedral-event-modal[data-event-scene="debt-collector"] {
+  --event-accent: #bb9a79;
+  --event-glow: #6e493e99;
+}
+.cathedral-event-modal[data-event-scene="debt-collector"] .cathedral-event-halo {
+  border: 4px double var(--event-accent);
+  border-radius: 8px;
+  box-shadow: 0 0 24px var(--event-glow);
+}
