@@ -134,3 +134,18 @@ test('Chronicle of Foresight advertises its hidden-room discovery effect', () =>
     const relics = readFileSync(join(__dirname, '../js/data/relics.js'), 'utf8');
     assert.match(relics, /Хроника предвидения[\s\S]*?позволяет находить запечатанные тайные комнаты/);
 });
+
+
+test('secret chamber events have their own visual scenes', () => {
+    const gameSource = readFileSync(join(__dirname, '../js/systems/Game.js'), 'utf8');
+    const styles = readFileSync(join(__dirname, '../css/cathedral.css'), 'utf8');
+    for (const [name, scene] of [
+        ['Кровавая сокровищница', 'secret-blood-vault'],
+        ['Забытый арсенал', 'secret-arsenal'],
+        ['Звёздная крипта', 'secret-astral-crypt']
+    ]) {
+        assert.ok(gameSource.includes(name));
+        assert.ok(gameSource.includes(`style: '${scene}'`));
+        assert.ok(styles.includes(`data-event-scene="${scene}"`));
+    }
+});
