@@ -161,6 +161,35 @@ class Game {
             detail.textContent = `Забегов: ${Number(data.heroes[id]) || 0} · Побед: ${Number(data.heroVictories[id]) || 0}`
                 + (cosmetic ? ` · ${cosmetic.sigil} ${cosmetic.title}` : '');
             row.append(name, detail);
+            const availableRewards = this.runHistory.availableRewardsForHero(id, data);
+            const rewardSelect = document.createElement('select');
+            rewardSelect.className = 'cathedral-cosmetic-select';
+            rewardSelect.setAttribute('aria-label', `Награда для героя: ${label}`);
+            if (!availableRewards.length) {
+                const locked = document.createElement('option');
+                locked.value = '';
+                locked.textContent = 'Награды пока закрыты';
+                rewardSelect.appendChild(locked);
+                rewardSelect.disabled = true;
+            } else {
+                for (const reward of availableRewards) {
+                    const option = document.createElement('option');
+                    option.value = reward.id;
+                    option.textContent = `${reward.sigil} ${reward.title}`;
+                    rewardSelect.appendChild(option);
+                }
+                rewardSelect.value = data.selectedRewards?.[id] || cosmetic?.id || availableRewards[0].id;
+                rewardSelect.addEventListener('change', () => {
+                    if (!this.runHistory.equipReward(id, rewardSelect.value)) return;
+                    const equipped = this.runHistory.rewardForHero(id);
+                    detail.textContent = `Забегов: ${Number(data.heroes[id]) || 0} · Побед: ${Number(data.heroVictories[id]) || 0}`
+                        + (equipped ? ` · ${equipped.sigil} ${equipped.title}` : '');
+                    if (this.player?.heroId === id && this.gameState === 'battle') {
+                        document.getElementById('battle-screen').dataset.cardSkin = equipped?.skin || '';
+                    }
+                });
+            }
+            row.appendChild(rewardSelect);
             panel.appendChild(row);
         }
         const achievements = this.runHistory.achievements(data);
