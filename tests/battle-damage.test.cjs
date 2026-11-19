@@ -47,3 +47,52 @@ test('self-damage uses the same cumulative tracker as incoming damage', () => {
     assert.equal(battle.damageTakenThisBattle, 5);
     assert.equal(battle.damageTakenThisTurn, 5);
 });
+
+
+const turnSource = readFileSync(join(__dirname, '../js/systems/battle/BattleTurn.js'), 'utf8');
+const BattleTurn = vm.runInNewContext(turnSource + '\\nBattleTurn;', { Math });
+
+test('enemy attack records only health damage after block is absorbed', () => {
+    const battle = {
+        player: { hp: 30 },
+        enemy: { hp: 40 },
+        block: 6,
+        statusEffects: { player: { thorns: 0 } },
+        damageTakenThisTurn: 0,
+        damageTakenThisBattle: 0,
+        takeDamage(amount) {
+            const lost = Math.min(this.player.hp, Math.max(0, Math.floor(amount)));
+            this.player.hp -= lost;
+            this.damageTakenThisTurn += lost;
+            this.damageTakenThisBattle += lost;
+        }
+    };
+
+    new BattleTurn().attackPlayer(battle, 10);
+
+    assert.equal(battle.block, 0);
+    assert.equal(battle.player.hp, 26);
+    assert.equal(battle.damageTakenThisBattle, 4);
+});
+
+test('fully blocked enemy attack does not disqualify a flawless battle', () => {
+    const battle = {
+        player: { hp: 30 },
+        enemy: { hp: 40 },
+        block: 12,
+        statusEffects: { player: { thorns: 0 } },
+        damageTakenThisTurn: 0,
+        damageTakenThisBattle: 0,
+        takeDamage(amount) {
+            const lost = Math.min(this.player.hp, Math.max(0, Math.floor(amount)));
+            this.player.hp -= lost;
+            this.damageTakenThisTurn += lost;
+            this.damageTakenThisBattle += lost;
+        }
+    };
+
+    new BattleTurn().attackPlayer(battle, 10);
+
+    assert.equal(battle.player.hp, 30);
+    assert.equal(battle.damageTakenThisBattle, 0);
+});
