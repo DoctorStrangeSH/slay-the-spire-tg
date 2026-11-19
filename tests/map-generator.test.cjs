@@ -1098,11 +1098,11 @@ test('rare secret rooms are deterministic, optional, and preserve route reachabi
             assert.equal(room.secretRoute, true);
             assert.equal(room.skippedFloor, room.floor + 1);
             assert.ok(room.connections.length > 0);
-            for (const exitId of room.connections) {
-                const exit = map.findNodeById(exitId);
-                assert.ok(exit, 'secret route exit exists');
-                assert.equal(exit.floor, room.floor + 2, 'secret route skips exactly one floor');
-            }
+            const exits = room.connections.map(id => map.findNodeById(id)).filter(Boolean);
+            assert.ok(exits.some(exit => exit.floor === room.floor + 1),
+                'normal route remains available');
+            assert.ok(exits.some(exit => exit.floor === room.floor + 2),
+                'secret shortcut skips exactly one floor');
         }
     }
     assert.ok(found > 0, 'some seeded runs should contain a secret room');
@@ -1122,7 +1122,10 @@ test('secret rooms create real shortcuts and keep the boss reachable', () => {
         const map = new MapGenerator(1, seed);
         const secret = map.allNodes.find(node => node.type === 'secret');
         if (!secret) continue;
-        assert.equal(secret.connections.length, map.paths[secret.floor + 2].length);
+        assert.equal(secret.connections.filter(id => map.findNodeById(id).floor === secret.floor + 2).length,
+            map.paths[secret.floor + 2].length);
+        assert.ok(secret.connections.some(id => map.findNodeById(id).floor === secret.floor + 1),
+            'normal path is preserved beside the shortcut');
         const reachable = new Set([map.paths[0][0].id]);
         let changed = true;
         while (changed) {
@@ -1138,8 +1141,10 @@ test('secret rooms create real shortcuts and keep the boss reachable', () => {
             }
         }
         assert.ok(reachable.has(map.paths[15][0].id), 'boss remains reachable after the shortcut is added');
-        assert.ok(map.paths[secret.floor + 1].every(node =>
-            !secret.connections.includes(node.id)), 'secret route does not enter the skipped floor');
+        assert.ok(map.paths[secret.floor + 1].some(node =>
+            secret.connections.includes(node.id)), 'regular exit still reaches the next floor');
+        assert.ok(map.paths[secret.floor + 2].some(node =>
+            secret.connections.includes(node.id)), 'shortcut reaches the floor after the skipped floor');
     }
 });
 
@@ -1148,4 +1153,12 @@ test('secret shortcut stays disabled for legacy organic maps', () => {
         const map = new MapGenerator(1, seed, { legacyOrganicLayout: true });
         assert.equal(map.allNodes.some(node => node.type === 'secret'), false);
     }
+});
+
+
+test('map UI explains the two exits available after a secret chamber', () => {
+    const ui = readFileSync(join(__dirname, '../js/ui/MapUI.js'), 'utf8');
+    assert.ok(ui.includes("'Обычный путь: '"));
+    assert.ok(ui.includes("'Секретный выход (+2 этажа): '"));
+    assert.ok(ui.includes("'spire-route--secret'"));
 });
