@@ -111,7 +111,10 @@ class BattleTurn {
 
     enemyAttack(battle) {
         let damage = Math.floor(battle.enemy.damage + (battle.statusEffects.enemy.strength || 0));
-        
+        if (battle.enemy.specialAbility === 'debt_collector' && battle.enemy.phase >= 3) {
+            damage = Math.floor(damage * 1.25);
+        }
+
         if (battle.enemy.specialAbility === 'dark_magic' && Math.random() < 0.3) {
             damage = Math.floor(damage * 1.5);
         }
