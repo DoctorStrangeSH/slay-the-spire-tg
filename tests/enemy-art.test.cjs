@@ -77,3 +77,14 @@ test('boss encounter heraldry is keyed by actual boss identity and remains safe'
     assert.ok(styles.includes('#enemy-area.boss-encounter::before'));
     assert.ok(styles.includes('@media (prefers-reduced-motion: reduce)'));
 });
+
+test('mobile enemy panels keep boss portraits and long intents reachable', () => {
+    const css = fs.readFileSync(path.join(root, 'css/cathedral.css'), 'utf8');
+    const mobile = css.slice(css.indexOf('/* Keep boss intents and stacked debuffs'));
+    assert.match(mobile, /@media \(max-width: 640px\)/);
+    assert.match(mobile, /#enemy-sprite\.enemy-is-boss\.enemy-has-portrait/);
+    assert.match(mobile, /#enemy-info[\s\S]*?overflow-y: auto/);
+    assert.match(mobile, /#enemy-name[\s\S]*?overflow-wrap: anywhere/);
+    assert.match(mobile, /#enemy-effects[\s\S]*?justify-content: flex-start/);
+    assert.match(mobile, /max-height: 640px/);
+});
