@@ -211,10 +211,30 @@ const MapUI = {
             button.appendChild(icon);
             button.appendChild(copy);
             button.addEventListener('click', () => game.selectMapNode(node));
+            button.addEventListener('pointerenter', () =>
+                this.highlightRoute(container, node.id, game.currentNodeId, true));
+            button.addEventListener('pointerleave', () =>
+                this.highlightRoute(container, node.id, game.currentNodeId, false));
+            button.addEventListener('focus', () =>
+                this.highlightRoute(container, node.id, game.currentNodeId, true));
+            button.addEventListener('blur', () =>
+                this.highlightRoute(container, node.id, game.currentNodeId, false));
             list.appendChild(button);
         });
         panel.appendChild(list);
         container.appendChild(panel);
+    },
+
+    highlightRoute(container, destinationId, currentNodeId, active) {
+        if (!container || typeof container.querySelectorAll !== 'function') return;
+        container.querySelectorAll('.spire-room, .spire-route').forEach(element => {
+            const matchesRoom = element.classList.contains('spire-room') &&
+                element.getAttribute('data-route-to') === destinationId;
+            const matchesEdge = element.classList.contains('spire-route') &&
+                element.getAttribute('data-route-from') === currentNodeId &&
+                element.getAttribute('data-route-to') === destinationId;
+            if (matchesRoom || matchesEdge) element.classList.toggle('is-route-preview', active);
+        });
     },
 
     createSVG(game) {
@@ -275,6 +295,8 @@ const MapUI = {
         line.setAttribute('stroke-linecap', 'round');
         
         line.setAttribute('class', 'spire-route');
+        line.setAttribute('data-route-from', node1.id);
+        line.setAttribute('data-route-to', node2.id);
         const isVisited = node1.visited && node2.visited;
         const isAvailable = node1.id === currentNodeId && !node2.visited;
         
@@ -317,6 +339,7 @@ const MapUI = {
         const isAvailable = availableNodes.includes(node);
         const isVisited = node.visited;
         const isFutureFloor = floorIndex > currentFloor;
+        group.setAttribute('data-route-to', node.id);
         group.setAttribute('class', 'spire-room spire-room--' + node.type +
             (isVisited ? ' is-visited' : isAvailable ? ' is-available' : ' is-future'));
         
