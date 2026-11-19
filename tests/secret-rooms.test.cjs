@@ -149,3 +149,63 @@ test('secret chamber events have their own visual scenes', () => {
         assert.ok(styles.includes(`data-event-scene="${scene}"`));
     }
 });
+
+
+test('Veiled Merchant contract pays an advance and records the debt origin', () => {
+    const game = createGame();
+    game.act = 1;
+    game.floor = 4;
+    game.player = { heroId: 'berserk', hp: 40, maxHp: 60, gold: 10, relics: [], veiledMerchantDebt: null };
+    const event = game.getRareEventsForAct().find(item => item.name === 'Безликий Торговец');
+    assert.ok(event);
+    assert.equal(event.options[0].action(), true);
+    assert.equal(game.player.gold, 90);
+    assert.equal(game.player.veiledMerchantDebt, 'owed');
+    assert.equal(game.player.veiledMerchantAct, 1);
+    assert.equal(game.player.veiledMerchantFloor, 4);
+    assert.equal(game.canEncounterVeiledMerchantCollector(), false);
+});
+
+test('Veiled Merchant collector appears only after a later floor and can settle the contract', () => {
+    const game = createGame();
+    game.act = 1;
+    game.floor = 4;
+    game.player = { heroId: 'berserk', hp: 40, maxHp: 60, gold: 120, relics: [], veiledMerchantDebt: 'owed', veiledMerchantAct: 1, veiledMerchantFloor: 4 };
+    assert.equal(game.canEncounterVeiledMerchantCollector(), false);
+    game.floor = 5;
+    assert.equal(game.canEncounterVeiledMerchantCollector(), true);
+    const events = game.getEventsForAct();
+    const collector = events.find(item => item.name === 'Сборщик Долгов');
+    assert.ok(collector);
+    assert.equal(collector.options[0].action(), true);
+    assert.equal(game.player.gold, 20);
+    assert.equal(game.player.veiledMerchantDebt, 'settled');
+    assert.equal(game.canEncounterVeiledMerchantCollector(), false);
+});
+
+test('defaulting on the Veiled Merchant contract is recorded as a lasting consequence', () => {
+    const game = createGame();
+    game.act = 2;
+    game.floor = 2;
+    game.player = { heroId: 'engineer', hp: 40, maxHp: 60, gold: 0, relics: [], veiledMerchantDebt: 'owed', veiledMerchantAct: 1, veiledMerchantFloor: 8 };
+    const collector = game.getEventsForAct().find(item => item.name === 'Сборщик Долгов');
+    assert.ok(collector);
+    assert.equal(collector.options[1].action(), true);
+    assert.equal(game.player.veiledMerchantDebt, 'defaulted');
+    assert.equal(game.canEncounterVeiledMerchantCollector(), false);
+});
+
+test('Veiled Merchant refuses duplicate contracts and journals all outcomes', () => {
+    const game = createGame();
+    game.act = 1;
+    game.floor = 3;
+    game.player = { heroId: 'psyker', hp: 40, maxHp: 60, gold: 200, relics: [], veiledMerchantDebt: 'owed', veiledMerchantAct: 1, veiledMerchantFloor: 1 };
+    const event = game.getRareEventsForAct().find(item => item.name === 'Безликий Торговец');
+    assert.equal(event.options[0].action(), false);
+    game.player.veiledMerchantDebt = 'defaulted';
+    assert.equal(event.options[0].action(), false);
+    for (const state of ['owed', 'settled', 'defaulted', 'declined']) {
+        game.player.veiledMerchantDebt = state;
+        assert.ok(game.getRunJournalEntries().some(entry => entry.title === 'Договор с Безликим Торговцем'));
+    }
+});
