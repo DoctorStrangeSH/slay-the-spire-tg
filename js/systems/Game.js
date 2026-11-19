@@ -755,27 +755,34 @@ class Game {
 
     recordCombatChallenge(victory) {
         if (!victory || !this.player || !this.runHistory) return false;
+        let unlocked = false;
+        const eliteVictory = this.currentBattleIsElite === true;
+
+        // Count actual HP lost during the fight, not the final HP delta (healing cannot erase damage).
+        if (eliteVictory && Number(this.currentBattle?.damageTakenThisBattle) === 0) {
+            unlocked = this.runHistory.unlockChallenge('flawless_elite') || unlocked;
+        }
         if (this.player.heroId === 'berserk' && this.currentBattle?.enemy?.isBoss === true) {
             const hp = Number(this.player.hp);
             const maxHp = Number(this.player.maxHp);
             if (Number.isFinite(hp) && Number.isFinite(maxHp) && maxHp > 0
                 && hp > 0 && hp <= maxHp * 0.2) {
-                return this.runHistory.unlockChallenge('berserk_last_breath');
+                unlocked = this.runHistory.unlockChallenge('berserk_last_breath') || unlocked;
             }
         }
-        if (this.player.heroId === 'engineer' && this.currentBattleIsElite === true) {
+        if (this.player.heroId === 'engineer' && eliteVictory) {
             const active = this.currentBattle?.buildings?.buildings;
             if (Array.isArray(active) && active.filter(building =>
                 building && Number.isFinite(Number(building.hp)) && Number(building.hp) > 0).length >= 2) {
-                return this.runHistory.unlockChallenge('engineer_iron_line');
+                unlocked = this.runHistory.unlockChallenge('engineer_iron_line') || unlocked;
             }
         }
-        if (this.player.heroId === 'psyker' && this.currentBattleIsElite === true
+        if (this.player.heroId === 'psyker' && eliteVictory
             && (Number(this.currentBattle?.cardsPlayedThisTurn) || 0) >= 3
             && (Number(this.currentBattle?.statusEffects?.enemy?.paralysis) || 0) > 0) {
-            return this.runHistory.unlockChallenge('psyker_mind_chain');
+            unlocked = this.runHistory.unlockChallenge('psyker_mind_chain') || unlocked;
         }
-        return false;
+        return unlocked;
     }
 
     endBattle(victory) {
