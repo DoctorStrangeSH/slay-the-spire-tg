@@ -7,6 +7,7 @@ class MapGenerator {
         this.legacyLayout = options.legacyLayout === true || this.legacyTreasureShop;
         this.legacyBranchingLayout = options.legacyBranchingLayout === true;
         this.legacyOrganicLayout = options.legacyOrganicLayout === true;
+        this.legacyCrossingLayout = options.legacyCrossingLayout === true;
         // Один seed описывает целую карту; пригодится для повтора забега.
         this.seed = seed === null ? Math.floor(Math.random() * 0x100000000) : seed;
         this.random = createMapRandom(this.seed);
@@ -154,7 +155,7 @@ class MapGenerator {
             const alt = to[Math.min(to.length - 1, currentTarget + 1)];
             // Дополнительная дуга не должна пересекать соседнюю линию маршрута.
             // Иначе даже при упорядоченных основных связях карта выглядит спутанной.
-            const crossesRoute = !this.legacyOrganicLayout && alt && from.some(other => other !== node &&
+            const crossesRoute = !this.legacyOrganicLayout && !this.legacyCrossingLayout && alt && from.some(other => other !== node &&
                 other.connections.some(id => {
                     const destination = to.find(target => target.id === id);
                     return destination && (
