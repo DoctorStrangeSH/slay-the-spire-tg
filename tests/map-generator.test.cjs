@@ -1012,3 +1012,46 @@ test('organic atlas avoids long diagonal jumps on 500 seeded maps', () => {
         }
     }
 });
+
+test('available atlas rooms have mobile-sized tap targets and keyboard activation', () => {
+    const ui = readFileSync(join(__dirname, '../js/ui/MapUI.js'), 'utf8');
+    const document = {
+        createElementNS(namespace, tag) {
+            return {
+                tag, attrs: {}, children: [], handlers: {}, style: {},
+                setAttribute(name, value) { this.attrs[name] = String(value); },
+                appendChild(child) { this.children.push(child); },
+                addEventListener(name, callback) { this.handlers[name] = callback; }
+            };
+        }
+    };
+    const MapUI = vm.runInNewContext(constants + '\n' + ui + '\nMapUI;', {
+        document, window: {}
+    });
+    const selected = [];
+    const room = { id: 'next', floor: 1, x: 3, type: 'battle', visited: false };
+    const game = { selectMapNode(node) { selected.push(node.id); } };
+    const group = MapUI.createNodeElement(
+        room, 1, 'svg', 520, 24, 36, 64, [room], 0, game
+    );
+    assert.equal(group.attrs.role, 'button');
+    assert.equal(group.attrs.tabindex, '0');
+    assert.match(group.attrs['aria-label'], /Обычный бой/);
+    const hit = group.children.find(child => child.attrs.class === 'spire-room-hit-target');
+    assert.ok(hit);
+    assert.ok(Number(hit.attrs.r) >= 30);
+    let prevented = 0;
+    const event = key => ({
+        key,
+        preventDefault() { prevented++; },
+        stopPropagation() {}
+    });
+    group.handlers.keydown(event('Tab'));
+    assert.equal(selected.length, 0);
+    group.handlers.keydown(event('Enter'));
+    group.handlers.keydown(event(' '));
+    assert.deepEqual(selected, ['next', 'next']);
+    assert.equal(prevented, 2);
+    group.handlers.click(event());
+    assert.equal(selected.length, 3);
+});
