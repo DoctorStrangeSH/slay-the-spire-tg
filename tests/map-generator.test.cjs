@@ -1087,9 +1087,9 @@ test('rare secret rooms are deterministic, optional, and preserve route reachabi
         const replay = new MapGenerator(1, seed);
         const secret = map.allNodes.filter(node => node.type === 'secret');
         assert.ok(secret.length <= 1, 'at most one secret room per act');
-        assert.deepEqual(
-            map.allNodes.map(node => [node.id, node.type, node.connections]),
-            replay.allNodes.map(node => [node.id, node.type, node.connections])
+        assert.equal(
+            JSON.stringify(map.allNodes.map(node => [node.id, node.type, node.connections])),
+            JSON.stringify(replay.allNodes.map(node => [node.id, node.type, node.connections]))
         );
         for (const room of secret) {
             found++;
