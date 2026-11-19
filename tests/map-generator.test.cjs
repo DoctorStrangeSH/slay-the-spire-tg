@@ -862,3 +862,19 @@ test('map highlights only routes leaving the current room', () => {
     assert.equal(staleLine.attributes.opacity, '0.3');
     assert.equal(activeLine.attributes.opacity, '0.8');
 });
+
+
+test('route forecast distinguishes a forced corridor from multiple real exits', () => {
+    const ui = readFileSync(join(__dirname, '../js/ui/MapUI.js'), 'utf8');
+    const MapUI = vm.runInNewContext(constants + '\n' + ui + '\nMapUI;', { window: {} });
+    const rooms = {
+        one: { id: 'one', type: 'battle' },
+        two: { id: 'two', type: 'battle' },
+        rest: { id: 'rest', type: 'rest' }
+    };
+    const map = { findNodeById: id => rooms[id] || null };
+    assert.match(MapUI.getRouteForecast({ connections: ['one'] }, map), /один путь/);
+    assert.match(MapUI.getRouteForecast({ connections: ['one', 'two'] }, map), /2 варианта пути/);
+    assert.match(MapUI.getRouteForecast({ connections: ['one', 'rest'] }, map), /Бой.*Отдых/);
+    assert.equal(MapUI.getRouteForecast({ connections: ['missing'] }, map), '');
+});
