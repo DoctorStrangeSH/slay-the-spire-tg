@@ -6,7 +6,7 @@ const { join } = require('node:path');
 const vm = require('node:vm');
 
 const source = readFileSync(join(__dirname, '../js/systems/Game.js'), 'utf8');
-const Game = vm.runInNewContext(source + '\\nGame;', { Math, Date, JSON });
+const Game = vm.runInNewContext(source + '\nGame;', { Math, Date, JSON });
 
 function gameWith(player) {
     const game = Object.create(Game.prototype);
