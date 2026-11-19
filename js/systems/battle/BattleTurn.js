@@ -48,8 +48,7 @@ class BattleTurn {
         
         // Яд игрока
         if (battle.statusEffects.player.poison > 0) {
-            battle.player.hp -= Math.floor(battle.statusEffects.player.poison);
-            battle.player.hp = Math.max(0, Math.floor(battle.player.hp));
+            battle.takeDamage(Math.floor(battle.statusEffects.player.poison));
             battle.statusEffects.player.poison--;
         }
         
@@ -150,8 +149,7 @@ class BattleTurn {
         }
         
         damage = Math.max(0, Math.floor(damage));
-        battle.player.hp -= damage;
-        battle.player.hp = Math.max(0, Math.floor(battle.player.hp));
+        battle.takeDamage(damage);
         
         if (battle.statusEffects.player.thorns > 0 && damage > 0) {
             battle.enemy.hp -= Math.floor(battle.statusEffects.player.thorns);
