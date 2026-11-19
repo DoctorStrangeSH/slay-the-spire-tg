@@ -962,3 +962,32 @@ test('important rooms have distinct non-interactive atlas silhouettes', () => {
     assert.ok(ornaments.every(ornament => ornament.attrs['aria-hidden'] === 'true'));
     assert.equal(MapUI.createRoomOrnament('battle', 100, 100, 'svg'), null);
 });
+
+
+test('singleton boss and treasure rooms are centred in the organic atlas', () => {
+    const ui = readFileSync(join(__dirname, '../js/ui/MapUI.js'), 'utf8');
+    const window = { _currentMapOrganicLayout: true };
+    const document = {
+        createElementNS(namespace, tag) {
+            return {
+                tag, attrs: {}, children: [],
+                setAttribute(name, value) { this.attrs[name] = value; },
+                appendChild(child) { this.children.push(child); }
+            };
+        }
+    };
+    const MapUI = vm.runInNewContext(constants + '\n' + ui + '\nMapUI;', { window, document });
+    const paths = Array.from({ length: 16 }, () => []);
+    const treasure = { id: 'treasure', floor: 8, x: 0, type: 'treasure', visited: false, connections: [] };
+    const boss = { id: 'boss', floor: 15, x: 0, type: 'boss', visited: false, connections: [] };
+    paths[8].push(treasure);
+    paths[15].push(boss);
+    const generator = {
+        floors: 16, paths,
+        getAvailableNodes: () => [],
+        findNodeById: () => null
+    };
+    MapUI.createSVG({ mapGenerator: generator, currentNodeId: 'none' });
+    assert.equal(MapUI.getNodeX(treasure, 520, 24), 260);
+    assert.equal(MapUI.getNodeX(boss, 520, 24), 260);
+});
