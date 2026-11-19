@@ -9,7 +9,7 @@ class RunHistory {
 
     empty() {
         return { version: 1, runs: 0, victories: 0, defeats: 0,
-            bestScore: 0, bestAct: 0, totalBattles: 0, heroes: {}, heroVictories: {}, challenges: {}, recent: [] };
+            bestScore: 0, bestAct: 0, totalBattles: 0, heroes: {}, heroVictories: {}, challenges: {}, selectedRewards: {}, recent: [] };
     }
 
     read() {
