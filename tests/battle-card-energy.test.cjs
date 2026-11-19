@@ -58,3 +58,38 @@ test('attack discounts never produce a negative energy cost', () => {
     assert.equal(cards.selectCard(battle, 1).success, true);
     assert.equal(cards.calculateSelectedCost(battle, battle.selectedCards), 0);
 });
+
+test('batch play uses battle-level card pipeline and triggers every after-play bonus', () => {
+    const cards = new BattleCards();
+    const battle = state([1, 1, 1], [], 3);
+    battle.selectedCards = [0, 2, 1];
+    const played = [];
+    battle.playCard = index => {
+        played.push(index);
+        battle.energy -= 1;
+        battle.cardsPlayedThisTurn++;
+        battle.statusEffects.player.strength += 1; // Simulate after-play trigger.
+        return { success: true };
+    };
+    assert.equal(cards.playSelectedCards(battle).success, true);
+    assert.deepEqual(played, [2, 1, 0]);
+    assert.equal(battle.statusEffects.player.strength, 3);
+    assert.equal(battle.energy, 0);
+    assert.deepEqual(Array.from(battle.selectedCards), []);
+});
+
+test('batch play surfaces card errors and clears a stale selection', () => {
+    const cards = new BattleCards();
+    const battle = state([1, 1]);
+    battle.selectedCards = [0, 1];
+    const played = [];
+    battle.playCard = index => {
+        played.push(index);
+        return { success: false, message: 'Недостаточно энергии!' };
+    };
+    const result = cards.playSelectedCards(battle);
+    assert.equal(result.success, false);
+    assert.equal(result.message, 'Недостаточно энергии!');
+    assert.deepEqual(played, [1]);
+    assert.deepEqual(Array.from(battle.selectedCards), []);
+});
