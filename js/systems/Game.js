@@ -640,12 +640,6 @@ class Game {
                 BattleUI.hidePreview();
             }
 
-            // Если карта с scry - показываем модальное окно
-            const card = this.currentBattle.hand[index];
-            if (card && card.scry) {
-                const topCards = this.currentBattle.scry(card.scry);
-                BattleUI.showScryModal(this, topCards);
-            }
         } else {
             alert(result.message);
         }
@@ -666,6 +660,9 @@ class Game {
             BattleFeedback.show(before, this.currentBattle);
             BattleFeedback.cardsPlayed(playedTypes, this.player.heroId, playedCards.map(card => card.id));
             BattleUI.hidePreview();
+            if (result.scryedCards) {
+                BattleUI.showScryModal(this, result.scryedCards);
+            }
 
             if (this.currentBattle.enemy.hp <= 0) {
                 this.endBattle(true);
