@@ -238,7 +238,7 @@ const MapUI = {
                 node.connections.forEach(connId => {
                     const targetNode = game.mapGenerator.findNodeById(connId);
                     if (targetNode) {
-                        const line = this.createConnectionLine(node, targetNode, svgNS, width, marginX, marginY, floorHeight);
+                        const line = this.createConnectionLine(node, targetNode, svgNS, width, marginX, marginY, floorHeight, currentNode?.id);
                         svg.appendChild(line);
                     }
                 });
@@ -256,7 +256,7 @@ const MapUI = {
         return svg;
     },
     
-    createConnectionLine(node1, node2, svgNS, width, marginX, marginY, floorHeight) {
+    createConnectionLine(node1, node2, svgNS, width, marginX, marginY, floorHeight, currentNodeId) {
         const line = document.createElementNS(svgNS, 'path');
         
         const x1 = this.getNodeX(node1, width, marginX);
@@ -271,7 +271,7 @@ const MapUI = {
         
         line.setAttribute('class', 'spire-route');
         const isVisited = node1.visited && node2.visited;
-        const isAvailable = node1.visited && !node2.visited;
+        const isAvailable = node1.id === currentNodeId && !node2.visited;
         
         if (isVisited) {
             line.setAttribute('stroke', '#665a54');
