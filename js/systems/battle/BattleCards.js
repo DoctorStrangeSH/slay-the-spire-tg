@@ -150,9 +150,11 @@ class BattleCards {
         
         // Route every card through BattleSystem.playCard, including its
         // after-play effects (adaptation, onslaught, versatility and relics).
+        let scryedCards = null;
         for (const cardIndex of sortedIndices) {
             if (!battle.hand[cardIndex]) continue;
             const result = battle.playCard(cardIndex);
+            if (result.scryedCards) scryedCards = result.scryedCards;
             if (!result.success) {
                 battle.selectedCards = [];
                 return result;
@@ -160,7 +162,7 @@ class BattleCards {
         }
 
         battle.selectedCards = [];
-        return { success: true };
+        return { success: true, scryedCards };
     }
     
     playCard(battle, cardIndex) {
@@ -238,10 +240,8 @@ class BattleCards {
             battle.echoSkillStacks += card.echoSkill;
         }
         
-        // Предвидение
-        if (card.scry) {
-            battle.scry(card.scry);
-        }
+        // Предвидение activates only when the card is actually played.
+        const scryedCards = card.scry ? battle.scry(card.scry) : null;
         
         // Перемотка
         if (card.id === 'rewind') {
@@ -266,7 +266,7 @@ class BattleCards {
             battle.discardPile.push(playedCard);
         }
         
-        return { success: true };
+        return { success: true, scryedCards };
     }
     
     dealDamage(battle, card) {
