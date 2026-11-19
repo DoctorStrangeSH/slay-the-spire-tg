@@ -376,6 +376,8 @@ class Game {
         else if (player.classEventDebt === 'engineer') add('Мастерская Последнего Механика', 'Ожидает продолжения', 'Ты забрал чертёж. В мастерской обещали передать тебе оставшийся механизм.');
         else if (player.classEventDebt === 'psyker') add('Шёпот Между Созвездиями', 'Ожидает продолжения', 'Ты коснулся звёздного разлома. Теперь он зовёт тебя снова.');
         else if (['berserk-resolved', 'engineer-resolved', 'psyker-resolved'].includes(player.classEventDebt)) add('Классовое испытание', 'Завершено', 'Последствия твоего решения стали частью истории этого забега.');
+        const secretRooms = Number(player.secretRoomsFound) || 0;
+        if (secretRooms > 0) add('Тайные комнаты', 'Обнаружено', `Найдено скрытых комнат: ${secretRooms}. Выборов сделано: ${Number(player.secretRoomChoices) || 0}.`);
         const mark = Number(player.bloodMarkBattles) || 0;
         if (mark > 0) add('Кровавая метка', 'Действует', `Потеря 4 HP в начале следующих ${mark} боёв.`);
         const exhaustion = Number(player.exhaustionBattles) || 0;
@@ -726,6 +728,11 @@ class Game {
 
         const currentNode = this.mapGenerator.findNodeById(this.currentNodeId);
         if (currentNode && node.floor <= currentNode.floor) return;
+        if (node.type === NODE_TYPES.SECRET &&
+            !this.player.relics.includes('chronicle')) {
+            alert('Проход запечатан. Хроника предвидения поможет увидеть скрытый путь.');
+            return;
+        }
 
         this.mapGenerator.visitNode(node.id);
         this.currentNodeId = node.id;
@@ -743,6 +750,9 @@ class Game {
                 break;
             case NODE_TYPES.EVENT:
                 this.triggerEvent();
+                break;
+            case NODE_TYPES.SECRET:
+                this.triggerSecretRoom();
                 break;
             case NODE_TYPES.TREASURE:
                 this.openTreasure();
@@ -1090,6 +1100,73 @@ class Game {
         if (card) {
             this.showCardModal(card, 'view');
         }
+    }
+
+    triggerSecretRoom() {
+        if (!this.player || !this.player.relics.includes('chronicle')) return;
+        this.player.secretRoomsFound = Math.max(0, Number(this.player.secretRoomsFound) || 0) + 1;
+        const heroEvents = {
+            berserk: {
+                name: 'Кровавая сокровищница',
+                description: 'За скрытой дверью лежит зал павших чемпионов. Каменный сундук открывается только от капли крови. Его содержимое пахнет железом и древней яростью.',
+                options: [
+                    { text: 'Заплатить 8 HP и забрать реликвию', action: () => {
+                        if (this.player.hp <= 8) { alert('Недостаточно здоровья для жертвы.'); return false; }
+                        const relic = chooseRelic(this.player.relics, Math.random, this.player.heroId);
+                        if (!relic) { alert('В сундуке больше нет реликвий для тебя.'); return false; }
+                        this.player.hp -= 8;
+                        this.player.relics.push(relic.id);
+                        this.player.secretRoomChoices = (Number(this.player.secretRoomChoices) || 0) + 1;
+                        return true;
+                    } },
+                    { text: 'Забрать старые монеты (+35 золота)', action: () => {
+                        this.player.gold += 35;
+                        this.player.secretRoomChoices = (Number(this.player.secretRoomChoices) || 0) + 1;
+                        return true;
+                    } }
+                ]
+            },
+            engineer: {
+                name: 'Забытый арсенал',
+                description: 'За стеной обнаружен арсенал с нетронутыми механизмами. Часть устройств ещё можно запустить, но остальные принесут больше пользы как лом.',
+                options: [
+                    { text: 'Активировать механизм (получить реликвию)', action: () => {
+                        const relic = chooseRelic(this.player.relics, Math.random, this.player.heroId);
+                        if (!relic) { alert('Все доступные реликвии уже собраны.'); return false; }
+                        this.player.relics.push(relic.id);
+                        this.player.secretRoomChoices = (Number(this.player.secretRoomChoices) || 0) + 1;
+                        return true;
+                    } },
+                    { text: 'Разобрать арсенал (+50 золота)', action: () => {
+                        this.player.gold += 50;
+                        this.player.secretRoomChoices = (Number(this.player.secretRoomChoices) || 0) + 1;
+                        return true;
+                    } }
+                ]
+            },
+            psyker: {
+                name: 'Звёздная крипта',
+                description: 'В крипте мерцают письмена, которых нет ни в одном языке. Они обещают знание, но прикосновение к ним обжигает разум.',
+                options: [
+                    { text: 'Прочесть письмена (−7 HP, улучшить карту)', action: () => {
+                        if (!this.applyForbiddenManuscript()) {
+                            alert('Нужно больше 7 HP и хотя бы одна карта, которую можно улучшить.');
+                            return false;
+                        }
+                        this.player.secretRoomChoices = (Number(this.player.secretRoomChoices) || 0) + 1;
+                        return true;
+                    } },
+                    { text: 'Собрать осколки (+30 золота)', action: () => {
+                        this.player.gold += 30;
+                        this.player.secretRoomChoices = (Number(this.player.secretRoomChoices) || 0) + 1;
+                        return true;
+                    } }
+                ]
+            }
+        };
+        const event = heroEvents[this.player.heroId];
+        if (!event) return;
+        this.showEventModal(event);
     }
 
     getRareEventChance() {
