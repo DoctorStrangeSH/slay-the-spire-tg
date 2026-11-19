@@ -456,7 +456,12 @@ const MapUI = {
         const availableWidth = width - 2 * marginX;
         if (floorNodes.length === 1) return width / 2;
         if (window._currentMapOrganicLayout) {
-            return marginX + availableWidth * (node.x + 1) / 8;
+            // Keep some seeded asymmetry while distributing rooms evenly enough
+            // to prevent steep cross-screen diagonals between adjacent floors.
+            const rank = floorNodes.findIndex(room => room.id === node.id);
+            const natural = (node.x + 1) / 8;
+            const balanced = rank < 0 ? natural : (rank + 1) / (floorNodes.length + 1);
+            return marginX + availableWidth * (natural * 0.3 + balanced * 0.7);
         }
         const step = availableWidth / (floorNodes.length + 1);
         return marginX + step * (node.x + 1);
