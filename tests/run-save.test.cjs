@@ -162,3 +162,17 @@ test('checkpoint retains the run id so outcomes are counted only once', () => {
     const restored = persistence.read();
     assert.equal(restored.runId, 'stable-run-id');
 });
+
+
+test('checkpoint from pre-fix organic map restores without changing its routes', () => {
+    const persistence = new RunSave(storage());
+    const previous = game();
+    previous.mapGenerator = new MapGenerator(1, 0, { legacyCrossingLayout: true });
+    const oldSignature = persistence.mapSignature(previous.mapGenerator);
+    assert.notEqual(oldSignature, persistence.mapSignature(new MapGenerator(1, 0)));
+    assert.equal(persistence.save(previous), true);
+    const restored = { player: null };
+    assert.equal(persistence.restore(restored), true);
+    assert.equal(restored.mapGenerator.legacyCrossingLayout, true);
+    assert.equal(persistence.mapSignature(restored.mapGenerator), oldSignature);
+});
