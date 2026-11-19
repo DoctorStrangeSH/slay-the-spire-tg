@@ -836,3 +836,29 @@ test('modern organic routes never cross between adjacent floors', () => {
         }
     }
 });
+
+
+test('map highlights only routes leaving the current room', () => {
+    const ui = readFileSync(join(__dirname, '../js/ui/MapUI.js'), 'utf8');
+    const MapUI = vm.runInNewContext(ui + '\nMapUI;', {
+        window: { _currentMapOrganicLayout: true },
+        document: {
+            createElementNS() {
+                return {
+                    attributes: {},
+                    setAttribute(name, value) { this.attributes[name] = String(value); }
+                };
+            }
+        }
+    });
+    const past = { id: 'past', floor: 3, x: 1, visited: true };
+    const current = { id: 'current', floor: 3, x: 3, visited: true };
+    const future = { id: 'future', floor: 4, x: 3, visited: false };
+    const args = ['svg', 520, 24, 36, 60, current.id];
+    const staleLine = MapUI.createConnectionLine(past, future, ...args);
+    const activeLine = MapUI.createConnectionLine(current, future, ...args);
+    assert.equal(staleLine.attributes.stroke, '#685f63');
+    assert.equal(activeLine.attributes.stroke, '#8bbfba');
+    assert.equal(staleLine.attributes.opacity, '0.3');
+    assert.equal(activeLine.attributes.opacity, '0.8');
+});
