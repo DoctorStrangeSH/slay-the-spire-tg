@@ -1161,4 +1161,6 @@ test('map UI explains the two exits available after a secret chamber', () => {
     assert.ok(ui.includes("'Обычный путь: '"));
     assert.ok(ui.includes("'Секретный выход (+2 этажа): '"));
     assert.ok(ui.includes("'spire-route--secret'"));
+    assert.ok(ui.includes("if (node.type === NODE_TYPES.SECRET && !hasChronicle) return"));
+    assert.ok(ui.includes("Содержимое прохода скрыто до получения Хроники предвидения"));
 });
