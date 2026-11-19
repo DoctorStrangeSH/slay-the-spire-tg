@@ -158,8 +158,16 @@ const MapUI = {
         // несколько узлов одного типа — всё равно разные маршруты.
         const branchCount = destinations.length;
         if (node.type === NODE_TYPES.SECRET) {
-            return 'После тайного прохода (этаж +2): ' + labels.join(' · ') +
-                (branchCount > 1 ? ` · ${branchCount} выхода` : ' · один выход');
+            const regular = destinations.filter(room => room.floor === node.floor + 1);
+            const shortcut = destinations.filter(room => room.floor === node.floor + 2);
+            const regularLabel = regular.length
+                ? 'Обычный путь: ' + regular.map(room => this.getNodeIcon(room.type) + ' ' + this.getNodeLabel(room.type)).join(' · ')
+                : '';
+            const shortcutLabel = shortcut.length
+                ? 'Секретный выход (+2 этажа): ' + shortcut.map(room => this.getNodeIcon(room.type) + ' ' + this.getNodeLabel(room.type)).join(' · ')
+                : '';
+            return [regularLabel, shortcutLabel].filter(Boolean).join('  |  ') ||
+                'Тайный путь пока не раскрыт';
         }
         return 'После: ' + labels.join(' · ') +
             (branchCount > 1 ? ` · ${branchCount} варианта пути` : ' · один путь');
