@@ -50,23 +50,24 @@ test('self-damage uses the same cumulative tracker as incoming damage', () => {
 
 
 const turnSource = readFileSync(join(__dirname, '../js/systems/battle/BattleTurn.js'), 'utf8');
-const BattleTurn = vm.runInNewContext(turnSource + '\nBattleTurn;', { Math });
+const combatClasses = vm.runInNewContext(
+    source + '\n' + turnSource + '\n({ BattleCore, BattleTurn })',
+    { GAME_CONFIG: { baseEnergy: 3, maxEnergy: 3, maxHandSize: 10 }, Math }
+);
+const IntegratedBattleCore = combatClasses.BattleCore;
+const BattleTurn = combatClasses.BattleTurn;
+
+function integratedBattle(hp, block) {
+    const battle = new IntegratedBattleCore(
+        { hp, maxHp: 70, deck: [], relics: [] },
+        { hp: 40, maxHp: 40, damage: 10, pattern: [], patternIndex: 0 }
+    );
+    battle.block = block;
+    return battle;
+}
 
 test('enemy attack records only health damage after block is absorbed', () => {
-    const battle = {
-        player: { hp: 30 },
-        enemy: { hp: 40 },
-        block: 6,
-        statusEffects: { player: { thorns: 0 } },
-        damageTakenThisTurn: 0,
-        damageTakenThisBattle: 0,
-        takeDamage(amount) {
-            const lost = Math.min(this.player.hp, Math.max(0, Math.floor(amount)));
-            this.player.hp -= lost;
-            this.damageTakenThisTurn += lost;
-            this.damageTakenThisBattle += lost;
-        }
-    };
+    const battle = integratedBattle(30, 6);
 
     new BattleTurn().attackPlayer(battle, 10);
 
@@ -76,20 +77,7 @@ test('enemy attack records only health damage after block is absorbed', () => {
 });
 
 test('fully blocked enemy attack does not disqualify a flawless battle', () => {
-    const battle = {
-        player: { hp: 30 },
-        enemy: { hp: 40 },
-        block: 12,
-        statusEffects: { player: { thorns: 0 } },
-        damageTakenThisTurn: 0,
-        damageTakenThisBattle: 0,
-        takeDamage(amount) {
-            const lost = Math.min(this.player.hp, Math.max(0, Math.floor(amount)));
-            this.player.hp -= lost;
-            this.damageTakenThisTurn += lost;
-            this.damageTakenThisBattle += lost;
-        }
-    };
+    const battle = integratedBattle(30, 12);
 
     new BattleTurn().attackPlayer(battle, 10);
 
