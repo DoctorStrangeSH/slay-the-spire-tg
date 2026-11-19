@@ -16,7 +16,7 @@ const RELIC_CATALOG = Object.freeze({
         id: 'chronicle',
         name: 'Хроника предвидения',
         emoji: '📜',
-        description: 'В начале каждого хода берёте дополнительную карту.'
+        description: 'В начале каждого хода берёте дополнительную карту. Также позволяет находить запечатанные тайные комнаты.'
     },
     eternityShard: {
         id: 'eternityShard',
