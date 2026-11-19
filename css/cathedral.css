@@ -2136,3 +2136,33 @@ button:disabled { opacity: .42; filter: grayscale(.5); }
   opacity: 1;
   filter: drop-shadow(0 0 4px #7ad9bd);
 }
+
+
+/* Three atlas materials: each act has its own terrain, not only a header tint. */
+#map-screen[data-act-theme="garden"] #map-nodes {
+  background:
+    radial-gradient(ellipse at 17% 24%, #58754b25 0 12%, transparent 42%),
+    radial-gradient(ellipse at 85% 68%, #3e665027 0 10%, transparent 43%),
+    repeating-radial-gradient(circle at 12% 23%, transparent 0 23px, #9dae7c09 24px 25px, transparent 26px 63px),
+    linear-gradient(140deg, #172820, #101c1b 49%, #222a21);
+  border-color: #77906a88;
+  box-shadow: inset 0 0 48px #050e0b, 0 16px 38px #0008;
+}
+#map-screen[data-act-theme="depths"] #map-nodes {
+  background:
+    radial-gradient(ellipse at 55% 10%, #ab62302c, transparent 51%),
+    radial-gradient(ellipse at 25% 85%, #85452b22, transparent 53%),
+    repeating-linear-gradient(155deg, transparent 0 48px, #f3ae6d08 49px 51px, transparent 52px 96px),
+    linear-gradient(120deg, #29201d, #17191d 53%, #30231e);
+  border-color: #aa775888;
+  box-shadow: inset 0 0 55px #110a08, 0 16px 38px #0008;
+}
+#map-screen[data-act-theme="citadel"] #map-nodes {
+  background:
+    radial-gradient(ellipse at 50% 0%, #79518b35, transparent 61%),
+    repeating-linear-gradient(90deg, transparent 0 72px, #b89bc70a 73px 74px),
+    repeating-linear-gradient(0deg, transparent 0 72px, #b89bc70a 73px 74px),
+    linear-gradient(135deg, #221d30, #121521 53%, #292033);
+  border-color: #9e7ba988;
+  box-shadow: inset 0 0 55px #090712, 0 16px 38px #0008;
+}
