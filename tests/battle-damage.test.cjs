@@ -6,7 +6,7 @@ const { join } = require('node:path');
 const vm = require('node:vm');
 
 const source = readFileSync(join(__dirname, '../js/systems/battle/BattleCore.js'), 'utf8');
-const BattleCore = vm.runInNewContext(source + '\\nBattleCore;', {
+const BattleCore = vm.runInNewContext(source + '\nBattleCore;', {
     GAME_CONFIG: { baseEnergy: 3, maxEnergy: 3, maxHandSize: 10 },
     Math
 });
