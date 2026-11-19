@@ -1671,6 +1671,71 @@ class Game {
                 ]
             }
         };
+        // Class-specific encounters give each hero a different risk/reward decision.
+        const classEvents = {
+            berserk: {
+                name: 'Круг Кровавой Клятвы',
+                description: 'В зале без зрителей стоит испачканный кровью круг. За его чертой лежит реликвия павшего чемпиона. Круг признаёт только тех, кто готов заплатить собственным здоровьем.',
+                options: [
+                    {
+                        text: 'Принять вызов (−8 HP, получить реликвию)',
+                        action: () => {
+                            if (this.player.hp <= 8) { alert('Недостаточно здоровья, чтобы пережить испытание!'); return false; }
+                            const relic = chooseRelic(this.player.relics, Math.random, this.player.heroId);
+                            if (!relic) { alert('В круге не осталось реликвий, достойных тебя.'); return false; }
+                            this.player.hp -= 8;
+                            this.player.relics.push(relic.id);
+                            return true;
+                        }
+                    },
+                    { text: 'Покинуть круг', action: () => true }
+                ]
+            },
+            engineer: {
+                name: 'Мастерская Последнего Механика',
+                description: 'За завалом обнаружилась мастерская погибшего инженера. Его инструменты ещё работают, но мастер оставил жетон оплаты: без него чертежи не откроются.',
+                options: [
+                    {
+                        text: 'Купить чертёж (35 золота, выбрать карту)',
+                        action: () => {
+                            if (this.player.gold < 35) { alert('Недостаточно золота для покупки чертежа!'); return false; }
+                            this.player.gold -= 35;
+                            this.offerCard();
+                            return 'deferred';
+                        }
+                    },
+                    {
+                        text: 'Разобрать запасные детали (+25 золота)',
+                        action: () => { this.player.gold += 25; return true; }
+                    },
+                    { text: 'Оставить мастерскую', action: () => true }
+                ]
+            },
+            psyker: {
+                name: 'Шёпот Между Созвездиями',
+                description: 'В потолке зияет трещина, за которой мерцают чужие звёзды. Голос предлагает переписать одну карту твоей колоды, но разум должен выдержать прикосновение.',
+                options: [
+                    {
+                        text: 'Открыть разум (−7 HP, улучшить случайную карту)',
+                        action: () => {
+                            if (!this.applyForbiddenManuscript()) {
+                                alert('Нужно больше 7 HP и хотя бы одна карта для изменения!'); 
+                                return false;
+                            }
+                            return true;
+                        }
+                    },
+                    {
+                        text: 'Закрыть сознание (+18 золота)',
+                        action: () => { this.player.gold += 18; return true; }
+                    },
+                    { text: 'Отвернуться от звёзд', action: () => true }
+                ]
+            }
+        };
+        const classEvent = classEvents[this.player?.heroId];
+        if (classEvent) commonEvents.push(classEvent);
+
         return actEvents[this.act] ? [...commonEvents, actEvents[this.act]] : commonEvents;
     }
 
