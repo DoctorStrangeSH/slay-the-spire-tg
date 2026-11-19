@@ -8,6 +8,7 @@ class MapGenerator {
         this.legacyBranchingLayout = options.legacyBranchingLayout === true;
         this.legacyOrganicLayout = options.legacyOrganicLayout === true;
         this.legacyCrossingLayout = options.legacyCrossingLayout === true;
+        this.enableSecretRooms = options.enableSecretRooms !== false;
         // Один seed описывает целую карту; пригодится для повтора забега.
         this.seed = seed === null ? Math.floor(Math.random() * 0x100000000) : seed;
         this.random = createMapRandom(this.seed);
@@ -93,6 +94,19 @@ class MapGenerator {
         this.createNode(this.floors - 1, 0, NODE_TYPES.BOSS);
         this.connectOrganicRoutes();
         if (!this.legacyOrganicLayout) this.removeRepetitiveRoutes(new Set(Object.keys(special).map(Number)));
+        if (this.enableSecretRooms) this.placeSecretRoom();
+    }
+
+    // Один редкий тайник может скрыться среди обычных событий на каждом акте.
+    // Мы переиспользуем узел, чтобы не менять геометрию и связность карты.
+    placeSecretRoom() {
+        if (this.random() >= 0.22) return false;
+        const candidates = this.allNodes.filter(node =>
+            node.floor >= 3 && node.floor <= 12 && node.type === NODE_TYPES.EVENT);
+        if (!candidates.length) return false;
+        const chosen = candidates[this.randomInt(0, candidates.length - 1)];
+        chosen.type = NODE_TYPES.SECRET;
+        return true;
     }
 
     removeRepetitiveRoutes(protectedFloors) {
