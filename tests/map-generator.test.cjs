@@ -878,3 +878,38 @@ test('route forecast distinguishes a forced corridor from multiple real exits', 
     assert.match(MapUI.getRouteForecast({ connections: ['one', 'rest'] }, map), /Бой.*Отдых/);
     assert.equal(MapUI.getRouteForecast({ connections: ['missing'] }, map), '');
 });
+
+
+test('route preview highlights only the selected room and current connecting edge', () => {
+    const ui = readFileSync(join(__dirname, '../js/ui/MapUI.js'), 'utf8');
+    const MapUI = vm.runInNewContext(ui + '\nMapUI;', { window: {} });
+    const element = (kind, from, to) => {
+        const classes = new Set([kind]);
+        return {
+            getAttribute(name) {
+                return ({ 'data-route-from': from, 'data-route-to': to })[name];
+            },
+            classList: {
+                contains(name) { return classes.has(name); },
+                toggle(name, enabled) {
+                    if (enabled) classes.add(name);
+                    else classes.delete(name);
+                }
+            },
+            active() { return classes.has('is-route-preview'); }
+        };
+    };
+    const target = element('spire-room', null, 'chosen');
+    const other = element('spire-room', null, 'other');
+    const activeLine = element('spire-route', 'current', 'chosen');
+    const staleLine = element('spire-route', 'previous', 'chosen');
+    const container = { querySelectorAll: () => [target, other, activeLine, staleLine] };
+    MapUI.highlightRoute(container, 'chosen', 'current', true);
+    assert.equal(target.active(), true);
+    assert.equal(activeLine.active(), true);
+    assert.equal(other.active(), false);
+    assert.equal(staleLine.active(), false);
+    MapUI.highlightRoute(container, 'chosen', 'current', false);
+    assert.equal(target.active(), false);
+    assert.equal(activeLine.active(), false);
+});
