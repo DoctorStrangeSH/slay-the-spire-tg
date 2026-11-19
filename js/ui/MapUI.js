@@ -453,6 +453,10 @@ const MapUI = {
             group.setAttribute('role', 'button');
             group.setAttribute('tabindex', '0');
             const details = this.getRoomDetails(node.type);
+            if (node.type === NODE_TYPES.SECRET && hasChronicle) {
+                details.label = 'Тайный маршрут';
+                details.hint = 'Можно выбрать обычный выход или секретный обход';
+            }
             group.setAttribute('aria-label', details.label + ' — доступно. ' + details.hint);
             group.addEventListener('click', (e) => {
                 e.preventDefault();
