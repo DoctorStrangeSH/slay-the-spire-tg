@@ -122,13 +122,13 @@ test('psyker mind chain challenge stays unlocked after a new session', () => {
 test('achievement hall categories cover all achievements without duplicates', () => {
     const history = new RunHistory(memory());
     const list = history.achievements();
-    assert.equal(list.length, 12);
+    assert.equal(list.length, 13);
     const tally = { general: 0, berserk: 0, engineer: 0, psyker: 0 };
     for (const item of list) {
         assert.ok(Object.hasOwn(tally, item.category));
         tally[item.category]++;
     }
-    assert.deepEqual(tally, { general: 6, berserk: 2, engineer: 2, psyker: 2 });
+    assert.deepEqual(tally, { general: 7, berserk: 2, engineer: 2, psyker: 2 });
 });
 
 test('hero title rewards unlock only for their matching challenges', () => {
