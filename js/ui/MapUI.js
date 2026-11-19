@@ -152,7 +152,12 @@ const MapUI = {
             .filter(Boolean);
         const labels = [...new Set(destinations.map(next =>
             this.getNodeIcon(next.type) + ' ' + this.getNodeLabel(next.type)))];
-        return labels.length ? 'После: ' + labels.join(' · ') : '';
+        if (!labels.length) return '';
+        // Видимость развилки важна не меньше типа следующей комнаты:
+        // несколько узлов одного типа — всё равно разные маршруты.
+        const branchCount = destinations.length;
+        return 'После: ' + labels.join(' · ') +
+            (branchCount > 1 ? ` · ${branchCount} варианта пути` : ' · один путь');
     },
 
     renderNextChoices(container, game) {
