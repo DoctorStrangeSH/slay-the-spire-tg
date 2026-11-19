@@ -58,7 +58,7 @@ class RunHistory {
     }
 
     unlockChallenge(id) {
-        if (!['berserk_last_breath', 'engineer_iron_line', 'psyker_mind_chain'].includes(id) || !this.storage) return false;
+        if (!['berserk_last_breath', 'engineer_iron_line', 'psyker_mind_chain', 'flawless_elite'].includes(id) || !this.storage) return false;
         const data = this.read();
         if (data.challenges[id]) return false;
         data.challenges[id] = true;
@@ -100,7 +100,8 @@ class RunHistory {
             { name: 'Три судьбы', description: 'Победить каждым из трёх стартовых героев', unlocked: ['berserk', 'engineer', 'psyker'].every(id => (Number(data.heroVictories?.[id]) || 0) >= 1) },
             { name: 'На последнем дыхании', description: 'Берсерком победить босса, имея не более 20% максимального HP', unlocked: data.challenges?.berserk_last_breath === true },
             { name: 'Железная линия', description: 'Инженером победить элитного врага, сохранив не менее двух конструкций', unlocked: data.challenges?.engineer_iron_line === true },
-            { name: 'Разрыв сознания', description: 'Псайкером победить элитного врага под параличом, разыграв три карты за ход', unlocked: data.challenges?.psyker_mind_chain === true }
+            { name: 'Разрыв сознания', description: 'Псайкером победить элитного врага под параличом, разыграв три карты за ход', unlocked: data.challenges?.psyker_mind_chain === true },
+            { name: 'Без единой царапины', description: 'Победить элитного врага, не потеряв ни одной единицы здоровья за весь бой', unlocked: data.challenges?.flawless_elite === true }
         ].map(entry => ({ ...entry, category: categoryByName[entry.name] || 'general',
             reward: {
                 'На последнем дыхании': 'Титул «Клятвопреступник» и кровавый стиль карт',
