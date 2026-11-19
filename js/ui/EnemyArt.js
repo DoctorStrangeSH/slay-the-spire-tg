@@ -7,7 +7,8 @@ const EnemyArt = Object.freeze({
         wolf: Object.freeze({ src: 'assets/enemies/wolf.svg', alt: 'Сумрачный волк' }),
         forestBoss: Object.freeze({ src: 'assets/enemies/forest-boss.svg', alt: 'Древний Энт — страж корней' }),
         caveBoss: Object.freeze({ src: 'assets/enemies/cave-boss.svg', alt: 'Каменный Голем — сердце разлома' }),
-        castleBoss: Object.freeze({ src: 'assets/enemies/castle-boss.svg', alt: 'Тёмный Лорд — владыка проклятого шпиля' })
+        castleBoss: Object.freeze({ src: 'assets/enemies/castle-boss.svg', alt: 'Тёмный Лорд — владыка проклятого шпиля' }),
+        veiledCollector: Object.freeze({ src: 'assets/enemies/veiled-collector.svg', alt: 'Сборщик Последнего Долга — тайный взыскатель' })
     }),
     get(id) {
         return Object.prototype.hasOwnProperty.call(this.portraits, id) ? this.portraits[id] : null;
