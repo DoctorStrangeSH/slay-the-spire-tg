@@ -89,6 +89,22 @@ class RunHistory {
         return result;
     }
 
+    cosmeticCollection(data = this.read()) {
+        const catalog = [
+            { id: 'berserk_last_breath', heroId: 'berserk', hero: 'Берсерк', title: 'Клятвопреступник', sigil: '🩸', skin: 'berserk', challenge: 'berserk_last_breath', requirement: 'Победить босса Берсерком с 20% HP или меньше' },
+            { id: 'engineer_iron_line', heroId: 'engineer', hero: 'Инженер', title: 'Мастер механизмов', sigil: '⚙️', skin: 'engineer', challenge: 'engineer_iron_line', requirement: 'Победить элиту Инженером, сохранив две конструкции' },
+            { id: 'psyker_mind_chain', heroId: 'psyker', hero: 'Псайкер', title: 'Разрушитель разума', sigil: '🔮', skin: 'psyker', challenge: 'psyker_mind_chain', requirement: 'Победить элиту Псайкером под параличом после трёх карт за ход' },
+            { id: 'flawless_elite', heroId: 'all', hero: 'Все герои', title: 'Непоколебимый', sigil: '✧', skin: 'flawless', challenge: 'flawless_elite', requirement: 'Победить элиту, не потеряв HP за весь бой' }
+        ];
+        return catalog.map(item => ({
+            ...item,
+            unlocked: data.challenges?.[item.challenge] === true,
+            equipped: item.heroId === 'all'
+                ? ['berserk', 'engineer', 'psyker'].some(id => data.selectedRewards?.[id] === item.id || (!data.selectedRewards?.[id] && this.rewardForHero(id, data)?.id === item.id))
+                : data.selectedRewards?.[item.heroId] === item.id || (!data.selectedRewards?.[item.heroId] && this.rewardForHero(item.heroId, data)?.id === item.id)
+        }));
+    }
+
     equipReward(heroId, rewardId) {
         if (!['berserk', 'engineer', 'psyker'].includes(heroId) || !this.storage) return false;
         const data = this.read();
