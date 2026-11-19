@@ -1041,3 +1041,26 @@ body {
   border-color: rgba(220, 91, 105, .95);
   box-shadow: 0 0 42px rgba(186, 55, 76, .32), inset 0 0 34px rgba(186, 55, 76, .18);
 }
+
+
+/* The contract's outcome leaves a visual mark on the collector's arena. */
+#enemy-area.boss-secret[data-boss-consequence="defaulted"] {
+  --collector-mark: rgba(205, 75, 91, .9);
+  border-color: var(--collector-mark);
+}
+#enemy-area.boss-secret[data-boss-consequence="settled"] {
+  --collector-mark: rgba(190, 164, 111, .85);
+  border-color: var(--collector-mark);
+}
+#enemy-area.boss-secret[data-boss-consequence="declined"] {
+  --collector-mark: rgba(130, 179, 194, .85);
+  border-color: var(--collector-mark);
+}
+#enemy-area.boss-secret[data-boss-consequence="purchased"] {
+  --collector-mark: rgba(176, 139, 216, .9);
+  border-color: var(--collector-mark);
+}
+#enemy-area.boss-secret[data-boss-consequence="owed"] {
+  --collector-mark: rgba(183, 151, 220, .82);
+  border-color: var(--collector-mark);
+}
