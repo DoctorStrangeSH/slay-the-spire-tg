@@ -93,3 +93,35 @@ test('batch play surfaces card errors and clears a stale selection', () => {
     assert.deepEqual(played, [1]);
     assert.deepEqual(Array.from(battle.selectedCards), []);
 });
+
+test('scry reveals results only after actual play, never when selecting', () => {
+    const cards = new BattleCards();
+    const battle = state([1]);
+    battle.hand[0].scry = 2;
+    let views = 0;
+    battle.scry = count => {
+        views++;
+        assert.equal(count, 2);
+        return [{ id: 'revealed' }];
+    };
+    assert.equal(cards.selectCard(battle, 0).success, true);
+    assert.equal(views, 0);
+    // Reuse the real card pipeline while mocking unrelated combat operations.
+    battle.playCard = index => {
+        const card = battle.hand[index];
+        return { success: true, scryedCards: battle.scry(card.scry) };
+    };
+    const result = cards.playSelectedCards(battle);
+    assert.equal(result.success, true);
+    assert.equal(views, 1);
+    assert.deepEqual(Array.from(result.scryedCards, card => card.id), ['revealed']);
+});
+
+test('game does not award free scry from card selection', () => {
+    const game = fs.readFileSync(path.join(__dirname, '../js/systems/Game.js'), 'utf8');
+    const selection = game.slice(game.indexOf('    selectCard(index) {'), game.indexOf('    playSelectedCards() {'));
+    const playing = game.slice(game.indexOf('    playSelectedCards() {'), game.indexOf('    endTurn() {'));
+    assert.doesNotMatch(selection, /currentBattle\.scry\(/);
+    assert.match(playing, /result\.scryedCards/);
+    assert.match(playing, /BattleUI\.showScryModal\(this, result\.scryedCards\)/);
+});
