@@ -20,20 +20,25 @@ const BattleUI = {
         const bossTitles = {
             forestBoss: 'I • ХРАНИТЕЛЬ ЧАЩИ',
             caveBoss: 'II • СЕРДЦЕ СКАЛЫ',
-            castleBoss: 'III • ВЛАДЫКА ШПИЛЯ'
+            castleBoss: 'III • ВЛАДЫКА ШПИЛЯ',
+            veiledCollector: 'IV • СБОРЩИК ПОСЛЕДНЕГО ДОЛГА'
         };
         const bossId = enemy.isBoss && Object.prototype.hasOwnProperty.call(bossTitles, enemy.id) ? enemy.id : null;
-        enemyArea.classList.toggle('boss-encounter', Boolean(bossId));
-        enemyArea.classList.toggle('boss-wounded', Boolean(bossId) && enemy.hp <= enemy.maxHp / 2);
-        enemyArea.classList.remove('boss-forest', 'boss-cave', 'boss-castle');
+        enemyArea.classList.toggle('boss-encounter', Boolean(enemy.isBoss));
+        enemyArea.classList.toggle('boss-wounded', Boolean(enemy.isBoss) && enemy.hp <= enemy.maxHp / 2);
+        enemyArea.classList.remove('boss-forest', 'boss-cave', 'boss-castle', 'boss-secret');
         if (bossId) {
-            enemyArea.classList.add({ forestBoss: 'boss-forest', caveBoss: 'boss-cave', castleBoss: 'boss-castle' }[bossId]);
+            enemyArea.classList.add(({ forestBoss: 'boss-forest', caveBoss: 'boss-cave', castleBoss: 'boss-castle', veiledCollector: 'boss-secret' })[bossId]);
             enemyArea.setAttribute('data-boss-title', bossTitles[bossId]);
         } else {
             enemyArea.removeAttribute('data-boss-title');
         }
         EnemyArt.render(document.getElementById('enemy-sprite'), enemy);
-        document.getElementById('enemy-name').textContent = enemy.name;
+        document.getElementById('enemy-name').textContent = enemy.isSecretBoss
+            ? `${enemy.name} · ФАЗА ${enemy.phase || 1}/3`
+            : enemy.name;
+        if (enemy.isSecretBoss) enemyArea.setAttribute('data-boss-phase', String(enemy.phase || 1));
+        else enemyArea.removeAttribute('data-boss-phase');
         
         document.getElementById('enemy-hp-text').innerHTML = 
             `❤️ <span class="hp-current">${Math.floor(enemy.hp)}</span>/${Math.floor(enemy.maxHp)}`;
