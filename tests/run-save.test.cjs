@@ -131,15 +131,24 @@ test('checkpoint remembers outstanding archive debt across a restore', () => {
 test('run checkpoint persists the chronological journal without losing decisions', () => {
     const persistence = new RunSave(storage());
     const current = game();
+    current.player.pilgrimChoice = 'helped';
+    current.player.obeliskDebt = 'owed';
+    current.player.archiveDebt = 'owed';
     current.player.journalLog = [{
+        id: 'run-checkpoint:1:3:palomnik',
+        runId: 'run-checkpoint',
         act: 1, floor: 3, event: 'Паломник', choice: 'Помочь',
-        outcome: 'золото: -20'
+        outcome: 'золото: -20 · сюжет: помощь паломнику'
     }];
     assert.equal(persistence.save(current), true);
     const restored = { player: null };
     assert.equal(persistence.restore(restored), true);
     assert.equal(restored.player.journalLog.length, 1);
     assert.equal(restored.player.journalLog[0].choice, 'Помочь');
+    assert.equal(restored.player.journalLog[0].id, 'run-checkpoint:1:3:palomnik');
+    assert.equal(restored.player.pilgrimChoice, 'helped');
+    assert.equal(restored.player.obeliskDebt, 'owed');
+    assert.equal(restored.player.archiveDebt, 'owed');
 });
 
 test('run checkpoint retains battle wins, elite wins and boss wins', () => {
