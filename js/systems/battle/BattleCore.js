@@ -184,6 +184,10 @@ class BattleCore {
             let boosted = damage;
             // Dark magic has a 30% chance to empower the hit before status modifiers.
             if (this.enemy.specialAbility === 'dark_magic') boosted = Math.floor(boosted * 1.5);
+            if (this.enemy.specialAbility === 'debt_collector' && this.enemy.phase >= 3) {
+                damage = Math.floor(damage * 1.25);
+                boosted = damage;
+            }
             const modify = value => {
                 if (this.statusEffects.player.vulnerable > 0) value = Math.floor(value * 1.5);
                 if (this.statusEffects.enemy.weak > 0) value = Math.floor(value * 0.75);
@@ -201,9 +205,13 @@ class BattleCore {
         }
         let blockAmount = 10;
         if (this.enemy.specialAbility === 'rock_armor') blockAmount = 20;
+        if (this.enemy.specialAbility === 'debt_collector') {
+            blockAmount = this.enemy.phase >= 3 ? 20 : 15;
+        }
         return {
             type: 'defend', block: blockAmount,
-            poison: this.enemy.specialAbility === 'root_grasp' ? 2 : 0
+            poison: this.enemy.specialAbility === 'root_grasp' ? 2 :
+                (this.enemy.specialAbility === 'debt_collector' ? (this.enemy.phase >= 3 ? 2 : 1) : 0)
         };
     }
     
