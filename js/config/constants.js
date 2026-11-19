@@ -26,6 +26,7 @@ const NODE_TYPES = {
     ELITE: 'elite',
     REST: 'rest',
     EVENT: 'event',
+    SECRET: 'secret',
     SHOP: 'shop',
     TREASURE: 'treasure',
     BOSS: 'boss'
