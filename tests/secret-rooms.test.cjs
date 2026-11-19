@@ -16,6 +16,7 @@ function createGame() {
     const context = {
         GAME_CONFIG: { maxActs: 3 },
         RunSave: class { clear() {} },
+        getStarterDeckForHero: () => [],
         alert() {},
         Math: Object.assign(Object.create(Math), { random: () => 0 })
     };
@@ -206,7 +207,8 @@ test('Veiled Merchant refuses duplicate contracts and journals all outcomes', ()
     assert.equal(event.options[0].action(), false);
     for (const state of ['owed', 'settled', 'defaulted', 'declined']) {
         game.player.veiledMerchantDebt = state;
-        assert.ok(game.getRunJournalEntries().some(entry => entry.title === 'Договор с Безликим Торговцем'));
+        const expectedTitle = state === 'declined' ? 'Безликий Торговец' : 'Договор с Безликим Торговцем';
+        assert.ok(game.getRunJournalEntries().some(entry => entry.title === expectedTitle));
     }
 });
 
