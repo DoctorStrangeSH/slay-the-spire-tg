@@ -15,6 +15,8 @@ class BattleCore {
         this.selectedCards = [];
         this.cardsPlayedThisTurn = 0;
         this.damageTakenThisTurn = 0;
+        // Cumulative HP loss for achievements; healing never erases damage already taken.
+        this.damageTakenThisBattle = 0;
         this.cardsPlayedTypes = { attack: 0, skill: 0, power: 0, building: 0 };
         
         // Механики Псайкера
@@ -162,10 +164,18 @@ class BattleCore {
         return intent;
     }
     
+    takeDamage(damage) {
+        const amount = Math.max(0, Math.floor(Number(damage) || 0));
+        const hpBefore = Math.max(0, Number(this.player?.hp) || 0);
+        this.player.hp = Math.max(0, Math.floor(hpBefore - amount));
+        const actualLoss = hpBefore - this.player.hp;
+        this.damageTakenThisTurn += actualLoss;
+        this.damageTakenThisBattle += actualLoss;
+        return actualLoss;
+    }
+
     takeSelfDamage(damage) {
-        this.player.hp -= damage;
-        this.player.hp = Math.max(0, Math.floor(this.player.hp));
-        this.damageTakenThisTurn += damage;
+        return this.takeDamage(damage);
     }
     
     getEnemyIntentInfo() {
