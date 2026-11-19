@@ -5,6 +5,8 @@ class BattleTurn {
         if (battle.player.hp <= 0) return { battleEnded: true, victory: false };
         if (battle.enemy.hp <= 0) return { battleEnded: true, victory: true };
 
+        this.advanceSecretBossPhase(battle);
+
         // ПРОВЕРЯЕМ ПАРАЛИЧ
         const isParalyzed = battle.isEnemyParalyzed();
         
@@ -82,6 +84,31 @@ class BattleTurn {
         return { battleEnded: false };
     }
     
+    advanceSecretBossPhase(battle) {
+        const enemy = battle.enemy;
+        if (!enemy?.isSecretBoss || enemy.hp <= 0) return false;
+        const ratio = enemy.hp / Math.max(1, enemy.maxHp);
+        const nextPhase = ratio <= 1 / 3 ? 3 : ratio <= 2 / 3 ? 2 : 1;
+        if (nextPhase <= (Number(enemy.phase) || 1)) return false;
+
+        enemy.phase = nextPhase;
+        enemy.damage = (Number(enemy.baseDamage) || enemy.damage) +
+            ((nextPhase - 1) * (Number(enemy.phaseDamageBonus) || 0));
+        enemy.pattern = nextPhase === 2
+            ? ['attack', 'defend', 'attack']
+            : ['attack', 'attack', 'defend', 'attack'];
+        enemy.patternIndex = 0;
+
+        if (nextPhase === 2) {
+            battle.enemyBlock += 12;
+        } else {
+            battle.statusEffects.enemy.strength =
+                (Number(battle.statusEffects.enemy.strength) || 0) + 2;
+            battle.enemyBlock += 18;
+        }
+        return true;
+    }
+
     enemyAttack(battle) {
         let damage = Math.floor(battle.enemy.damage + (battle.statusEffects.enemy.strength || 0));
         
@@ -160,10 +187,17 @@ class BattleTurn {
     enemyDefend(battle) {
         let blockAmount = 10;
         if (battle.enemy.specialAbility === 'rock_armor') blockAmount = 20;
+        if (battle.enemy.specialAbility === 'debt_collector') {
+            blockAmount = battle.enemy.phase >= 3 ? 20 : 15;
+        }
         battle.enemyBlock += blockAmount;
         
         if (battle.enemy.specialAbility === 'root_grasp') {
             battle.statusEffects.player.poison = (battle.statusEffects.player.poison || 0) + 2;
+        }
+        if (battle.enemy.specialAbility === 'debt_collector') {
+            battle.statusEffects.player.poison = (battle.statusEffects.player.poison || 0) +
+                (battle.enemy.phase >= 3 ? 2 : 1);
         }
     }
 }
