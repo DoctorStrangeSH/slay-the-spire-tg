@@ -152,7 +152,17 @@ class MapGenerator {
             const node = from[index];
             const currentTarget = to.findIndex(target => node.connections.includes(target.id));
             const alt = to[Math.min(to.length - 1, currentTarget + 1)];
-            if (alt && !node.connections.includes(alt.id)) node.connections.push(alt.id);
+            // Дополнительная дуга не должна пересекать соседнюю линию маршрута.
+            // Иначе даже при упорядоченных основных связях карта выглядит спутанной.
+            const crossesRoute = !this.legacyOrganicLayout && alt && from.some(other => other !== node &&
+                other.connections.some(id => {
+                    const destination = to.find(target => target.id === id);
+                    return destination && (
+                        (other.x < node.x && destination.x > alt.x) ||
+                        (other.x > node.x && destination.x < alt.x)
+                    );
+                }));
+            if (alt && !node.connections.includes(alt.id) && !crossesRoute) node.connections.push(alt.id);
         }
     }
 
