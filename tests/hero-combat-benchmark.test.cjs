@@ -510,7 +510,7 @@ function chooseCompleteRoute(map, random) {
 }
 
 function chooseBestReward(api, heroId, rewardRandom) {
-    const offers = api.getRandomRewardCards(heroId, 3, random);
+    const offers = api.getRandomRewardCards(heroId, 3, rewardRandom);
     if (!offers.length) return null;
     const score = card =>
         (card.damage || 0) * (card.hits || 1) +
