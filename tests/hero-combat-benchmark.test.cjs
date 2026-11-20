@@ -783,6 +783,8 @@ function simulateRouteCampaign(heroId, seed, policy = 'heal-when-useful') {
             plannedRests: route.filter(node => node.type === 'rest').length,
             plannedBattles: route.filter(node => node.type === 'battle').length,
             plannedElites: route.filter(node => node.type === 'elite').length,
+            plannedShops: route.filter(node => node.type === 'shop').length,
+            plannedEvents: route.filter(node => node.type === 'event').length,
             battles: 0, elites: 0, rests: 0, restHeals: 0, restUpgrades: 0, cardRewards: 0,
             relicRewards: 0, goldEarned: 0, shopVisits: 0, shopPurchases: 0,
             shopCards: 0, shopHeals: 0, shopUpgrades: 0, shopRemovals: 0, shopGoldSpent: 0,
@@ -892,7 +894,11 @@ function simulateRouteCampaign(heroId, seed, policy = 'heal-when-useful') {
         report.push(stats);
         if (!alive) break;
     }
-    return { heroId, seed, policy, acts: report, finalHp: player.hp, deckSize: player.deck.length, relicCount: player.relics.length, completed: report.length === 3 && report[2].bossWon };
+    return {
+        heroId, seed, policy, acts: report, finalHp: player.hp, finalGold: player.gold,
+        deckSize: player.deck.length, relicCount: player.relics.length,
+        completed: report.length === 3 && report[2].bossWon
+    };
 }
 
 test('route-aware boss benchmark compares campfire policies while carrying route rewards and HP across acts', () => {
@@ -907,10 +913,17 @@ test('route-aware boss benchmark compares campfire policies while carrying route
                 campaigns.push(campaign);
                 assert.ok(campaign.acts.length >= 1 && campaign.acts.length <= 3);
                 assert.ok(campaign.finalHp >= 0 && campaign.finalHp <= apiMaxHp(heroId));
+                assert.ok(campaign.finalGold >= 0);
                 for (const act of campaign.acts) {
                     assert.ok(act.plannedRests >= 1,
                         'every generated route must include the pre-boss rest');
                     assert.ok(act.battles <= act.plannedBattles && act.elites <= act.plannedElites);
+                    assert.ok(act.shopVisits <= act.plannedShops);
+                    assert.ok(act.shopPurchases <= act.shopVisits * 4);
+                    assert.ok(act.shopGoldSpent >= 0 && act.goldEarned >= 0);
+                    assert.ok(act.eventRooms <= act.plannedEvents);
+                    assert.equal(act.eventDecisions, act.eventRooms,
+                        'every visited event room must commit exactly one decision');
                     assert.ok(act.restHeals + act.restUpgrades <= act.rests);
                     if (act.bossReached) {
                         assert.ok(act.hpBeforeBoss > 0);
