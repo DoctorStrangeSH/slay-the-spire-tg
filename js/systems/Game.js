@@ -2291,9 +2291,9 @@ class Game {
             typeof apply !== 'function' || typeof rollback !== 'function') return false;
 
         const goldBefore = this.player.gold;
-        let applied = false;
+        let attempted = false;
         const revert = () => {
-            try { if (applied) rollback(); }
+            try { if (attempted) rollback(); }
             catch (error) { console.error('Не удалось отменить покупку:', error); }
             this.player.gold = goldBefore;
             const index = visit.purchased.lastIndexOf(purchaseId);
@@ -2301,8 +2301,11 @@ class Game {
         };
 
         try {
-            if (apply() !== true) return false;
-            applied = true;
+            attempted = true;
+            if (apply() !== true) {
+                revert();
+                return false;
+            }
             this.player.gold = goldBefore - price;
             visit.purchased.push(purchaseId);
             if (!this.runSave || this.runSave.save(this) !== true) {
