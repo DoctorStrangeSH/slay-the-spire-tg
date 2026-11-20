@@ -67,7 +67,7 @@ test('defeat finale has no reward and returns through callback', () => {
 
 test('game replaces battle-end alerts but preserves gold and save semantics', () => {
     const game = fs.readFileSync(path.join(root, 'js/systems/Game.js'), 'utf8');
-    const battleEnd = game.split('    endBattle(victory) {')[1].split('    offerCard() {')[0];
+    const battleEnd = game.split('    endBattle(victory) {')[1].split('    offerCard(cards = null) {')[0];
     assert.match(battleEnd, /this\.player\.gold \+= goldReward/);
     assert.match(battleEnd, /this\.runSave\.clear\(\)/);
     assert.match(battleEnd, /BattleFeedback\.result/);
