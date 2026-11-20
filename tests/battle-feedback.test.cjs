@@ -351,6 +351,8 @@ test('merchant pricing scales by rarity and purchases do not close the shop', ()
     });
     const game = Object.create(Game.prototype);
     game.player = { heroId: 'test', gold: 220, deck: [], hp: 30, maxHp: 100 };
+    game.runSave = { save() { return true; } };
+    game.runSave = { save() { return true; } };
     let continued = 0;
     game.continueJourney = () => continued++;
     assert.equal(game.getShopPrice({ rarity: 'common' }), 30);
@@ -401,6 +403,8 @@ test('merchant deck thinning removes exactly the selected copy once', () => {
         heroId: 'test', gold: 150, hp: 40, maxHp: 100,
         deck: Array.from({ length: 7 }, (_, index) => ({ id: 'card' + index, name: 'Карта ' + index }))
     };
+    game.runSave = { save() { return true; } };
+    game.runSave = { save() { return true; } };
     game.openShop();
     const shelf = document.body.children[0].children[0].children.find(n => n.className === 'merchant-shelf');
     const removal = shelf.children.find(n => n.className === 'merchant-item merchant-removal');
@@ -431,6 +435,8 @@ test('merchant deck thinning refuses short decks and insufficient gold', () => {
     );
     const game = Object.create(Game.prototype);
     game.player = { heroId: 'test', gold: 50, hp: 30, maxHp: 100, deck: Array.from({ length: 5 }, (_, i) => ({ id: String(i) })) };
+    game.runSave = { save() { return true; } };
+    game.runSave = { save() { return true; } };
     game.openShop();
     const shelf = document.body.children[0].children[0].children.find(n => n.className === 'merchant-shelf');
     const button = shelf.children.find(n => n.className === 'merchant-item merchant-removal').children.at(-1);
@@ -458,6 +464,7 @@ test('shop card upgrades change actual combat stats and cannot be bought twice',
         { id: 'strike', name: 'Удар', damage: 6, cost: 1 },
         { id: 'guard', name: 'Защита', block: 5, cost: 1 }
     ] };
+    game.runSave = { save() { return true; } };
     assert.deepEqual(JSON.parse(JSON.stringify(game.getCardUpgrade(game.player.deck[0]))), {
         stat: 'damage', bonus: 3, label: 'Урон', current: 6, next: 9
     });

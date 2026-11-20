@@ -174,6 +174,27 @@ test('checkpoint persists claimed treasure rooms to prevent reward duplication a
         JSON.stringify(['floor_1_node_0', 'floor_2_node_1']));
 });
 
+test('checkpoint preserves shop stock, purchases and visit completion', () => {
+    const persistence = new RunSave(storage());
+    const original = game();
+    original.player.shopVisits = {
+        floor_2_node_1: {
+            offerCardIds: ['strike', 'guard'],
+            purchased: ['card:strike', 'heal'],
+            closed: false
+        }
+    };
+    assert.equal(persistence.save(original), true);
+    const restored = { player: null };
+    assert.equal(persistence.restore(restored), true);
+    assert.equal(JSON.stringify(restored.player.shopVisits), JSON.stringify(original.player.shopVisits));
+    original.player.shopVisits.floor_2_node_1.closed = true;
+    assert.equal(persistence.save(original), true);
+    const resumed = { player: null };
+    assert.equal(persistence.restore(resumed), true);
+    assert.equal(resumed.player.shopVisits.floor_2_node_1.closed, true);
+});
+
 test('checkpoint retains the run id so outcomes are counted only once', () => {
     const persistence = new RunSave(storage());
     const original = game();
