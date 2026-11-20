@@ -58,9 +58,39 @@ function simulate(heroId, enemyId, seed, elite = false, maxTurns = 30, build = n
         heroTargetAttacks: 0,
         buildingTargetAttacks: 0,
         blockAbsorbed: 0,
-        buildingDamage: 0
+        buildingDamage: 0,
+        directHeroDamage: 0,
+        poisonDamage: 0,
+        selfDamage: 0
+    };
+    let resolvingEnemyAttack = false;
+    let resolvingEnemyEndTurn = false;
+    const originalTakeDamage = battle.takeDamage.bind(battle);
+    battle.takeDamage = amount => {
+        const hpBefore = player.hp;
+        const result = originalTakeDamage(amount);
+        const actualLoss = Math.max(0, hpBefore - player.hp);
+        if (resolvingEnemyAttack) combatMetrics.directHeroDamage += actualLoss;
+        else if (resolvingEnemyEndTurn) combatMetrics.poisonDamage += actualLoss;
+        return result;
+    };
+    const originalTakeSelfDamage = battle.takeSelfDamage.bind(battle);
+    battle.takeSelfDamage = amount => {
+        const hpBefore = player.hp;
+        const result = originalTakeSelfDamage(amount);
+        combatMetrics.selfDamage += Math.max(0, hpBefore - player.hp);
+        return result;
     };
     const turnManager = battle.turnManager;
+    const originalEndTurn = turnManager.endTurn.bind(turnManager);
+    turnManager.endTurn = currentBattle => {
+        resolvingEnemyEndTurn = true;
+        try {
+            return originalEndTurn(currentBattle);
+        } finally {
+            resolvingEnemyEndTurn = false;
+        }
+    };
     const originalChooseTarget = turnManager.chooseTarget.bind(turnManager);
     turnManager.chooseTarget = currentBattle => {
         const target = originalChooseTarget(currentBattle);
@@ -71,7 +101,12 @@ function simulate(heroId, enemyId, seed, elite = false, maxTurns = 30, build = n
     const originalEnemyAttack = turnManager.enemyAttack.bind(turnManager);
     turnManager.enemyAttack = currentBattle => {
         combatMetrics.enemyAttacks++;
-        return originalEnemyAttack(currentBattle);
+        resolvingEnemyAttack = true;
+        try {
+            return originalEnemyAttack(currentBattle);
+        } finally {
+            resolvingEnemyAttack = false;
+        }
     };
     const originalEnemyDefend = turnManager.enemyDefend.bind(turnManager);
     turnManager.enemyDefend = currentBattle => {
@@ -339,6 +374,9 @@ test('act-ready deck progression benchmark compares all heroes under the same ac
                 assert.ok(result.combatMetrics.enemyDefends <= result.turns);
                 assert.ok(result.combatMetrics.blockAbsorbed >= 0);
                 assert.ok(result.combatMetrics.buildingDamage >= 0);
+                assert.ok(result.combatMetrics.directHeroDamage >= 0);
+                assert.ok(result.combatMetrics.poisonDamage >= 0);
+                assert.ok(result.combatMetrics.selfDamage >= 0);
                 assert.equal(build.deck.length, apiStarterDeckSize(heroId) + act * 3,
                     'snapshot should add exactly three reward cards per completed act');
                 deckSizes.push(build.deck.length);
@@ -363,6 +401,9 @@ test('act-ready deck progression benchmark compares all heroes under the same ac
                 averageAttacksTargetingBuildings: Number((results.reduce((sum, result) => sum + result.combatMetrics.buildingTargetAttacks, 0) / results.length).toFixed(2)),
                 averageBlockAbsorbed: Number((results.reduce((sum, result) => sum + result.combatMetrics.blockAbsorbed, 0) / results.length).toFixed(2)),
                 averageBuildingDamage: Number((results.reduce((sum, result) => sum + result.combatMetrics.buildingDamage, 0) / results.length).toFixed(2)),
+                averageDirectHeroDamage: Number((results.reduce((sum, result) => sum + result.combatMetrics.directHeroDamage, 0) / results.length).toFixed(2)),
+                averagePoisonDamage: Number((results.reduce((sum, result) => sum + result.combatMetrics.poisonDamage, 0) / results.length).toFixed(2)),
+                averageSelfDamage: Number((results.reduce((sum, result) => sum + result.combatMetrics.selfDamage, 0) / results.length).toFixed(2)),
                 deckSize: deckSizes[0],
                 relics: relicCounts[0]
             });
