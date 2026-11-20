@@ -125,7 +125,7 @@ function getExpectedIncomingDamage(battle) {
 
 test('benchmark values block using expected hero damage when attacks can be redirected to buildings', () => {
     const cases = [
-        [0, 0],
+        [0, 10],
         [1, 5.5],
         [2, 4],
         [3, 2.5],
