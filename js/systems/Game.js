@@ -2283,6 +2283,40 @@ class Game {
         return true;
     }
 
+    commitShopPurchase(visit, purchaseId, price, apply, rollback) {
+        if (!visit || !Array.isArray(visit.purchased) ||
+            visit.purchased.includes(purchaseId) ||
+            !Number.isFinite(price) || price < 0 ||
+            !Number.isFinite(this.player?.gold) || this.player.gold < price ||
+            typeof apply !== 'function' || typeof rollback !== 'function') return false;
+
+        const goldBefore = this.player.gold;
+        let applied = false;
+        const revert = () => {
+            try { if (applied) rollback(); }
+            catch (error) { console.error('Не удалось отменить покупку:', error); }
+            this.player.gold = goldBefore;
+            const index = visit.purchased.lastIndexOf(purchaseId);
+            if (index >= 0) visit.purchased.splice(index, 1);
+        };
+
+        try {
+            if (apply() !== true) return false;
+            applied = true;
+            this.player.gold = goldBefore - price;
+            visit.purchased.push(purchaseId);
+            if (!this.runSave || this.runSave.save(this) !== true) {
+                revert();
+                return false;
+            }
+            return true;
+        } catch (error) {
+            revert();
+            console.warn('Покупка отменена: не удалось зафиксировать checkpoint.', error);
+            return false;
+        }
+    }
+
     openShop() {
         const cards = Object.values(getCardsForHero(this.player.heroId));
         const nodeId = String(this.currentNodeId || '');
@@ -2313,12 +2347,6 @@ class Game {
             .map(id => cards.find(card => card.id === id))
             .filter(Boolean);
         if (!Array.isArray(visit.purchased)) visit.purchased = [];
-        const recordPurchase = id => {
-            if (visit.purchased.includes(id)) return false;
-            visit.purchased.push(id);
-            this.runSave.save(this);
-            return true;
-        };
         const modal = document.createElement('div');
         modal.className = 'modal merchant-modal';
         modal.id = 'merchant-modal';
@@ -2360,10 +2388,15 @@ class Game {
             let purchased = visit.purchased.includes(purchaseId);
             button.onclick = () => {
                 if (purchased || visit.purchased.includes(purchaseId) || this.player.gold < price) return;
-                this.player.gold -= price;
-                this.player.deck.push({ ...card });
+                const purchasedCard = { ...card };
+                purchased = this.commitShopPurchase(visit, purchaseId, price,
+                    () => { this.player.deck.push(purchasedCard); return true; },
+                    () => {
+                        const index = this.player.deck.indexOf(purchasedCard);
+                        if (index >= 0) this.player.deck.splice(index, 1);
+                    });
+                if (!purchased) return;
                 refreshUpgradeOptions();
-                purchased = recordPurchase(purchaseId);
                 button.textContent = '✓ Куплено';
                 renderBalance();
             };
@@ -2387,9 +2420,14 @@ class Game {
         healButton.onclick = () => {
             if (healed || visit.purchased.includes(healPurchaseId) ||
                 this.player.gold < healPrice || this.player.hp >= this.player.maxHp) return;
-            this.player.gold -= healPrice;
-            this.player.hp = Math.min(this.player.maxHp, this.player.hp + healAmount);
-            healed = recordPurchase(healPurchaseId);
+            const hpBefore = this.player.hp;
+            healed = this.commitShopPurchase(visit, healPurchaseId, healPrice,
+                () => {
+                    this.player.hp = Math.min(this.player.maxHp, this.player.hp + healAmount);
+                    return this.player.hp > hpBefore;
+                },
+                () => { this.player.hp = hpBefore; });
+            if (!healed) return;
             healButton.textContent = '✓ Выпито';
             renderBalance();
         };
@@ -2426,10 +2464,12 @@ class Game {
                 this.player.gold < removalPrice || this.player.deck.length <= 5) return;
             const index = Number(removalSelect.value);
             if (!Number.isInteger(index) || index < 0 || index >= this.player.deck.length) return;
-            this.player.gold -= removalPrice;
-            this.player.deck.splice(index, 1);
+            const [removedCard] = this.player.deck.slice(index, index + 1);
+            removed = this.commitShopPurchase(visit, removalPurchaseId, removalPrice,
+                () => this.player.deck.splice(index, 1).length === 1,
+                () => this.player.deck.splice(index, 0, removedCard));
+            if (!removed) return;
             refreshUpgradeOptions();
-            removed = recordPurchase(removalPurchaseId);
             removalButton.textContent = '✓ Карта удалена';
             removalSelect.disabled = true;
             renderBalance();
@@ -2486,9 +2526,15 @@ class Game {
         upgradeButton.onclick = () => {
             if (upgraded || visit.purchased.includes(upgradePurchaseId) || this.player.gold < upgradePrice) return;
             const card = eligible[Number(upgradeSelect.value)];
-            if (!card || !this.player.deck.includes(card) || !this.upgradeCard(card)) return;
-            this.player.gold -= upgradePrice;
-            upgraded = recordPurchase(upgradePurchaseId);
+            if (!card || !this.player.deck.includes(card)) return;
+            const cardBefore = { ...card };
+            upgraded = this.commitShopPurchase(visit, upgradePurchaseId, upgradePrice,
+                () => this.upgradeCard(card),
+                () => {
+                    Object.keys(card).forEach(key => delete card[key]);
+                    Object.assign(card, cardBefore);
+                });
+            if (!upgraded) return;
             upgradeButton.textContent = '✓ Карта улучшена';
             upgradeSelect.disabled = true;
             renderBalance();
