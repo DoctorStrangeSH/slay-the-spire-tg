@@ -48,7 +48,8 @@ class Game {
             veiledMerchantFloor: null,
             veiledMerchantDeals: 0,
             secretBossDefeated: false,
-            claimedTreasureNodes: []
+            claimedTreasureNodes: [],
+            pendingRest: false
         };
 
         this.startNewGame();
@@ -86,6 +87,7 @@ class Game {
         this.player.claimedTreasureNodes = [];
         this.player.shopVisits = {};
         this.player.pendingEvent = null;
+        this.player.pendingRest = false;
         this.actTransitionPending = false;
         this.runCompleted = false;
         this.act = 1;
@@ -118,7 +120,9 @@ class Game {
         this.showMap();
         const currentNode = this.mapGenerator.findNodeById(this.currentNodeId);
         const shopVisit = this.player.shopVisits?.[this.currentNodeId];
-        if (this.offeredCards.length) {
+        if (this.player.pendingRest === true) {
+            this.rest();
+        } else if (this.offeredCards.length) {
             this.offerCard(this.offeredCards);
         } else if (currentNode?.type === NODE_TYPES.SHOP && !shopVisit?.closed) {
             this.openShop();
@@ -2772,7 +2776,39 @@ class Game {
         continueButton.focus();
     }
 
+    commitRestDecision(action = null) {
+        if (!this.player || this.player.pendingRest !== true) return false;
+        let snapshot;
+        try {
+            snapshot = JSON.stringify(this.player);
+            if (typeof snapshot !== 'string') return false;
+        } catch (error) {
+            console.warn('Решение на привале отменено: не удалось создать checkpoint.', error);
+            return false;
+        }
+
+        try {
+            if (typeof action === 'function' && action() === false) {
+                this.player = JSON.parse(snapshot);
+                return false;
+            }
+            this.player.pendingRest = false;
+            if (this.runSave?.save?.(this) === false) {
+                this.player = JSON.parse(snapshot);
+                return false;
+            }
+            return true;
+        } catch (error) {
+            this.player = JSON.parse(snapshot);
+            console.warn('Решение на привале отменено: не удалось сохранить checkpoint.', error);
+            return false;
+        }
+    }
+
     rest() {
+        if (!this.player) return false;
+        this.player.pendingRest = true;
+        this.runSave?.save?.(this);
         const modal = document.createElement('div');
         modal.className = 'modal campfire-modal';
         modal.setAttribute('role', 'dialog');
@@ -2824,16 +2860,23 @@ class Game {
         upgradeButton.className = 'campfire-choice campfire-upgrade';
         upgradeButton.textContent = '✦ Закалить карту';
         upgradeButton.disabled = eligible.length === 0;
-        const finish = () => { modal.remove(); this.continueJourney(); };
+        const finish = action => {
+            if (!this.commitRestDecision(action)) return false;
+            modal.remove();
+            this.continueJourney();
+            return true;
+        };
         healButton.onclick = () => {
             if (this.player.hp >= this.player.maxHp) return;
-            this.player.hp = Math.min(this.player.maxHp, this.player.hp + healAmount);
-            finish();
+            finish(() => {
+                this.player.hp = Math.min(this.player.maxHp, this.player.hp + healAmount);
+                return true;
+            });
         };
         upgradeButton.onclick = () => {
             const card = eligible[Number(selector.value)];
-            if (!card || !this.player.deck.includes(card) || !this.upgradeCard(card)) return;
-            finish();
+            if (!card || !this.player.deck.includes(card)) return;
+            finish(() => this.upgradeCard(card));
         };
         forge.append(forgeLabel, selector, preview, upgradeButton);
         choices.append(healButton, forge);
@@ -2843,7 +2886,7 @@ class Game {
             continueButton.type = 'button';
             continueButton.className = 'campfire-choice campfire-continue';
             continueButton.textContent = 'Продолжить путь →';
-            continueButton.onclick = finish;
+            continueButton.onclick = () => finish();
             panel.appendChild(continueButton);
         }
         modal.appendChild(panel);
