@@ -7,7 +7,7 @@ const vm = require('node:vm');
 const constants = readFileSync(join(__dirname, '../js/config/constants.js'), 'utf8');
 const source = readFileSync(join(__dirname, '../js/systems/MapGenerator.js'), 'utf8');
 const MapGenerator = vm.runInNewContext(
-    constants + '\\n' + source + '\\nMapGenerator;',
+    constants + '\n' + source + '\nMapGenerator;',
     { Math }
 );
 
