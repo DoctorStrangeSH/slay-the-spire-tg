@@ -16,10 +16,15 @@ const source = [
     'js/systems/Game.js'
 ].map(file => readFileSync(join(root, file), 'utf8')).join('\n');
 
-function api() {
+function api(overrides = {}) {
     const math = Object.create(Math);
     math.random = () => 0.99;
-    const context = { Math: math, BattleUI: { update() {} } };
+    const context = {
+        Math: math,
+        BattleUI: { update() {} },
+        BattleFeedback: { snapshot() { return {}; }, show() {}, bossAttack() {} },
+        ...overrides
+    };
     return vm.runInNewContext(source + '\n({ BattleSystem, CARD_TYPES, Game })', context);
 }
 
@@ -96,4 +101,28 @@ test('Closing Predictor scry preserves the top card and clears the pending choic
 
     assert.equal(battle.drawPile.length, drawCount);
     assert.equal(battle.pendingScryCards, null);
+});
+
+test('Game does not show an enemy attack animation on an Absolute Control skip turn', () => {
+    let bossAttackFeedback = 0;
+    const { Game } = api({
+        BattleFeedback: {
+            snapshot() { return {}; },
+            show() {},
+            bossAttack() { bossAttackFeedback++; }
+        }
+    });
+    const battle = {
+        enemyIntent: 'attack',
+        isEnemyParalyzed() { return false; },
+        hasPower(id) { return id === 'absoluteControl'; },
+        turn: 2,
+        enemy: { hp: 100, isBoss: true, id: 'test_boss' },
+        pendingScryCards: null,
+        endTurn() { return { battleEnded: false }; }
+    };
+
+    Game.prototype.endTurn.call({ currentBattle: battle });
+
+    assert.equal(bossAttackFeedback, 0);
 });
