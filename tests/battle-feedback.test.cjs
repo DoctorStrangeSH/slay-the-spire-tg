@@ -461,11 +461,10 @@ test('shop card upgrades change actual combat stats and cannot be bought twice',
     );
     const game = Object.create(Game.prototype);
     game.player = { heroId: 'test', gold: 150, hp: 70, maxHp: 100, deck: [
-    game.runSave = { save() { return true; } };
-    game.runSave = { save() { return true; } };
         { id: 'strike', name: 'Удар', damage: 6, cost: 1 },
         { id: 'guard', name: 'Защита', block: 5, cost: 1 }
     ] };
+    game.runSave = { save() { return true; } };
     assert.deepEqual(JSON.parse(JSON.stringify(game.getCardUpgrade(game.player.deck[0]))), {
         stat: 'damage', bonus: 3, label: 'Урон', current: 6, next: 9
     });
