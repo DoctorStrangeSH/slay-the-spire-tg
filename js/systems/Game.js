@@ -438,6 +438,53 @@ class Game {
         };
     }
 
+    commitEventDecision(event, option, eventId) {
+        if (!this.player || typeof option?.action !== 'function') return false;
+        let playerSnapshot;
+        let offeredCardsSnapshot;
+        try {
+            playerSnapshot = JSON.stringify(this.player);
+            if (typeof playerSnapshot !== 'string') return false;
+            offeredCardsSnapshot = Array.isArray(this.offeredCards)
+                ? this.offeredCards.map(card => ({ ...card }))
+                : this.offeredCards;
+        } catch (error) {
+            console.warn('Выбор события отменён: не удалось создать checkpoint.', error);
+            return false;
+        }
+
+        const before = this.snapshotJournalResources();
+        const rollback = () => {
+            try { this.player = JSON.parse(playerSnapshot); }
+            catch (error) { console.error('Не удалось восстановить состояние после события:', error); }
+            this.offeredCards = offeredCardsSnapshot;
+            document.getElementById('reward-modal')?.remove();
+            document.getElementById('card-modal')?.remove();
+        };
+
+        try {
+            const result = option.action();
+            if (result === false) {
+                rollback();
+                return false;
+            }
+            if (!this.recordEventDecision(event, option, before)) {
+                rollback();
+                return false;
+            }
+            if (this.player?.pendingEvent?.id === eventId) this.player.pendingEvent = null;
+            if (this.runSave?.save?.(this) === false) {
+                rollback();
+                return false;
+            }
+            return result;
+        } catch (error) {
+            rollback();
+            console.warn('Выбор события отменён: не удалось зафиксировать checkpoint.', error);
+            return false;
+        }
+    }
+
     recordEventDecision(event, option, before) {
         if (!this.player) return;
         const after = this.snapshotJournalResources();
@@ -2165,13 +2212,9 @@ class Game {
                     modal.remove();
                     return;
                 }
-                const before = this.snapshotJournalResources();
-                const result = option.action();
+                const result = this.commitEventDecision(event, option, eventId);
                 if (result === false) return;
-                this.recordEventDecision(event, option, before);
                 resolved = true;
-                if (this.player?.pendingEvent?.id === eventId) this.player.pendingEvent = null;
-                this.runSave?.save?.(this);
                 modal.remove();
                 if (result !== 'deferred') this.continueJourney();
             };
