@@ -73,7 +73,7 @@ const BattleUI = {
                 : `После блока: ${afterBlock}`;
             intentEl.innerHTML = `⚔️ <span class="intent-value">${range}</span><span class="intent-caption">${afterBlockLabel}${chance}${buildingTarget}</span>`;
             intentEl.className = 'intent intent-attack';
-            intentLabel = `Следующее действие: атака на ${range} урона. ${afterBlockLabel}: ${afterBlock}.${intent.bonusChance ? ' Шанс усиленного удара 30%.' : ''}`;
+            intentLabel = `Следующее действие: атака на ${range} урона. ${afterBlockLabel}.${intent.bonusChance ? ' Шанс усиленного удара 30%.' : ''}`;
             if (intent.buildingTargetChance > 0) {
                 intentLabel += ` Шанс выбора постройки целью: ${Math.round(intent.buildingTargetChance * 100)}% (${intent.buildingCount} шт.).`;
             }
