@@ -29,6 +29,7 @@ class BattleSystem extends BattleCore {
         this.damageTakenThisTurn = 0;
         this.battleMadnessTriggersThisTurn = 0;
         this.painIsPowerTriggeredThisTurn = false;
+        this.vampirismTriggersThisTurn = 0;
         if (this.beastSkinBlockNextTurn > 0) {
             this.block += this.beastSkinBlockNextTurn;
             this.beastSkinBlockNextTurn = 0;
@@ -94,6 +95,12 @@ class BattleSystem extends BattleCore {
         const card = this.hand[cardIndex];
         const result = this.cards.playCard(this, cardIndex);
         if (result.success && this.enemy.hp <= 0) this.triggerAdrenalineRush?.();
+        if (result.success && card?.type === CARD_TYPES.ATTACK &&
+            this.hasPower('arsenal') && this.player.hp > 0 && this.enemy.hp > 0 &&
+            this.hand.length < GAME_CONFIG.maxHandSize &&
+            typeof ENGINEER_CARDS !== 'undefined' && ENGINEER_CARDS.spark) {
+            this.hand.push({ ...ENGINEER_CARDS.spark });
+        }
         
         // A lethal card ends resolution immediately: no relic/after-play effects
         // may mutate a run after either side has reached a terminal HP state.
