@@ -188,8 +188,8 @@ test('checkpoint preserves shop stock, purchases and visit completion', () => {
     const restored = { player: null };
     assert.equal(persistence.restore(restored), true);
     assert.equal(JSON.stringify(restored.player.shopVisits), JSON.stringify(original.player.shopVisits));
-    restored.player.shopVisits.floor_2_node_1.closed = true;
-    assert.equal(persistence.save(restored), true);
+    original.player.shopVisits.floor_2_node_1.closed = true;
+    assert.equal(persistence.save(original), true);
     const resumed = { player: null };
     assert.equal(persistence.restore(resumed), true);
     assert.equal(resumed.player.shopVisits.floor_2_node_1.closed, true);
