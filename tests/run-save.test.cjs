@@ -106,6 +106,31 @@ test('checkpoint preserves a pending camp choice for recovery after reload', () 
     assert.equal(restored.player.pendingRest, true);
 });
 
+test('checkpoint rejects a pending rest flag on a non-rest room', () => {
+    const memory = storage();
+    const persistence = new RunSave(memory);
+    const original = game();
+    original.player.pendingRest = true;
+    assert.equal(persistence.save(original), true);
+
+    const target = { player: null };
+    assert.equal(persistence.restore(target), false);
+    assert.equal(target.player, null);
+});
+
+test('checkpoint rejects malformed pending rest flags', () => {
+    const memory = storage();
+    const persistence = new RunSave(memory);
+    assert.equal(persistence.save(game()), true);
+    const corrupted = JSON.parse(memory.getItem(RunSave.KEY));
+    corrupted.player.pendingRest = 'yes';
+    memory.setItem(RunSave.KEY, JSON.stringify(corrupted));
+
+    const target = { player: null };
+    assert.equal(persistence.restore(target), false);
+    assert.equal(target.player, null);
+});
+
 test('battle state is never saved as an unsafe partial checkpoint', () => {
     const persistence = new RunSave(storage());
     const current = game();
