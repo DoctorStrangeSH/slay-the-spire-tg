@@ -40,7 +40,8 @@ function simulate(heroId, enemyId, seed, elite = false, maxTurns = 30, build = n
     const hero = api.HEROES[heroId];
     const player = {
         heroId,
-        hp: hero.maxHp,
+        hp: Math.min(hero.maxHp, Math.max(1, Math.floor(hero.maxHp *
+            (Number.isFinite(build?.initialHpPercent) ? build.initialHpPercent : 1)))),
         maxHp: hero.maxHp,
         deck: (build?.deck || api.getStarterDeckForHero(heroId)).map(card => ({ ...card })),
         relics: [...(build?.relics || [])]
@@ -416,3 +417,38 @@ function apiStarterDeckSize(heroId) {
     const api = vm.runInNewContext(source + String.fromCharCode(10) + '({ getStarterDeckForHero })', { Math });
     return api.getStarterDeckForHero(heroId).length;
 }
+
+
+test('act boss benchmark measures sensitivity to health carried into the boss room', () => {
+    const report = [];
+    const startingHealth = [1, 0.7, 0.4];
+    for (const heroId of HERO_IDS) {
+        for (let act = 1; act <= 3; act++) {
+            for (const initialHpPercent of startingHealth) {
+                const results = [];
+                for (let seed = 1; seed <= 20; seed++) {
+                    const build = buildActSnapshot(heroId, seed * 65537, act);
+                    build.initialHpPercent = initialHpPercent;
+                    const result = simulate(heroId, ACT_BOSS_IDS[act - 1],
+                        seed * 130363, false, 80, build);
+                    assert.ok(['win', 'loss', 'timeout'].includes(result.outcome));
+                    assert.ok(result.hpRemaining >= 0 && Number.isFinite(result.hpRemaining));
+                    assert.ok(result.enemyHpRemaining >= 0 && Number.isFinite(result.enemyHpRemaining));
+                    results.push(result);
+                }
+                report.push({
+                    heroId,
+                    act,
+                    bossId: ACT_BOSS_IDS[act - 1],
+                    startingHpPercent: Math.round(initialHpPercent * 100),
+                    wins: results.filter(result => result.outcome === 'win').length,
+                    losses: results.filter(result => result.outcome === 'loss').length,
+                    timeouts: results.filter(result => result.outcome === 'timeout').length,
+                    averageTurns: Number((results.reduce((sum, result) => sum + result.turns, 0) / results.length).toFixed(2)),
+                    averageDamageTaken: Number((results.reduce((sum, result) => sum + result.damageTaken, 0) / results.length).toFixed(2))
+                });
+            }
+        }
+    }
+    console.log('ACT_BOSS_STARTING_HEALTH_SENSITIVITY ' + JSON.stringify(report));
+});
