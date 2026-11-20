@@ -59,6 +59,9 @@ function simulate(heroId, enemyId, seed, elite = false, maxTurns = 30, build = n
         enemy.damage = Math.floor(enemy.damage * 1.3);
     }
     const battle = new api.BattleSystem(player, enemy);
+    if (enemy.isSecretBoss && Number(enemy.openingBlock) > 0) {
+        battle.enemyBlock += Math.floor(enemy.openingBlock);
+    }
     const conditions = build?.conditions ? { ...build.conditions } : null;
     if (conditions && !battle.battleEnded && player.hp > 0) {
         const blessing = Number(conditions.blessingBattles) || 0;
@@ -67,9 +70,6 @@ function simulate(heroId, enemyId, seed, elite = false, maxTurns = 30, build = n
         const ash = Number(conditions.ashBattles) || 0;
         const exhaustion = Number(conditions.exhaustionBattles) || 0;
         const bloodMark = Number(conditions.bloodMarkBattles) || 0;
-        if (enemy.isSecretBoss && Number(enemy.openingBlock) > 0) {
-            battle.enemyBlock += Math.floor(enemy.openingBlock);
-        }
         if (blessing > 0) {
             battle.block += 5;
             conditions.blessingBattles = blessing - 1;
