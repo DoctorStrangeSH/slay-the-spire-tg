@@ -509,7 +509,7 @@ function chooseCompleteRoute(map, random) {
     return route;
 }
 
-function chooseBestReward(api, heroId, random) {
+function chooseBestReward(api, heroId, rewardRandom) {
     const offers = api.getRandomRewardCards(heroId, 3, random);
     if (!offers.length) return null;
     const score = card =>
@@ -561,7 +561,9 @@ function applyRouteRest(api, player, policy) {
 
 function simulateRouteCampaign(heroId, seed, policy = 'heal-when-useful') {
     const api = createRouteApi();
-    const random = createRunRandom(seed ^ 0x5f3759df);
+    const routeRandom = createRunRandom(seed ^ 0x5f3759df);
+    const rewardRandom = createRunRandom(seed ^ 0x6c8e9cf5);
+    const combatRandom = createRunRandom(seed ^ 0x1b873593);
     const hero = api.HEROES[heroId];
     const player = {
         hp: hero.maxHp,
@@ -577,7 +579,7 @@ function simulateRouteCampaign(heroId, seed, policy = 'heal-when-useful') {
 
     for (let act = 1; act <= 3 && alive; act++) {
         const map = new api.MapGenerator(act, `route-aware-${heroId}-${seed}-act-${act}`);
-        const route = chooseCompleteRoute(map, random);
+        const route = chooseCompleteRoute(map, routeRandom);
         const stats = {
             act, routeRooms: route.length - 2,
             plannedRests: route.filter(node => node.type === 'rest').length,
@@ -595,14 +597,14 @@ function simulateRouteCampaign(heroId, seed, policy = 'heal-when-useful') {
                 const isBoss = node.type === 'boss';
                 const enemyId = isBoss
                     ? ACT_BOSS_IDS[act - 1]
-                    : regularEnemies[Math.floor(random() * regularEnemies.length)];
+                    : regularEnemies[Math.floor(combatRandom() * regularEnemies.length)];
                 if (isBoss) {
                     stats.bossReached = true;
                     stats.hpBeforeBoss = player.hp;
                     stats.deckSizeBeforeBoss = player.deck.length;
                     stats.relicCountBeforeBoss = player.relics.length;
                 }
-                const combatSeed = Math.floor(random() * 0xffffffff) >>> 0;
+                const combatSeed = Math.floor(combatRandom() * 0xffffffff) >>> 0;
                 const result = simulate(heroId, enemyId, combatSeed, isElite, 80, {
                     currentHp: player.hp,
                     maxHp: player.maxHp,
@@ -612,7 +614,7 @@ function simulateRouteCampaign(heroId, seed, policy = 'heal-when-useful') {
                 player.hp = result.hpRemaining;
                 if (isBoss) {
                     stats.bossWon = result.outcome === 'win';
-                    if (stats.bossWon && random() < cardRewardChance) {
+                    if (stats.bossWon && rewardRandom() < cardRewardChance) {
                         const card = chooseBestReward(api, heroId, random);
                         if (card) {
                             player.deck.push(card);
@@ -628,7 +630,7 @@ function simulateRouteCampaign(heroId, seed, policy = 'heal-when-useful') {
                 }
                 if (isElite) {
                     stats.elites++;
-                    const relic = api.chooseRelic(player.relics, random, heroId);
+                    const relic = api.chooseRelic(player.relics, rewardRandom, heroId);
                     if (relic) {
                         player.relics.push(relic.id);
                         stats.relicRewards++;
@@ -636,7 +638,7 @@ function simulateRouteCampaign(heroId, seed, policy = 'heal-when-useful') {
                 } else {
                     stats.battles++;
                 }
-                if (random() < cardRewardChance) {
+                if (rewardRandom() < cardRewardChance) {
                     const card = chooseBestReward(api, heroId, random);
                     if (card) {
                         player.deck.push(card);
@@ -659,7 +661,7 @@ function simulateRouteCampaign(heroId, seed, policy = 'heal-when-useful') {
                     const rare = cards.filter(card => card.rarity === 'rare');
                     const pool = rare.length ? rare : cards;
                     if (pool.length) {
-                        player.deck.push({ ...pool[Math.floor(random() * pool.length)] });
+                        player.deck.push({ ...pool[Math.floor(rewardRandom() * pool.length)] });
                         stats.cardRewards++;
                     }
                 }
