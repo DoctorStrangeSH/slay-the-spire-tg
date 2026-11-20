@@ -128,7 +128,8 @@ test('legacy map layout remains reproducible for old checkpoints', () => {
 test('mobile layout sets a fixed-height battle field with a scrollable card hand', () => {
     const css = readFileSync(join(__dirname, '../css/cathedral.css'), 'utf8');
     const mapUI = readFileSync(join(__dirname, '../js/ui/MapUI.js'), 'utf8');
-    assert.match(css, /#battle-screen\s*\{[\s\S]*?height:\s*100dvh/);
+    assert.match(css, /:root\s*\{[\s\S]*?--game-viewport-height:\s*100dvh/);
+    assert.match(css, /#battle-screen\s*\{[\s\S]*?height:\s*var\(--game-viewport-height,\s*100dvh\)/);
     assert.match(css, /#hand-area\s*\{[\s\S]*?touch-action:\s*pan-x/);
     assert.match(css, /#action-buttons\s*\{[\s\S]*?grid-template-columns:\s*repeat\(3/);
     assert.match(mapUI, /15 - node\.floor/);
