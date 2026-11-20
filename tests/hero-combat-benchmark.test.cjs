@@ -468,7 +468,7 @@ const mapSource = [
 ] .join('\n');
 
 function createRouteApi() {
-    return vm.runInNewContext(mapSource + '\nMapGenerator;', { Math });', { Math });
+    return vm.runInNewContext(mapSource + '\nMapGenerator;', { Math });
 }
 
 function createRunRandom(seed) {
