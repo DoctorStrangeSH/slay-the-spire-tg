@@ -72,7 +72,7 @@ test('class story progress is reset for a new run and exposed in the run journal
 
 test('class follow-ups appear only on a later floor and resolve once for every hero', () => {
     const vm = require('node:vm');
-    const Game = vm.runInNewContext(gameSource + '\\nGame;', {
+    const Game = vm.runInNewContext(gameSource + '\nGame;', {
         console, Math, Date, JSON,
         RunSave: class { clear() {} },
         GAME_CONFIG: { maxActs: 3 },
