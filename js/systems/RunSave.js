@@ -113,6 +113,8 @@ class RunSave {
         }
         const current = map.findNodeById(data.currentNodeId);
         const visitedIds = data.map.visited;
+        if (data.player.pendingRest !== undefined && typeof data.player.pendingRest !== 'boolean') return false;
+        if (data.player.pendingRest === true && current?.type !== NODE_TYPES.REST) return false;
         if (!current || current.floor !== data.floor ||
             !Array.isArray(visitedIds) || visitedIds.length === 0 ||
             visitedIds.length > map.allNodes.length ||
