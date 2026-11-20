@@ -45,7 +45,8 @@ class Game {
             veiledMerchantAct: null,
             veiledMerchantFloor: null,
             veiledMerchantDeals: 0,
-            secretBossDefeated: false
+            secretBossDefeated: false,
+            claimedTreasureNodes: []
         };
 
         this.startNewGame();
@@ -80,6 +81,7 @@ class Game {
         this.player.veiledMerchantFloor = null;
         this.player.veiledMerchantDeals = 0;
         this.player.secretBossDefeated = false;
+        this.player.claimedTreasureNodes = [];
         this.act = 1;
         this.floor = 0;
 
@@ -2142,13 +2144,25 @@ class Game {
         if (getAvailableRelics(this.player.relics, this.player.heroId).length) {
             choices.push({ type: 'relic', text: '💎 Получить новую реликвию' });
         }
+        const nodeId = String(this.currentNodeId || '');
+        const claimedNodes = Array.isArray(this.player.claimedTreasureNodes)
+            ? this.player.claimedTreasureNodes : [];
+        // A claimed room remains resolved after reload; never reopen its reward.
+        if (nodeId && claimedNodes.includes(nodeId)) {
+            this.continueJourney();
+            return;
+        }
         let claimed = false;
         choices.forEach(choice => {
             const button = document.createElement('button');
             button.textContent = choice.text;
             button.onclick = () => {
-                if (claimed || !this.applyTreasureReward(choice.type)) return;
+                const resolved = Array.isArray(this.player.claimedTreasureNodes)
+                    ? this.player.claimedTreasureNodes : [];
+                if (claimed || (nodeId && resolved.includes(nodeId)) ||
+                    !this.applyTreasureReward(choice.type)) return;
                 claimed = true;
+                this.player.claimedTreasureNodes = [...resolved, nodeId].filter(Boolean);
                 modal.remove();
                 this.continueJourney();
             };
