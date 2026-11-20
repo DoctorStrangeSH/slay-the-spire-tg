@@ -2,26 +2,24 @@
    Локальная типографика: без внешних запросов, быстро загружается в Telegram. */
 :root {
   --game-viewport-height: 100dvh;
-  --game-viewport-90: 90dvh;
+  --game-viewport-93: 93dvh;
   --game-viewport-92: 92dvh;
+  --game-viewport-90: 90dvh;
+  --game-viewport-88: 88dvh;
   --game-viewport-85: 85dvh;
+  --game-viewport-77: 77dvh;
   --game-viewport-75: 75dvh;
   --game-viewport-73: 73dvh;
-  color-scheme: dark;
-  --void: #090b10;
-  --night: #11141b;
-  --slate: #1b2028;
-  --panel: #20232a;
-  --panel-deep: #151920;
-  --line: rgba(208, 166, 102, .32);
-  --line-bright: #bd935e;
-  --gold: #e8c78e;
-  --ivory: #f2e9d9;
-  --mist: #b5b6bd;
-  --crimson: #af4352;
-  --teal: #79c5be;
-  --violet: #ac93d0;
-  --shadow: 0 16px 34px rgba(0,0,0,.5);
+  --game-viewport-52: 52vh;
+  --game-viewport-47: 47vh;
+  --game-viewport-34: 34dvh;
+  --game-viewport-31: 31vh;
+  --game-viewport-29: 29dvh;
+  --game-viewport-26: 26dvh;
+  --game-viewport-25: 25dvh;
+  --game-viewport-18: 18dvh;
+  --game-viewport-9: 9dvh;
+  --game-viewport-8: 8dvh;
 }
 html { background: var(--void); }
 body {
@@ -38,7 +36,7 @@ button:focus-visible, .hero-card:focus-visible, .card:focus-visible {
 }
 #game-container {
   max-width: 540px;
-  min-height: 100dvh;
+  min-height: var(--game-viewport-height, 100dvh);
   isolation: isolate;
   background:
     radial-gradient(ellipse at 50% -15%, rgba(132, 57, 62, .23), transparent 49%),
@@ -65,7 +63,7 @@ button:focus-visible, .hero-card:focus-visible, .card:focus-visible {
 /* Игровой контроллер показывает меню через inline display:block. */
 #main-menu[style*="display: block"] { display: flex !important; }
 #main-menu {
-  min-height: 100dvh;
+  min-height: var(--game-viewport-height, 100dvh);
   padding: max(48px, env(safe-area-inset-top)) 24px 40px;
   text-align: center;
   display: flex;
@@ -362,7 +360,7 @@ button:disabled { opacity: .42; filter: grayscale(.5); }
     radial-gradient(ellipse at 50% 47%, #4d343b33, transparent 72%),
     #12151c;
   border-radius: 9px;
-  max-height: 77dvh;
+  max-height: var(--game-viewport-77, 77dvh);
 }
 #map-nodes svg { display: block; overflow: visible; }
 .map-legend {
@@ -744,7 +742,7 @@ button:disabled { opacity: .42; filter: grayscale(.5); }
   position: absolute;
   z-index: 10;
   left: 50%;
-  top: clamp(170px, 26vh, 250px);
+  top: clamp(170px, var(--game-viewport-26, 26vh), 250px);
   width: 155px;
   height: 155px;
   display: grid;
@@ -926,7 +924,7 @@ button:disabled { opacity: .42; filter: grayscale(.5); }
   color: #dbc9a8;
   font: 700 11px/1.2 system-ui, sans-serif;
 }
-.pile-gallery-modal .pile-cards { max-height: min(52vh, 450px); }
+.pile-gallery-modal .pile-cards { max-height: min(var(--game-viewport-52, 52vh), 450px); }
 .pile-gallery-modal .pile-card {
   width: 100%;
   text-align: left;
@@ -1060,7 +1058,7 @@ button:disabled { opacity: .42; filter: grayscale(.5); }
   position: absolute;
   z-index: 12;
   left: 50%;
-  top: clamp(260px, 47vh, 450px);
+  top: clamp(260px, var(--game-viewport-47, 47vh), 450px);
   width: 150px;
   height: 125px;
   display: grid;
@@ -1268,7 +1266,7 @@ button:disabled { opacity: .42; filter: grayscale(.5); }
 }
 .cathedral-event-kicker { text-align: center; color: var(--event-accent); font: 800 10px/1.4 system-ui,sans-serif; letter-spacing: .21em; }
 .cathedral-event-art {
-  position: relative; width: min(100%, 300px); height: clamp(125px, 31vh, 190px); margin: 8px auto 13px;
+  position: relative; width: min(100%, 300px); height: clamp(125px, var(--game-viewport-31, 31vh), 190px); margin: 8px auto 13px;
   display: grid; place-items: center; overflow: hidden;
   border-top: 1px solid #e6cda94d; border-bottom: 1px solid #e6cda94d;
   background:
@@ -1432,8 +1430,8 @@ button:disabled { opacity: .42; filter: grayscale(.5); }
     width: 100%;
     margin: 0;
     min-height: 0;
-    max-height: 25dvh;
-    font-size: clamp(35px, 9dvh, 63px);
+    max-height: var(--game-viewport-25, 25dvh);
+    font-size: clamp(35px, var(--game-viewport-9, 9dvh), 63px);
     align-self: center;
   }
   #enemy-info { margin: 0; padding: 6px; min-width: 0; text-align: left; }
@@ -1461,7 +1459,7 @@ button:disabled { opacity: .42; filter: grayscale(.5); }
     flex: 0 0 auto;
     width: 100%;
     min-height: 0;
-    height: clamp(125px, 26dvh, 172px);
+    height: clamp(125px, var(--game-viewport-26, 26dvh), 172px);
     box-sizing: border-box;
     margin: 0;
     padding: 5px 5px 10px;
@@ -1504,7 +1502,7 @@ button:disabled { opacity: .42; filter: grayscale(.5); }
   }
   #battle-preview {
     position: absolute;
-    bottom: calc(29dvh + 79px);
+    bottom: calc(var(--game-viewport-29, 29dvh) + 79px);
     left: 50%;
     max-width: calc(100% - 20px);
     pointer-events: none;
@@ -1514,7 +1512,7 @@ button:disabled { opacity: .42; filter: grayscale(.5); }
 @media (max-width: 640px) and (max-height: 640px) {
   #battle-screen { gap: 3px; }
   #enemy-area { min-height: 75px; }
-  #enemy-sprite { max-height: 18dvh; font-size: 34px; }
+  #enemy-sprite { max-height: var(--game-viewport-18, 18dvh); font-size: 34px; }
   #hand-area { height: 115px; }
   #action-buttons .action-btn { min-height: 29px; padding: 5px 3px; }
   #battle-preview { bottom: 185px; }
@@ -1753,7 +1751,7 @@ button:disabled { opacity: .42; filter: grayscale(.5); }
     box-shadow: inset 0 0 0 1px #aaf0d9, 0 0 14px #7aebcb77;
   }
   #battle-preview {
-    bottom: calc(26dvh + 111px + env(safe-area-inset-bottom));
+    bottom: calc(var(--game-viewport-26, 26dvh) + 111px + env(safe-area-inset-bottom));
     z-index: 5;
     max-width: min(94%, 440px);
   }
@@ -1810,14 +1808,14 @@ button:disabled { opacity: .42; filter: grayscale(.5); }
 .card-details-meta { margin: 0; font-size: 13px; color: #ddc395; }
 .card-details-art {
   width: min(100%, 300px);
-  max-height: 34dvh;
+  max-height: var(--game-viewport-34, 34dvh);
   margin: 0 auto;
   overflow: hidden;
   border: 1px solid #ad9367;
   border-radius: 9px;
   background: #111821;
 }
-.card-details-art img, .card-details-art svg { display: block; width: 100%; height: auto; max-height: 34dvh; object-fit: contain; }
+.card-details-art img, .card-details-art svg { display: block; width: 100%; height: auto; max-height: var(--game-viewport-34, 34dvh); object-fit: contain; }
 .card-details-description {
   margin: 0;
   padding: 12px;
@@ -1876,7 +1874,7 @@ button:disabled { opacity: .42; filter: grayscale(.5); }
 .merchant-content {
   box-sizing: border-box;
   width: min(760px, 100%);
-  max-height: min(88dvh, 850px);
+  max-height: min(var(--game-viewport-88, 88dvh), 850px);
   overflow-y: auto;
   padding: clamp(16px, 3vw, 28px);
   border: 1px solid #ae8763;
@@ -1960,7 +1958,7 @@ button:disabled { opacity: .42; filter: grayscale(.5); }
 .run-journal-modal { z-index: 1100; padding: 12px; box-sizing: border-box; }
 .run-journal-content {
   box-sizing: border-box; width: min(620px, 100%);
-  max-height: min(88dvh, 780px); overflow-y: auto;
+  max-height: min(var(--game-viewport-88, 88dvh), 780px); overflow-y: auto;
   padding: clamp(16px, 3vw, 26px); border: 1px solid #bba075;
   border-radius: 14px; background: linear-gradient(155deg, #2c2832, #141d2a 77%);
   color: #f5e8d3; box-shadow: 0 18px 70px #000b;
@@ -1984,7 +1982,7 @@ button:disabled { opacity: .42; filter: grayscale(.5); }
 }
 @media (max-width: 640px) {
   .run-journal-modal { padding: max(8px, env(safe-area-inset-top)) 8px max(8px, env(safe-area-inset-bottom)); }
-  .run-journal-content { max-height: 93dvh; padding: 16px; }
+  .run-journal-content { max-height: var(--game-viewport-93, 93dvh); padding: 16px; }
   .run-journal-button { margin-left: 4px; }
 }
 
@@ -2238,7 +2236,7 @@ button:disabled { opacity: .42; filter: grayscale(.5); }
   #battle-screen #enemy-sprite.enemy-is-boss.enemy-has-portrait {
     box-sizing: border-box;
     width: 100%;
-    height: min(25dvh, 180px);
+    height: min(var(--game-viewport-25, 25dvh), 180px);
     min-height: 0;
     margin: 0;
   }
@@ -2273,7 +2271,7 @@ button:disabled { opacity: .42; filter: grayscale(.5); }
 @media (max-width: 640px) and (max-height: 640px) {
   #battle-screen #enemy-sprite.enemy-has-portrait,
   #battle-screen #enemy-sprite.enemy-is-boss.enemy-has-portrait {
-    height: min(18dvh, 116px);
+    height: min(var(--game-viewport-18, 18dvh), 116px);
   }
 }
 
@@ -2285,7 +2283,7 @@ button:disabled { opacity: .42; filter: grayscale(.5); }
   }
   #battle-screen #hand-area .card-art-frame {
     box-sizing: border-box;
-    height: clamp(34px, 8dvh, 51px);
+    height: clamp(34px, var(--game-viewport-8, 8dvh), 51px);
     min-height: 0;
     margin: 3px auto 4px;
   }
