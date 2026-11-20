@@ -2,8 +2,21 @@
 class BattleTurn {
     endTurn(battle, effects) {
         // Эффекты карт и построек могут завершить бой до хода противника.
-        if (battle.player.hp <= 0) return { battleEnded: true, victory: false };
-        if (battle.enemy.hp <= 0) return { battleEnded: true, victory: true };
+        if (battle.player.hp <= 0) {
+            if (!this.resolvePlayerDefeat(battle)) return { battleEnded: true, victory: false };
+        }
+        if (battle.enemy.hp <= 0) {
+            battle.triggerAdrenalineRush?.();
+            return { battleEnded: true, victory: true };
+        }
+
+        // Берсерк-режим обменивает оставшиеся карты в руке на потерю HP.
+        if (battle.hasPower('berserkMode') && battle.hand.length > 0) {
+            battle.takeDamage(battle.hand.length);
+            if (battle.player.hp <= 0 && !this.resolvePlayerDefeat(battle)) {
+                return { battleEnded: true, victory: false };
+            }
+        }
 
         this.advanceSecretBossPhase(battle);
 
@@ -49,11 +62,22 @@ class BattleTurn {
             battle.statusEffects.enemy.poison--;
         }
 
-        // Кровотечение врага
+        // Кровотечение врага. Берсерк может преобразовать фактически нанесённый
+        // кровотечением урон в лечение; избыточный урон сверх оставшегося HP не лечит.
         if (battle.statusEffects.enemy.bleed > 0) {
-            battle.enemy.hp -= Math.floor(battle.statusEffects.enemy.bleed);
-            battle.enemy.hp = Math.max(0, Math.floor(battle.enemy.hp));
+            const bleedDamage = Math.min(
+                Math.max(0, battle.enemy.hp),
+                Math.floor(battle.statusEffects.enemy.bleed)
+            );
+            battle.enemy.hp = Math.max(0, Math.floor(battle.enemy.hp - bleedDamage));
             battle.statusEffects.enemy.bleed--;
+            if (bleedDamage > 0) {
+                const healing = (battle.hasPower('bloodthirst') ? 1 : 0) +
+                    (battle.hasPower('bloodSeal') ? 2 : 0);
+                if (healing > 0) {
+                    battle.player.hp = Math.min(battle.player.maxHp, battle.player.hp + healing);
+                }
+            }
         }
         
         // Яд игрока
@@ -70,21 +94,14 @@ class BattleTurn {
         
         // Сначала разрешаем спасение игрока: одновременная гибель не даёт
         // победу мёртвому герою без срабатывания защитных эффектов.
-        if (battle.player.hp <= 0) {
-            // Ментальное бессмертие
-            if (battle.hasPower('mentalImmortality')) {
-                battle.player.hp = 1;
-                battle.statusEffects.enemy.paralysis = (battle.statusEffects.enemy.paralysis || 0) + 1;
-                battle.player.relics = battle.player.relics.filter(r => r !== 'mentalImmortality');
-            } else if (battle.hasPower('secondLife')) {
-                battle.player.hp = 10;
-                battle.player.relics = battle.player.relics.filter(r => r !== 'secondLife');
-            } else {
-                return { battleEnded: true, victory: false };
-            }
+        if (battle.player.hp <= 0 && !this.resolvePlayerDefeat(battle)) {
+            return { battleEnded: true, victory: false };
         }
-        
-        if (battle.enemy.hp <= 0) return { battleEnded: true, victory: true };
+
+        if (battle.enemy.hp <= 0) {
+            battle.triggerAdrenalineRush?.();
+            return { battleEnded: true, victory: true };
+        }
 
         battle.turn++;
         battle.startTurn();
@@ -92,6 +109,22 @@ class BattleTurn {
         return { battleEnded: false };
     }
     
+    resolvePlayerDefeat(battle) {
+        if (battle.player.hp > 0) return true;
+        if (battle.hasPower('mentalImmortality')) {
+            battle.player.hp = 1;
+            battle.statusEffects.enemy.paralysis = (battle.statusEffects.enemy.paralysis || 0) + 1;
+            battle.player.relics = battle.player.relics.filter(r => r !== 'mentalImmortality');
+            return true;
+        }
+        if (battle.hasPower('secondLife')) {
+            battle.player.hp = 10;
+            battle.player.relics = battle.player.relics.filter(r => r !== 'secondLife');
+            return true;
+        }
+        return false;
+    }
+
     advanceSecretBossPhase(battle) {
         const enemy = battle.enemy;
         if (!enemy?.isSecretBoss || enemy.hp <= 0) return false;
