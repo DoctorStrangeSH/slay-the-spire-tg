@@ -6,6 +6,7 @@ class BattleSystem extends BattleCore {
         this.effects = new BattleEffects();
         this.cards = new BattleCards();
         this.turnManager = new BattleTurn();
+        this.pendingScryCards = null;
 
         if (this.hasPower('emberBattery')) this.maxEnergy += 1;
         
@@ -63,11 +64,6 @@ class BattleSystem extends BattleCore {
             this.drawCards(1);
         }
         
-        // Предсказатель - посмотреть верхнюю карту
-        if (this.hasPower('predictor') && this.drawPile.length > 0) {
-            this.scryedThisTurn = true;
-        }
-        
         // Пси-вампиризм - лечение при параличе врага
         if (this.hasPower('psyVampirism') && this.isEnemyParalyzed()) {
             this.player.hp = Math.min(this.player.maxHp, this.player.hp + 2);
@@ -76,6 +72,13 @@ class BattleSystem extends BattleCore {
         const bonusDraw = (this.hasPower('chronicle') ? 1 : 0)
             + (this.player.heroId === 'psyker' && this.hasPower('mindEye') ? 1 : 0);
         this.drawCards(5 + bonusDraw);
+
+        // Предсказатель: после обычного добора покажите верхнюю карту и
+        // разрешите сбросить именно её, не меняя порядок остальных карт.
+        this.pendingScryCards = this.hasPower('predictor') && this.drawPile.length > 0
+            ? this.scry(1)
+            : null;
+
         this.enemyIntent = this.getEnemyIntent();
     }
     
