@@ -35,6 +35,11 @@ class BattleEffects {
             if (battle.player.hp <= 0) return;
             battle.statusEffects.player.strength = (battle.statusEffects.player.strength || 0) + 1;
         }
+
+        if (battle.hasPower('titanRage')) {
+            battle.takeDamage(2);
+            if (battle.player.hp <= 0) return;
+        }
         
         if (battle.hasPower('battlePulse') && battle.player.hp < battle.player.maxHp * 0.25) {
             battle.player.hp = Math.min(battle.player.maxHp, battle.player.hp + 3);
