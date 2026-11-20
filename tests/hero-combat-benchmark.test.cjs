@@ -546,6 +546,100 @@ function scoreRouteCard(card) {
         (card.cost || 0) * 1.5;
 }
 
+function scoreRouteEventOption(option, player) {
+    const label = String(option?.text || '');
+    const hpGain = Number(label.match(/\+\s*(\d+)\s*HP/i)?.[1] || 0);
+    const hpLoss = Number(label.match(/[−-]\s*(\d+)\s*HP/i)?.[1] || 0);
+    const goldGain = Number(label.match(/\+\s*(\d+)\s*золота/i)?.[1] || 0);
+    const goldCost = Number(label.match(/[−-]\s*(\d+)\s*золота/i)?.[1] || 0);
+    const maxHpGain = Number(label.match(/\+\s*(\d+)\s*(?:к максимуму HP|максимальных HP|к макс\. HP)/i)?.[1] || 0);
+    if (hpLoss && player.hp <= hpLoss) return -Infinity;
+    if (goldCost && player.gold < goldCost) return -Infinity;
+    let score = Math.min(hpGain, player.maxHp - player.hp) * 1.35;
+    score += goldGain * 0.28;
+    score += maxHpGain * 2.5;
+    score -= hpLoss * 1.7;
+    score -= goldCost * 0.28;
+    if (/реликви/i.test(label)) score += 32;
+    if (/карт/i.test(label)) score += 18;
+    if (/улучшить|закалить|перековать/i.test(label)) score += 17;
+    if (/проклятие|долг|усилится|метка|истощения|заберёт часть твоих сил/i.test(label)) score -= 18;
+    if (/уйти|отказаться|отвернуться|оставить|не трогать|пройти мимо|покинуть/i.test(label)) score = Math.max(score, 0);
+    return score;
+}
+
+function simulateRouteEvent(api, player, act, floor, seed, stats) {
+    const eventRandom = createRunRandom(seed);
+    const game = Object.create(api.Game.prototype);
+    game.player = player;
+    game.act = act;
+    game.floor = floor;
+    game.runId = `benchmark:${player.heroId}:${act}:${floor}`;
+    game.currentNodeId = game.runId;
+    game.offeredCards = [];
+    game.runSave = { save: () => true };
+    game.offerCard = () => {
+        game.offeredCards = api.getRandomRewardCards(player.heroId, 3);
+    };
+
+    const rareEvents = game.getEligibleRareEvents();
+    const isRare = rareEvents.length > 0 && eventRandom() < game.getRareEventChance();
+    const events = isRare ? rareEvents : game.getEventsForAct();
+    const history = Array.isArray(player.eventHistory) ? player.eventHistory.slice(-2) : [];
+    const freshEvents = events.filter(event => !history.includes(event.name));
+    const available = freshEvents.length ? freshEvents : events;
+    let event = available[Math.floor(eventRandom() * available.length)];
+    if (!isRare) {
+        const followUpNames = [
+            'Возвращение паломника', 'Хранитель Расколотого Обелиска',
+            'Чернильный Сборщик', 'Сборщик Долгов'
+        ];
+        const followUps = available.filter(candidate => followUpNames.includes(candidate.name));
+        if (followUps.length && eventRandom() < 0.55) {
+            event = followUps[Math.floor(eventRandom() * followUps.length)];
+        }
+    }
+    if (!event?.options?.length) return player;
+
+    player.eventHistory = [...(Array.isArray(player.eventHistory) ? player.eventHistory.slice(-19) : []), event.name];
+    const eventId = game.getPendingEventDecisionId(event);
+    player.pendingEvent = { id: eventId, name: event.name, rare: Boolean(event.rare), nodeId: game.currentNodeId };
+    const before = {
+        hp: player.hp, maxHp: player.maxHp, gold: player.gold,
+        cards: player.deck.length, relics: player.relics.length
+    };
+    const options = [...event.options].sort((a, b) =>
+        scoreRouteEventOption(b, player) - scoreRouteEventOption(a, player));
+    let committed = false;
+    let selectedResult = false;
+    for (const option of options) {
+        if (scoreRouteEventOption(option, player) === -Infinity) continue;
+        const result = game.commitEventDecision(event, option, eventId);
+        if (result !== false) {
+            committed = true;
+            selectedResult = result;
+            stats.eventDecisions++;
+            break;
+        }
+        // commitEventDecision restores the player's snapshot by replacing the
+        // reference; keep subsequent room processing on that committed state.
+        player = game.player;
+    }
+    if (!committed) return player;
+    if (selectedResult === 'deferred' && game.offeredCards.length) {
+        const card = chooseBestReward(api, player.heroId, createRunRandom(seed ^ 0x7f4a7c15));
+        if (card) {
+            player.deck.push(card);
+            stats.eventCardRewards++;
+        }
+    }
+    stats.eventGoldDelta += player.gold - before.gold;
+    stats.eventHpDelta += player.hp - before.hp;
+    stats.eventRelicRewards += Math.max(0, player.relics.length - before.relics);
+    stats.eventMaxHpDelta += player.maxHp - before.maxHp;
+    return player;
+}
+
 function simulateRouteShop(api, player, seed, stats) {
     const random = createRunRandom(seed);
     const cards = Object.values(api.getCardsForHero(player.heroId));
@@ -664,7 +758,16 @@ function simulateRouteCampaign(heroId, seed, policy = 'heal-when-useful') {
         maxHp: hero.maxHp,
         deck: api.getStarterDeckForHero(heroId).map(card => ({ ...card })),
         relics: [],
-        gold: 0
+        gold: 0,
+        eventHistory: [],
+        journalLog: [],
+        curseBattles: 0,
+        bloodMarkBattles: 0,
+        exhaustionBattles: 0,
+        veiledMerchantDebt: null,
+        classEventDebt: null,
+        archiveDebt: null,
+        obeliskDebt: null
     };
     const report = [];
     const cardRewardChance = 0.7;
@@ -682,6 +785,8 @@ function simulateRouteCampaign(heroId, seed, policy = 'heal-when-useful') {
             battles: 0, elites: 0, rests: 0, restHeals: 0, restUpgrades: 0, cardRewards: 0,
             relicRewards: 0, goldEarned: 0, shopVisits: 0, shopPurchases: 0,
             shopCards: 0, shopHeals: 0, shopUpgrades: 0, shopRemovals: 0, shopGoldSpent: 0,
+            eventRooms: 0, eventDecisions: 0, eventGoldDelta: 0, eventHpDelta: 0,
+            eventMaxHpDelta: 0, eventCardRewards: 0, eventRelicRewards: 0,
             bossReached: false, bossWon: false,
             hpBeforeBoss: null, hpAfterAct: null, deckSizeBeforeBoss: null,
             relicCountBeforeBoss: null
@@ -749,6 +854,10 @@ function simulateRouteCampaign(heroId, seed, policy = 'heal-when-useful') {
                         stats.cardRewards++;
                     }
                 }
+            } else if (node.type === 'event') {
+                stats.eventRooms++;
+                player = simulateRouteEvent(api, player, act, node.floor ?? node.y ?? stats.eventRooms,
+                    seed ^ (act * 131071) ^ (stats.eventRooms * 32771), stats);
             } else if (node.type === 'shop') {
                 stats.shopVisits++;
                 simulateRouteShop(api, player, seed ^ (act * 65537) ^ (stats.shopVisits * 8191), stats);
@@ -832,6 +941,24 @@ test('route-aware boss benchmark compares campfire policies while carrying route
                         averageRestHeals: Number((rows.reduce((sum, item) => sum + item.restHeals, 0)
                             / Math.max(1, rows.length)).toFixed(2)),
                         averageRestUpgrades: Number((rows.reduce((sum, item) => sum + item.restUpgrades, 0)
+                            / Math.max(1, rows.length)).toFixed(2)),
+                        averageGoldEarned: Number((rows.reduce((sum, item) => sum + item.goldEarned, 0)
+                            / Math.max(1, rows.length)).toFixed(2)),
+                        averageShopVisits: Number((rows.reduce((sum, item) => sum + item.shopVisits, 0)
+                            / Math.max(1, rows.length)).toFixed(2)),
+                        averageShopPurchases: Number((rows.reduce((sum, item) => sum + item.shopPurchases, 0)
+                            / Math.max(1, rows.length)).toFixed(2)),
+                        averageShopGoldSpent: Number((rows.reduce((sum, item) => sum + item.shopGoldSpent, 0)
+                            / Math.max(1, rows.length)).toFixed(2)),
+                        averageEventRooms: Number((rows.reduce((sum, item) => sum + item.eventRooms, 0)
+                            / Math.max(1, rows.length)).toFixed(2)),
+                        averageEventDecisions: Number((rows.reduce((sum, item) => sum + item.eventDecisions, 0)
+                            / Math.max(1, rows.length)).toFixed(2)),
+                        averageEventGoldDelta: Number((rows.reduce((sum, item) => sum + item.eventGoldDelta, 0)
+                            / Math.max(1, rows.length)).toFixed(2)),
+                        averageEventHpDelta: Number((rows.reduce((sum, item) => sum + item.eventHpDelta, 0)
+                            / Math.max(1, rows.length)).toFixed(2)),
+                        averageEventCardRewards: Number((rows.reduce((sum, item) => sum + item.eventCardRewards, 0)
                             / Math.max(1, rows.length)).toFixed(2))
                     };
                 })
