@@ -377,7 +377,7 @@ test('rare room selection uses a twelve-percent independent roll', () => {
     const Game = vm.runInNewContext(source + '\nGame;', context);
     const game = new Game();
     let selected = null;
-    game.showEventModal = event => { selected = event; };
+    game.showEventModal = event => { selected = event; if (game.player) game.player.pendingEvent = null; };
     value = 0.05;
     game.triggerEvent();
     assert.equal(selected.rare, true);
@@ -399,7 +399,7 @@ test('recent encounters are distinct and survive player snapshot', () => {
         { name: 'Фонтан' }, { name: 'Библиотека' }, { name: 'Часовня' }
     ];
     const selected = [];
-    game.showEventModal = event => { selected.push(event.name); };
+    game.showEventModal = event => { selected.push(event.name); game.player.pendingEvent = null; };
     for (let i = 0; i < 3; i++) game.triggerEvent();
     assert.equal(new Set(selected).size, 3);
     assert.deepEqual(Array.from(game.player.eventHistory), selected);
@@ -421,7 +421,7 @@ test('single eligible event remains available despite history', () => {
     game.getEligibleRareEvents = () => [];
     game.getEventsForAct = () => [{ name: 'Единственное событие' }];
     let selected;
-    game.showEventModal = event => { selected = event.name; };
+    game.showEventModal = event => { selected = event.name; game.player.pendingEvent = null; };
     game.triggerEvent();
     assert.equal(selected, 'Единственное событие');
     assert.deepEqual(Array.from(game.player.eventHistory), [
@@ -794,7 +794,7 @@ test('rare events scale by act and never offer the forge without a curse', () =>
     game.player = { curseBattles: 0, exhaustionBattles: 0, bloodMarkBattles: 0 };
     assert.equal(game.getEligibleRareEvents().some(e => e.name === 'Кузница Судеб'), false);
     let selected;
-    game.showEventModal = event => { selected = event; };
+    game.showEventModal = event => { selected = event; if (game.player) game.player.pendingEvent = null; };
     game.triggerEvent();
     assert.equal(selected.rare, true);
     assert.notEqual(selected.name, 'Кузница Судеб');

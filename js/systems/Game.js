@@ -83,6 +83,7 @@ class Game {
         this.player.secretBossDefeated = false;
         this.player.claimedTreasureNodes = [];
         this.player.shopVisits = {};
+        this.player.pendingEvent = null;
         this.act = 1;
         this.floor = 0;
 
@@ -115,6 +116,8 @@ class Game {
         const shopVisit = this.player.shopVisits?.[this.currentNodeId];
         if (currentNode?.type === NODE_TYPES.SHOP && !shopVisit?.closed) {
             this.openShop();
+        } else if (currentNode?.type === NODE_TYPES.EVENT && this.player.pendingEvent) {
+            this.resumePendingEvent();
         }
         return true;
     }
@@ -1223,7 +1226,24 @@ class Game {
             !event.requiresCurse || this.getTotalCurseBattles() > 0);
     }
 
+    getPendingEventDecisionId(event) {
+        const eventKey = String(event?.id || event?.name || 'unknown-event')
+            .normalize('NFKD').replace(/[^a-zA-Z0-9а-яА-Я_-]+/g, '-').toLowerCase();
+        return [this.runId || 'legacy-run', this.act, this.floor + 1, eventKey].join(':');
+    }
+
+    resumePendingEvent() {
+        const pending = this.player?.pendingEvent;
+        if (!pending || pending.nodeId !== String(this.currentNodeId || '')) return false;
+        const events = pending.rare ? this.getEligibleRareEvents() : this.getEventsForAct();
+        const event = events.find(candidate => candidate.name === pending.name);
+        if (!event) return false;
+        this.showEventModal(event, pending.id);
+        return true;
+    }
+
     triggerEvent() {
+        if (this.player?.pendingEvent) return this.resumePendingEvent();
         const rareEvents = this.getEligibleRareEvents();
         const isRare = rareEvents.length > 0 && Math.random() < this.getRareEventChance();
         const events = isRare ? rareEvents : this.getEventsForAct();
@@ -1251,8 +1271,15 @@ class Game {
         if (this.player) {
             const previous = Array.isArray(this.player.eventHistory) ? this.player.eventHistory : [];
             this.player.eventHistory = [...previous.slice(-19), event.name];
+            this.player.pendingEvent = {
+                id: this.getPendingEventDecisionId(event),
+                name: event.name,
+                rare: Boolean(event.rare),
+                nodeId: String(this.currentNodeId || '')
+            };
+            this.runSave?.save?.(this);
         }
-        this.showEventModal(event);
+        this.showEventModal(event, this.player?.pendingEvent?.id);
     }
 
     getRareEventsForAct() {
@@ -2052,7 +2079,21 @@ class Game {
         return scenes[name] || { style: 'mystery', sigil: '✦', caption: 'НЕИЗВЕСТНАЯ ВСТРЕЧА', hint: 'Выбери свой путь.' };
     }
 
-    showEventModal(event) {
+    showEventModal(event, decisionId = null) {
+        const eventId = decisionId || this.getPendingEventDecisionId(event);
+        const journal = Array.isArray(this.player?.journalLog) ? this.player.journalLog : [];
+        if (journal.some(entry => entry?.id === eventId)) {
+            if (this.player?.pendingEvent?.id === eventId) this.player.pendingEvent = null;
+            this.runSave?.save?.(this);
+            return false;
+        }
+        if (this.player && this.player.pendingEvent?.id !== eventId) {
+            this.player.pendingEvent = {
+                id: eventId, name: event.name, rare: Boolean(event.rare),
+                nodeId: String(this.currentNodeId || '')
+            };
+            this.runSave?.save?.(this);
+        }
         const scene = this.getEventPresentation(event.name);
         const modal = document.createElement('div');
         modal.className = 'modal cathedral-event-modal';
@@ -2087,11 +2128,21 @@ class Game {
             button.appendChild(copy);
             button.onclick = () => {
                 if (resolved) return;
+                const previous = Array.isArray(this.player?.journalLog) ? this.player.journalLog : [];
+                if (previous.some(entry => entry?.id === eventId)) {
+                    resolved = true;
+                    if (this.player?.pendingEvent?.id === eventId) this.player.pendingEvent = null;
+                    this.runSave?.save?.(this);
+                    modal.remove();
+                    return;
+                }
                 const before = this.snapshotJournalResources();
                 const result = option.action();
-                if (result === false) return; // Невозможная покупка/сделка не завершает событие.
+                if (result === false) return;
                 this.recordEventDecision(event, option, before);
                 resolved = true;
+                if (this.player?.pendingEvent?.id === eventId) this.player.pendingEvent = null;
+                this.runSave?.save?.(this);
                 modal.remove();
                 if (result !== 'deferred') this.continueJourney();
             };
