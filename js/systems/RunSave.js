@@ -32,13 +32,16 @@ class RunSave {
     }
 
     save(game) {
-        const snapshot = this.createSnapshot(game);
-        if (!snapshot || !this.storage) return false;
         try {
+            // Snapshot construction is part of persistence too: player state may
+            // contain unexpected non-serializable data (e.g. a circular reference).
+            const snapshot = this.createSnapshot(game);
+            if (!snapshot || !this.storage) return false;
             this.storage.setItem(RunSave.KEY, JSON.stringify(snapshot));
             return true;
         } catch (error) {
-            // Браузер может запретить localStorage (приватный режим, квота).
+            // Storage may be unavailable/full, or snapshot data may be invalid.
+            // A failed checkpoint must never interrupt the current run.
             console.warn('Не удалось сохранить забег:', error);
             return false;
         }
