@@ -15,7 +15,18 @@ document.addEventListener('DOMContentLoaded', () => {
         const syncGameViewportHeight = () => {
             const height = Number(tg.viewportStableHeight || tg.viewportHeight);
             if (!Number.isFinite(height) || height <= 0) return;
-            document.documentElement.style.setProperty('--game-viewport-height', `${Math.round(height)}px`);
+            const rootStyle = document.documentElement.style;
+            rootStyle.setProperty('--game-viewport-height', `${Math.round(height)}px`);
+            const viewportFractions = {
+                '--game-viewport-90': 0.90,
+                '--game-viewport-92': 0.92,
+                '--game-viewport-85': 0.85,
+                '--game-viewport-75': 0.75,
+                '--game-viewport-73': 0.73
+            };
+            for (const [property, fraction] of Object.entries(viewportFractions)) {
+                rootStyle.setProperty(property, `${Math.round(height * fraction)}px`);
+            }
         };
         syncGameViewportHeight();
         tg.onEvent?.('viewportChanged', syncGameViewportHeight);
