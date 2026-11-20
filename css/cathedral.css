@@ -1,6 +1,7 @@
 /* Slay And Spire — «Тёмный собор», художественная система v1.
    Локальная типографика: без внешних запросов, быстро загружается в Telegram. */
 :root {
+  --game-viewport-height: 100dvh;
   color-scheme: dark;
   --void: #090b10;
   --night: #11141b;
@@ -1396,7 +1397,7 @@ button:disabled { opacity: .42; filter: grayscale(.5); }
   html, body, #game-container { min-width: 0; width: 100%; }
   #battle-screen {
     box-sizing: border-box;
-    height: 100dvh;
+    height: var(--game-viewport-height, 100dvh);
     min-height: 0;
     overflow: hidden;
     display: flex;
