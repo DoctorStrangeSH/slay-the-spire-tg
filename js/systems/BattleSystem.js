@@ -45,6 +45,12 @@ class BattleSystem extends BattleCore {
             this.enemyIntent = null;
             return;
         }
+
+        if (this.battleMadnessPendingDraws > 0) {
+            const pendingDraws = this.battleMadnessPendingDraws;
+            this.battleMadnessPendingDraws = 0;
+            this.drawCards(pendingDraws);
+        }
         
         // Конструкции срабатывают в начале хода
         if (this.buildings) {
