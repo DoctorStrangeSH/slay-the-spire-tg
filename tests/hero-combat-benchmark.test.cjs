@@ -22,18 +22,19 @@ const files = [
     'js/systems/battle/BattleBuildings.js',
     'js/systems/battle/BattleCards.js',
     'js/systems/battle/BattleTurn.js',
-    'js/systems/BattleSystem.js'
+    'js/systems/BattleSystem.js',
+    'js/systems/Game.js'
 ];
 const source = files.map(file => readFileSync(join(root, file), 'utf8')).join('\n');
 
-function simulate(heroId, enemyId, seed, elite = false, maxTurns = 30) {
+function simulate(heroId, enemyId, seed, elite = false, maxTurns = 30, build = null) {
     let state = seed >>> 0;
     const seededMath = Object.create(Math);
     seededMath.random = () => {
         state = (state * 1664525 + 1013904223) >>> 0;
         return state / 0x100000000;
     };
-    const api = vm.runInNewContext(source + '\n({ BattleSystem, HEROES, ENEMIES, getStarterDeckForHero })', {
+    const api = vm.runInNewContext(source + '\n({ BattleSystem, HEROES, ENEMIES, getStarterDeckForHero, getRandomRewardCards, chooseRelic, Game })', {
         Math: seededMath
     });
     const hero = api.HEROES[heroId];
@@ -41,8 +42,8 @@ function simulate(heroId, enemyId, seed, elite = false, maxTurns = 30) {
         heroId,
         hp: hero.maxHp,
         maxHp: hero.maxHp,
-        deck: api.getStarterDeckForHero(heroId),
-        relics: []
+        deck: (build?.deck || api.getStarterDeckForHero(heroId)).map(card => ({ ...card })),
+        relics: [...(build?.relics || [])]
     };
     const enemy = { ...api.ENEMIES[enemyId], pattern: [...api.ENEMIES[enemyId].pattern] };
     if (elite) {
@@ -171,3 +172,102 @@ test('act bosses resolve deterministic starter-deck benchmark encounters for all
     }
     console.log('ACT_BOSS_STARTER_DECK_BENCHMARK ' + JSON.stringify(report));
 });
+
+
+// Controlled act-ready snapshots use the game's real reward/relic registries and
+// upgrade rules. The acquisition budget approximates a route with ~3 card rewards,
+// one elite relic and one rest-site upgrade per completed act; it is not a claim
+// that every generated map guarantees those exact rewards.
+function buildActSnapshot(heroId, seed, targetAct) {
+    let state = seed >>> 0;
+    const random = () => {
+        state = (state * 1664525 + 1013904223) >>> 0;
+        return state / 0x100000000;
+    };
+    const api = vm.runInNewContext(source +
+        '\\n({ getStarterDeckForHero, getRandomRewardCards, chooseRelic, Game })',
+        { Math: Object.assign(Object.create(Math), { random }) });
+    const deck = api.getStarterDeckForHero(heroId);
+    const relics = [];
+    const chooseCardScore = card =>
+        (card.damage || 0) * (card.hits || 1) +
+        (card.block || 0) * 0.8 +
+        (card.draw || 0) * 5 +
+        (card.heal || 0) * 2 +
+        (card.bleed || 0) * 2 +
+        (card.poison || 0) * 2 +
+        (card.paralysis || 0) * 2 +
+        (card.strength || 0) * 3 +
+        (card.type === 'building' ? 8 : 0) -
+        (card.selfDamage || 0) * 2 -
+        (card.cost || 0) * 1.5;
+
+    for (let act = 1; act <= targetAct; act++) {
+        for (let reward = 0; reward < 3; reward++) {
+            const offers = api.getRandomRewardCards(heroId, 3, random);
+            if (!offers.length) continue;
+            const chosen = offers.reduce((best, card) =>
+                chooseCardScore(card) > chooseCardScore(best) ? card : best);
+            deck.push({ ...chosen });
+        }
+
+        const relic = api.chooseRelic(relics, random, heroId);
+        if (relic) relics.push(relic.id);
+
+        // Apply the exact current Game upgrade implementation to the highest
+        // value eligible card, once per act (rest-site budget).
+        const upgradeTarget = [...deck]
+            .filter(card => api.Game.prototype.getCardUpgrade.call({}, card))
+            .sort((a, b) => chooseCardScore(b) - chooseCardScore(a))[0];
+        if (upgradeTarget) {
+            const gameMethods = {
+                getCardUpgrade: api.Game.prototype.getCardUpgrade
+            };
+            api.Game.prototype.upgradeCard.call(gameMethods, upgradeTarget);
+        }
+    }
+
+    return { deck, relics };
+}
+
+test('act-ready deck progression benchmark compares all heroes under the same acquisition budget', () => {
+    const report = [];
+    for (const heroId of HERO_IDS) {
+        for (let act = 1; act <= 3; act++) {
+            const results = [];
+            const deckSizes = [];
+            const relicCounts = [];
+            for (let seed = 1; seed <= 5; seed++) {
+                const build = buildActSnapshot(heroId, seed * 65537, act);
+                const result = simulate(heroId, ACT_BOSS_IDS[act - 1], seed * 130363,
+                    false, 80, build);
+                assert.ok(['win', 'loss'].includes(result.outcome),
+                    `${heroId} vs act ${act} boss did not resolve: ${JSON.stringify(result)}`);
+                assert.ok(result.hpRemaining >= 0 && Number.isFinite(result.hpRemaining));
+                assert.ok(result.enemyHpRemaining >= 0 && Number.isFinite(result.enemyHpRemaining));
+                assert.equal(build.deck.length, apiStarterDeckSize(heroId) + act * 3,
+                    'snapshot should add exactly three reward cards per completed act');
+                deckSizes.push(build.deck.length);
+                relicCounts.push(build.relics.length);
+                results.push(result);
+            }
+            report.push({
+                heroId,
+                act,
+                bossId: ACT_BOSS_IDS[act - 1],
+                wins: results.filter(result => result.outcome === 'win').length,
+                losses: results.filter(result => result.outcome === 'loss').length,
+                averageTurns: Number((results.reduce((sum, result) => sum + result.turns, 0) / results.length).toFixed(2)),
+                averageHpRemaining: Number((results.reduce((sum, result) => sum + result.hpRemaining, 0) / results.length).toFixed(2)),
+                deckSize: deckSizes[0],
+                relics: relicCounts[0]
+            });
+        }
+    }
+    console.log('ACT_READY_DECK_PROGRESSION_BENCHMARK ' + JSON.stringify(report));
+});
+
+function apiStarterDeckSize(heroId) {
+    const api = vm.runInNewContext(source + '\\n({ getStarterDeckForHero })', { Math });
+    return api.getStarterDeckForHero(heroId).length;
+}
