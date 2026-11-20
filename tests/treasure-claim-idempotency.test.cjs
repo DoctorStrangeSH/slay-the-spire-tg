@@ -37,6 +37,7 @@ function loadGame() {
     const Game = vm.runInNewContext(source + '\nGame;', {
         document: dom.document,
         getAvailableRelics: () => [],
+        getStarterDeckForHero: () => [],
         console
     });
     return { Game, ...dom };
