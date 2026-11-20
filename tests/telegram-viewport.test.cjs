@@ -42,6 +42,11 @@ function bootTelegramApp(initialHeight = 720) {
 test('Telegram stable viewport height is applied to game layout', () => {
     const { properties } = bootTelegramApp(720);
     assert.equal(properties['--game-viewport-height'], '720px');
+    assert.equal(properties['--game-viewport-90'], '648px');
+    assert.equal(properties['--game-viewport-92'], '662px');
+    assert.equal(properties['--game-viewport-85'], '612px');
+    assert.equal(properties['--game-viewport-75'], '540px');
+    assert.equal(properties['--game-viewport-73'], '526px');
 });
 
 test('Telegram viewport changes update the game layout height', () => {
@@ -49,6 +54,11 @@ test('Telegram viewport changes update the game layout height', () => {
     tg.viewportStableHeight = 604;
     viewportChanged();
     assert.equal(properties['--game-viewport-height'], '604px');
+    assert.equal(properties['--game-viewport-90'], '544px');
+    assert.equal(properties['--game-viewport-92'], '556px');
+    assert.equal(properties['--game-viewport-85'], '513px');
+    assert.equal(properties['--game-viewport-75'], '453px');
+    assert.equal(properties['--game-viewport-73'], '441px');
 });
 
 test('viewportHeight is used when stable height is unavailable', () => {
