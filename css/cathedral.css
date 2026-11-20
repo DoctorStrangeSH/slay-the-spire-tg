@@ -2630,3 +2630,85 @@ button:disabled { opacity: .42; filter: grayscale(.5); }
 .cathedral-event-modal[data-event-scene="debt-collector"] .cathedral-event-choice:first-child {
   border-color: #b99a65;
 }
+
+
+/* Telegram's stable viewport can be shorter than CSS media-query viewport.
+   Mirror compact-height breakpoints from the actual WebApp height. */
+@media (max-width: 640px) {
+  html[data-game-viewport-height="compact"] #battle-screen,
+  html[data-game-viewport-height="short"] #battle-screen { gap: 2px; }
+  html[data-game-viewport-height="compact"] #enemy-area,
+  html[data-game-viewport-height="short"] #enemy-area { min-height: 65px; }
+  html[data-game-viewport-height="compact"] #player-info,
+  html[data-game-viewport-height="short"] #player-info { padding: 4px 7px; }
+  html[data-game-viewport-height="compact"] #hand-area,
+  html[data-game-viewport-height="short"] #hand-area { height: 107px; }
+  html[data-game-viewport-height="compact"] #action-buttons .play-btn,
+  html[data-game-viewport-height="compact"] #action-buttons .end-btn,
+  html[data-game-viewport-height="short"] #action-buttons .play-btn,
+  html[data-game-viewport-height="short"] #action-buttons .end-btn {
+    min-height: 40px;
+    padding: 6px 4px;
+  }
+  html[data-game-viewport-height="compact"] #action-buttons .relic-btn,
+  html[data-game-viewport-height="compact"] #action-buttons .deck-btn,
+  html[data-game-viewport-height="compact"] #action-buttons .discard-btn,
+  html[data-game-viewport-height="short"] #action-buttons .relic-btn,
+  html[data-game-viewport-height="short"] #action-buttons .deck-btn,
+  html[data-game-viewport-height="short"] #action-buttons .discard-btn {
+    min-height: 27px;
+    padding: 4px 2px;
+  }
+  html[data-game-viewport-height="compact"] #battle-preview,
+  html[data-game-viewport-height="short"] #battle-preview {
+    bottom: calc(107px + 78px + env(safe-area-inset-bottom));
+  }
+  html[data-game-viewport-height="compact"] #enemy-sprite.enemy-has-portrait,
+  html[data-game-viewport-height="compact"] #enemy-sprite.enemy-is-boss.enemy-has-portrait,
+  html[data-game-viewport-height="short"] #enemy-sprite.enemy-has-portrait,
+  html[data-game-viewport-height="short"] #enemy-sprite.enemy-is-boss.enemy-has-portrait {
+    height: min(var(--game-viewport-18, 18dvh), 116px);
+  }
+  html[data-game-viewport-height="compact"] #hand-area .card-art-frame,
+  html[data-game-viewport-height="short"] #hand-area .card-art-frame {
+    height: 33px;
+    margin: 2px auto 3px;
+  }
+
+  html[data-game-viewport-height="short"] #battle-screen {
+    overflow-y: auto;
+    overflow-x: hidden;
+    overscroll-behavior-y: contain;
+    -webkit-overflow-scrolling: touch;
+  }
+  html[data-game-viewport-height="short"] #enemy-area {
+    flex: 0 0 auto;
+    min-height: 82px;
+    max-height: 132px;
+  }
+  html[data-game-viewport-height="short"] #enemy-sprite { max-height: 100px; }
+  html[data-game-viewport-height="short"] #enemy-info {
+    max-height: 124px;
+    overflow-y: auto;
+    overscroll-behavior-y: contain;
+  }
+  html[data-game-viewport-height="short"] #hand-area {
+    flex: 0 0 auto;
+    height: 112px;
+  }
+  html[data-game-viewport-height="short"] #action-buttons {
+    position: sticky;
+    bottom: 0;
+    z-index: 12;
+    padding: 5px 3px max(5px, env(safe-area-inset-bottom));
+    border-top: 1px solid #d3b47b66;
+    border-radius: 10px 10px 0 0;
+    background: linear-gradient(180deg, #17202cf5, #0c131cfb);
+    box-shadow: 0 -7px 20px #0008;
+  }
+  html[data-game-viewport-height="short"] #action-buttons .play-btn,
+  html[data-game-viewport-height="short"] #action-buttons .end-btn { min-height: 44px; }
+  html[data-game-viewport-height="short"] #action-buttons .relic-btn,
+  html[data-game-viewport-height="short"] #action-buttons .deck-btn,
+  html[data-game-viewport-height="short"] #action-buttons .discard-btn { min-height: 36px; }
+}

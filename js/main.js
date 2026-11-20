@@ -17,6 +17,8 @@ document.addEventListener('DOMContentLoaded', () => {
             if (!Number.isFinite(height) || height <= 0) return;
             const rootStyle = document.documentElement.style;
             rootStyle.setProperty('--game-viewport-height', `${Math.round(height)}px`);
+            const compactMode = height <= 520 ? 'short' : height <= 640 ? 'compact' : 'normal';
+            document.documentElement.setAttribute('data-game-viewport-height', compactMode);
             const viewportFractions = {
                 93: 0.93, 92: 0.92, 90: 0.90, 88: 0.88, 85: 0.85,
                 77: 0.77, 75: 0.75, 73: 0.73, 52: 0.52, 47: 0.47,
