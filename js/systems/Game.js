@@ -872,8 +872,32 @@ class Game {
         }
 
         if (result.battleEnded) {
+            if (this.currentBattle) this.currentBattle.pendingScryCards = null;
             this.endBattle(result.victory);
+        } else if (Array.isArray(this.currentBattle.pendingScryCards) &&
+            this.currentBattle.pendingScryCards.length > 0) {
+            BattleUI.showScryModal(this, this.currentBattle.pendingScryCards, true);
         }
+    }
+
+    discardScryedCard(index) {
+        const battle = this.currentBattle;
+        const pending = battle?.pendingScryCards;
+        if (!Array.isArray(pending) || !Number.isInteger(index) ||
+            index < 0 || index >= pending.length) return false;
+
+        const drawIndex = battle.drawPile.length - 1 - index;
+        if (drawIndex < 0 || drawIndex >= battle.drawPile.length) return false;
+
+        const [discarded] = battle.drawPile.splice(drawIndex, 1);
+        battle.discardPile.push(discarded);
+        battle.pendingScryCards = null;
+        BattleUI.update(this);
+        return true;
+    }
+
+    closeScryModal() {
+        if (this.currentBattle) this.currentBattle.pendingScryCards = null;
     }
 
     demolishBuilding(buildingId) {
