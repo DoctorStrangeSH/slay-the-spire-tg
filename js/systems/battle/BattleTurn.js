@@ -19,6 +19,7 @@ class BattleTurn {
         }
 
         this.advanceSecretBossPhase(battle);
+        battle.isResolvingEnemyTurn = true;
 
         // ПРОВЕРЯЕМ ПАРАЛИЧ
         const isParalyzed = battle.isEnemyParalyzed();
@@ -86,6 +87,10 @@ class BattleTurn {
             battle.statusEffects.player.poison--;
         }
         
+        // Draws triggered by enemy-phase damage are deferred until the next
+        // player turn so they are not immediately discarded with the old hand.
+        battle.isResolvingEnemyTurn = false;
+
         // Сброс руки
         battle.discardPile.push(...battle.hand);
         battle.hand = [];
