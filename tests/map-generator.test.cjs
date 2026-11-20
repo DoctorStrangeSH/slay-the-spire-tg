@@ -377,7 +377,7 @@ test('rare room selection uses a twelve-percent independent roll', () => {
     const Game = vm.runInNewContext(source + '\nGame;', context);
     const game = new Game();
     let selected = null;
-    game.showEventModal = event => { selected = event; game.player.pendingEvent = null; };
+    game.showEventModal = event => { selected = event; if (game.player) game.player.pendingEvent = null; };
     value = 0.05;
     game.triggerEvent();
     assert.equal(selected.rare, true);
@@ -794,7 +794,7 @@ test('rare events scale by act and never offer the forge without a curse', () =>
     game.player = { curseBattles: 0, exhaustionBattles: 0, bloodMarkBattles: 0 };
     assert.equal(game.getEligibleRareEvents().some(e => e.name === 'Кузница Судеб'), false);
     let selected;
-    game.showEventModal = event => { selected = event; };
+    game.showEventModal = event => { selected = event; if (game.player) game.player.pendingEvent = null; };
     game.triggerEvent();
     assert.equal(selected.rare, true);
     assert.notEqual(selected.name, 'Кузница Судеб');
