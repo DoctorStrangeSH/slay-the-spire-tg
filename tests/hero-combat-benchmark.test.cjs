@@ -532,7 +532,10 @@ function applyRouteRest(api, player, policy) {
     const actualHeal = Math.min(healAmount, player.maxHp - player.hp);
     // Explicit policy: heal when the campfire can restore at least 15% max HP;
     // otherwise upgrade the highest-scoring eligible card.
-    if (policy === 'heal-when-useful' && actualHeal >= player.maxHp * 0.15) {
+    const shouldHeal = policy === 'heal-when-useful'
+        ? actualHeal >= player.maxHp * 0.15
+        : player.hp <= player.maxHp * 0.55 && actualHeal > 0;
+    if (shouldHeal) {
         player.hp += actualHeal;
         return 'heal';
     }
@@ -663,57 +666,62 @@ function simulateRouteCampaign(heroId, seed, policy = 'heal-when-useful') {
     return { heroId, seed, policy, acts: report, finalHp: player.hp, deckSize: player.deck.length, relicCount: player.relics.length, completed: report.length === 3 && report[2].bossWon };
 }
 
-test('route-aware boss benchmark carries real route rewards, elite relics, campfire choices and HP across acts', () => {
+test('route-aware boss benchmark compares campfire policies while carrying route rewards and HP across acts', () => {
     const report = [];
+    const policies = ['heal-when-useful', 'upgrade-unless-critical'];
     for (const heroId of HERO_IDS) {
-        const campaigns = [];
-        for (let seed = 1; seed <= 12; seed++) {
-            const campaign = simulateRouteCampaign(heroId, seed * 104729);
-            campaigns.push(campaign);
-            assert.ok(campaign.acts.length >= 1 && campaign.acts.length <= 3);
-            assert.ok(campaign.finalHp >= 0 && campaign.finalHp <= apiMaxHp(heroId));
-            for (const act of campaign.acts) {
-                assert.ok(act.plannedRests >= 1, 'every generated route must include the pre-boss rest');
-                assert.ok(act.battles <= act.plannedBattles && act.elites <= act.plannedElites);
-                assert.ok(act.restHeals + act.restUpgrades <= act.rests);
-                if (act.bossReached) {
-                    assert.ok(act.hpBeforeBoss > 0);
-                    assert.ok(act.deckSizeBeforeBoss >= apiStarterDeckSize(heroId));
-                    assert.ok(act.relicCountBeforeBoss >= 0);
+        const policyReports = [];
+        for (const policy of policies) {
+            const campaigns = [];
+            for (let seed = 1; seed <= 12; seed++) {
+                const campaign = simulateRouteCampaign(heroId, seed * 104729, policy);
+                campaigns.push(campaign);
+                assert.ok(campaign.acts.length >= 1 && campaign.acts.length <= 3);
+                assert.ok(campaign.finalHp >= 0 && campaign.finalHp <= apiMaxHp(heroId));
+                for (const act of campaign.acts) {
+                    assert.ok(act.plannedRests >= 1,
+                        'every generated route must include the pre-boss rest');
+                    assert.ok(act.battles <= act.plannedBattles && act.elites <= act.plannedElites);
+                    assert.ok(act.restHeals + act.restUpgrades <= act.rests);
+                    if (act.bossReached) {
+                        assert.ok(act.hpBeforeBoss > 0);
+                        assert.ok(act.deckSizeBeforeBoss >= apiStarterDeckSize(heroId));
+                        assert.ok(act.relicCountBeforeBoss >= 0);
+                    }
                 }
             }
+            policyReports.push({
+                policy,
+                campaigns: campaigns.length,
+                fullRunWins: campaigns.filter(item => item.completed).length,
+                reachedBosses: campaigns.reduce((sum, item) =>
+                    sum + item.acts.filter(act => act.bossReached).length, 0),
+                acts: [1, 2, 3].map(act => {
+                    const rows = campaigns.map(item => item.acts.find(entry => entry.act === act)).filter(Boolean);
+                    const bossRows = rows.filter(item => item.bossReached);
+                    return {
+                        act,
+                        bossAttempts: bossRows.length,
+                        bossWins: bossRows.filter(item => item.bossWon).length,
+                        averageHpBeforeBoss: bossRows.length
+                            ? Number((bossRows.reduce((sum, item) => sum + item.hpBeforeBoss, 0)
+                                / bossRows.length).toFixed(2)) : null,
+                        averageCardRewards: Number((rows.reduce((sum, item) => sum + item.cardRewards, 0)
+                            / Math.max(1, rows.length)).toFixed(2)),
+                        averageEliteRelics: Number((rows.reduce((sum, item) => sum + item.relicRewards, 0)
+                            / Math.max(1, rows.length)).toFixed(2)),
+                        averageRestHeals: Number((rows.reduce((sum, item) => sum + item.restHeals, 0)
+                            / Math.max(1, rows.length)).toFixed(2)),
+                        averageRestUpgrades: Number((rows.reduce((sum, item) => sum + item.restUpgrades, 0)
+                            / Math.max(1, rows.length)).toFixed(2))
+                    };
+                })
+            });
         }
-        report.push({
-            heroId,
-            campaigns: campaigns.length,
-            fullRunWins: campaigns.filter(item => item.completed).length,
-            reachedBosses: campaigns.reduce((sum, item) =>
-                sum + item.acts.filter(act => act.bossReached).length, 0),
-            acts: [1, 2, 3].map(act => {
-                const rows = campaigns.map(item => item.acts.find(entry => entry.act === act)).filter(Boolean);
-                return {
-                    act,
-                    bossAttempts: rows.filter(item => item.bossReached).length,
-                    bossWins: rows.filter(item => item.bossWon).length,
-                    averageHpBeforeBoss: rows.filter(item => item.bossReached).length
-                        ? Number((rows.filter(item => item.bossReached)
-                            .reduce((sum, item) => sum + item.hpBeforeBoss, 0)
-                            / rows.filter(item => item.bossReached).length).toFixed(2)) : null,
-                    averageCardRewards: Number((rows.reduce((sum, item) => sum + item.cardRewards, 0)
-                        / Math.max(1, rows.length)).toFixed(2)),
-                    averageEliteRelics: Number((rows.reduce((sum, item) => sum + item.relicRewards, 0)
-                        / Math.max(1, rows.length)).toFixed(2)),
-                    averageRestHeals: Number((rows.reduce((sum, item) => sum + item.restHeals, 0)
-                        / Math.max(1, rows.length)).toFixed(2)),
-                    averageRestUpgrades: Number((rows.reduce((sum, item) => sum + item.restUpgrades, 0)
-                        / Math.max(1, rows.length)).toFixed(2))
-                };
-            })
-        });
+        report.push({ heroId, policies: policyReports });
     }
     console.log('ROUTE_AWARE_BOSS_CAMPAIGN_BENCHMARK ' + JSON.stringify(report));
 });
-
 function apiMaxHp(heroId) {
     const api = vm.runInNewContext(source + String.fromCharCode(10) + '({ HEROES })', { Math });
     return api.HEROES[heroId].maxHp;
