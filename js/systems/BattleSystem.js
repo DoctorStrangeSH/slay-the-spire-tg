@@ -87,7 +87,7 @@ class BattleSystem extends BattleCore {
     playCard(cardIndex) {
         const card = this.hand[cardIndex];
         const result = this.cards.playCard(this, cardIndex);
-        if (result.success && this.enemy.hp <= 0) this.triggerAdrenalineRush();
+        if (result.success && this.enemy.hp <= 0) this.triggerAdrenalineRush?.();
         
         // A lethal card ends resolution immediately: no relic/after-play effects
         // may mutate a run after either side has reached a terminal HP state.
