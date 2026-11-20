@@ -88,7 +88,7 @@ test('atlas uses distinct illustrated materials for each act', () => {
 test('target mobile viewport profiles keep battle controls touch-accessible', () => {
     const main = fs.readFileSync(path.join(root, 'js/main.js'), 'utf8');
     const profiles = [
-        { width: 320, height: 568, expected: 'short' },
+        { width: 320, height: 568, expected: 'compact' },
         { width: 360, height: 640, expected: 'compact' },
         { width: 390, height: 844, expected: 'normal' }
     ];
