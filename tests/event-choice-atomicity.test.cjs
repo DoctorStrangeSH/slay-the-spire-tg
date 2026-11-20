@@ -18,7 +18,7 @@ function fixture(saveResult = true) {
         hp: 30, maxHp: 80, gold: 40,
         deck: [{ id: 'strike', damage: 6 }],
         relics: [], journalLog: [],
-        pendingEvent: { id: 'run:1:3:test-event', name: 'Тестовое событие', nodeId: 'room-1' }
+        pendingEvent: { id: 'run:1:3:тестовое-событие', name: 'Тестовое событие', nodeId: 'room-1' }
     };
     game.runId = 'run'; game.act = 1; game.floor = 2; game.currentNodeId = 'room-1';
     game.offeredCards = [];
