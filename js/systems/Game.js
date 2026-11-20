@@ -862,6 +862,7 @@ class Game {
         const before = BattleFeedback.snapshot(this.currentBattle);
         const enemyWasAttacking = this.currentBattle.enemyIntent === 'attack'
             && !this.currentBattle.isEnemyParalyzed()
+            && !(this.currentBattle.hasPower('absoluteControl') && this.currentBattle.turn % 2 === 0)
             && this.currentBattle.enemy.hp > 0;
         const bossId = this.currentBattle.enemy.isBoss ? this.currentBattle.enemy.id : null;
         const result = this.currentBattle.endTurn();
