@@ -185,3 +185,63 @@ test('checkpoint from pre-fix organic map restores without changing its routes',
     assert.equal(restored.mapGenerator.legacyCrossingLayout, true);
     assert.equal(persistence.mapSignature(restored.mapGenerator), oldSignature);
 });
+
+
+test('checkpoint rejects disconnected visited rooms without mutating game', () => {
+    const memory = storage();
+    const persistence = new RunSave(memory);
+    const original = game();
+    const first = original.mapGenerator.getAvailableNodes(original.currentNodeId)[0];
+    assert.ok(first);
+    original.mapGenerator.visitNode(first.id);
+    original.currentNodeId = first.id;
+    original.floor = first.floor;
+    assert.equal(persistence.save(original), true);
+
+    const corrupted = JSON.parse(memory.getItem(RunSave.KEY));
+    const disconnected = original.mapGenerator.allNodes.find(node =>
+        node.floor > first.floor && !first.connections.includes(node.id));
+    assert.ok(disconnected);
+    corrupted.map.visited.push(disconnected.id);
+    memory.setItem(RunSave.KEY, JSON.stringify(corrupted));
+
+    const target = { player: null, act: 99, floor: 99 };
+    assert.equal(persistence.restore(target), false);
+    assert.equal(target.player, null);
+    assert.equal(target.act, 99);
+    assert.equal(target.floor, 99);
+});
+
+test('checkpoint rejects duplicate, future-floor and same-floor visited nodes', () => {
+    const memory = storage();
+    const persistence = new RunSave(memory);
+    const original = game();
+    const first = original.mapGenerator.getAvailableNodes(original.currentNodeId)[0];
+    original.mapGenerator.visitNode(first.id);
+    original.currentNodeId = first.id;
+    original.floor = first.floor;
+    assert.equal(persistence.save(original), true);
+
+    const baseline = JSON.parse(memory.getItem(RunSave.KEY));
+    const target = { player: null };
+    const duplicate = structuredClone(baseline);
+    duplicate.map.visited.push(first.id);
+    memory.setItem(RunSave.KEY, JSON.stringify(duplicate));
+    assert.equal(persistence.restore(target), false);
+
+    const future = structuredClone(baseline);
+    const later = original.mapGenerator.allNodes.find(node => node.floor > first.floor);
+    assert.ok(later);
+    future.map.visited.push(later.id);
+    memory.setItem(RunSave.KEY, JSON.stringify(future));
+    assert.equal(persistence.restore(target), false);
+
+    const sibling = original.mapGenerator.paths[first.floor].find(node => node.id !== first.id);
+    if (sibling) {
+        const sameFloor = structuredClone(baseline);
+        sameFloor.map.visited.push(sibling.id);
+        memory.setItem(RunSave.KEY, JSON.stringify(sameFloor));
+        assert.equal(persistence.restore(target), false);
+    }
+    assert.equal(target.player, null);
+});
