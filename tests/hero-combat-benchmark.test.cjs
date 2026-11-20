@@ -718,9 +718,10 @@ function simulateRouteEvent(api, player, act, floor, seed, stats) {
     }
     if (!committed) return player;
     if (selectedResult === 'deferred' && game.offeredCards.length) {
-        const card = chooseBestReward(api, player.heroId, createRunRandom(seed ^ 0x7f4a7c15));
+        const card = game.offeredCards.reduce((best, candidate) =>
+            scoreRouteCard(candidate) > scoreRouteCard(best) ? candidate : best);
         if (card) {
-            player.deck.push(card);
+            player.deck.push({ ...card });
             stats.eventCardRewards++;
         }
     }
