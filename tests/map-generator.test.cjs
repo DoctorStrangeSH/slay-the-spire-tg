@@ -1189,6 +1189,7 @@ test('final act completion is idempotent after the victory transition closes', (
     game.recordFinishedRun = () => { recorded++; };
     game.runSave.clear = () => { cleared++; };
     game.showMenu = () => {};
+    game.showActTransition = () => {};
     game.completeAct();
     assert.equal(game.runCompleted, true);
     assert.equal(game.completeAct(), false);
