@@ -21,7 +21,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 93: 0.93, 92: 0.92, 90: 0.90, 88: 0.88, 85: 0.85,
                 77: 0.77, 75: 0.75, 73: 0.73, 52: 0.52, 47: 0.47,
                 34: 0.34, 31: 0.31, 29: 0.29, 26: 0.26, 25: 0.25,
-                18: 0.18, 9: 0.09
+                18: 0.18, 9: 0.09, 8: 0.08
             };
             for (const [fraction, ratio] of Object.entries(viewportFractions)) {
                 rootStyle.setProperty(`--game-viewport-${fraction}`, `${Math.round(height * ratio)}px`);
