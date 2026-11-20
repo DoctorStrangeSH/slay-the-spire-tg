@@ -19,6 +19,7 @@
   --game-viewport-25: 25dvh;
   --game-viewport-18: 18dvh;
   --game-viewport-9: 9dvh;
+}
 html { background: var(--void); }
 body {
   background: var(--void) !important;
