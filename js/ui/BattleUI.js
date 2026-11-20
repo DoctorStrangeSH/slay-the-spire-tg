@@ -417,28 +417,42 @@ const BattleUI = {
     },
     
     // Показать модальное окно с просмотром карт (Scry)
-    showScryModal(game, cards) {
+    showScryModal(game, cards, allowDiscard = false) {
         const modal = document.createElement('div');
         modal.className = 'modal';
         modal.id = 'scry-modal';
-        
+
         modal.innerHTML = `
             <div class="modal-content">
                 <h3>🔮 Предвидение</h3>
-                <p>Верхние карты колоды:</p>
+                <p>${allowDiscard ? 'Верхняя карта колоды. При желании сбросьте её:' : 'Верхние карты колоды:'}</p>
                 <div class="pile-cards">
                     ${cards.map((card, index) => `
                         <div class="pile-card">
                             <span>${card.emoji || '🃏'}</span>
                             <span>${card.name}</span>
                             <span>${card.cost}⚡</span>
+                            ${allowDiscard ? `<button type="button" data-scry-discard-index="${index}">Сбросить</button>` : ''}
                         </div>
                     `).join('')}
                 </div>
-                <button onclick="document.getElementById('scry-modal').remove()">Закрыть</button>
+                <button type="button" data-scry-close>Закрыть</button>
             </div>
         `;
-        
+
         document.body.appendChild(modal);
+
+        modal.querySelectorAll('[data-scry-discard-index]').forEach(button => {
+            button.addEventListener('click', () => {
+                const index = Number(button.getAttribute('data-scry-discard-index'));
+                if (game.discardScryedCard(index)) modal.remove();
+            });
+        });
+
+        const closeButton = modal.querySelector('[data-scry-close]');
+        closeButton?.addEventListener('click', () => {
+            game.closeScryModal?.();
+            modal.remove();
+        });
     }
 };
