@@ -260,6 +260,7 @@ test('act-ready deck progression benchmark compares all heroes under the same ac
                 bossId: ACT_BOSS_IDS[act - 1],
                 wins: results.filter(result => result.outcome === 'win').length,
                 losses: results.filter(result => result.outcome === 'loss').length,
+                timeouts: results.filter(result => result.outcome === 'timeout').length,
                 averageTurns: Number((results.reduce((sum, result) => sum + result.turns, 0) / results.length).toFixed(2)),
                 averageHpRemaining: Number((results.reduce((sum, result) => sum + result.hpRemaining, 0) / results.length).toFixed(2)),
                 averageDamageDealt: Number((results.reduce((sum, result) => sum + result.damageDealt, 0) / results.length).toFixed(2)),
