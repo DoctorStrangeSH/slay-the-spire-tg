@@ -29,6 +29,19 @@ test('rest choice commits its effect and clears pending rest in one checkpoint',
     assert.equal(game.runSave.saves, 1);
 });
 
+test('successful forge choice commits the upgraded card and clears pending rest', () => {
+    const game = fixture(true);
+    assert.equal(game.commitRestDecision(() => {
+        game.player.deck[0].damage = 9;
+        game.player.deck[0].upgraded = true;
+        return true;
+    }), true);
+    assert.equal(game.player.deck[0].damage, 9);
+    assert.equal(game.player.deck[0].upgraded, true);
+    assert.equal(game.player.pendingRest, false);
+    assert.equal(game.runSave.saves, 1);
+});
+
 test('failed rest checkpoint rolls back healing and keeps the rest pending', () => {
     const game = fixture(false);
     assert.equal(game.commitRestDecision(() => {
