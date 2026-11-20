@@ -95,13 +95,41 @@ class RunSave {
             if (!recovered) return false;
         }
         const current = map.findNodeById(data.currentNodeId);
+        const visitedIds = data.map.visited;
         if (!current || current.floor !== data.floor ||
-            !data.map.visited.includes(data.currentNodeId)) return false;
-        for (const id of data.map.visited) {
+            !Array.isArray(visitedIds) || visitedIds.length === 0 ||
+            visitedIds.length > map.allNodes.length ||
+            visitedIds.some(id => typeof id !== 'string') ||
+            new Set(visitedIds).size !== visitedIds.length ||
+            !visitedIds.includes('floor_0_node_0') ||
+            !visitedIds.includes(data.currentNodeId)) return false;
+
+        // A checkpoint must describe one reachable route, not an arbitrary set
+        // of visited flags. Secret-room shortcuts may skip a floor, so validate
+        // graph reachability instead of requiring consecutive floor numbers.
+        const visitedSet = new Set(visitedIds);
+        if (visitedIds.some(id => {
             const node = map.findNodeById(id);
-            if (!node) return false;
+            return !node || node.floor > current.floor;
+        })) return false;
+
+        const reachable = new Set(['floor_0_node_0']);
+        const orderedVisited = visitedIds
+            .map(id => map.findNodeById(id))
+            .sort((a, b) => a.floor - b.floor);
+        for (const node of orderedVisited) {
+            if (!reachable.has(node.id)) return false;
+            node.connections.forEach(id => {
+                if (visitedSet.has(id)) reachable.add(id);
+            });
             node.visited = true;
         }
+
+        // The current node must be the latest visited point; multiple visited
+        // nodes on the same floor would indicate a malformed checkpoint.
+        if (orderedVisited[orderedVisited.length - 1]?.id !== current.id ||
+            orderedVisited.some((node, index) =>
+                index > 0 && node.floor === orderedVisited[index - 1].floor)) return false;
 
         // Применять восстановление только после всех проверок.
         game.player = JSON.parse(JSON.stringify(data.player));
