@@ -231,11 +231,60 @@ function simulate(heroId, enemyId, seed, elite = false, maxTurns = 30, build = n
         hpRemaining: player.hp,
         enemyHpRemaining: enemy.hp,
         conditions,
+        openingState: {
+            hp: player.hp,
+            block: battle.block,
+            energy: battle.energy,
+            strength: Number(battle.statusEffects?.player?.strength) || 0,
+            enemyBlock: battle.enemyBlock
+        },
         damageDealt: Math.max(0, enemy.maxHp - enemy.hp),
         damageTaken: Number(battle.damageTakenThisBattle) || 0,
         combatMetrics
     };
 }
+
+test('route benchmark consumes temporary event conditions with the same opening effects as Game.beginEncounter', () => {
+    const baseline = simulate('berserk', 'slime', 1103, false, 0, {
+        currentHp: 40, maxHp: 80, relics: []
+    });
+    const conditioned = simulate('berserk', 'slime', 1103, false, 0, {
+        currentHp: 40,
+        maxHp: 80,
+        relics: ['bloodPact'],
+        conditions: {
+            blessingBattles: 1,
+            curseBattles: 1,
+            oathBattles: 1,
+            ashBattles: 1,
+            exhaustionBattles: 1,
+            bloodMarkBattles: 1
+        }
+    });
+    assert.equal(conditioned.openingState.hp, baseline.openingState.hp - 4);
+    assert.equal(conditioned.openingState.block, baseline.openingState.block + 5);
+    assert.equal(conditioned.openingState.energy, baseline.openingState.energy);
+    assert.equal(conditioned.openingState.strength, baseline.openingState.strength + 2);
+    assert.deepEqual(conditioned.conditions, {
+        blessingBattles: 0, curseBattles: 0, oathBattles: 0,
+        ashBattles: 0, exhaustionBattles: 0, bloodMarkBattles: 0
+    });
+});
+
+test('route benchmark uses the actual debt-collector boss profile and opening block', () => {
+    const api = createRouteApi(createRunRandom(1109));
+    const boss = api.getVeiledBossForRun({
+        veiledMerchantDebt: 'settled',
+        veiledMerchantDeals: 1
+    });
+    const result = simulate('berserk', 'darkLord', 1109, false, 0, {
+        currentHp: 40, maxHp: 80, enemy: boss
+    });
+    assert.equal(boss.isSecretBoss, true);
+    assert.equal(boss.maxHp, 330);
+    assert.equal(result.openingState.enemyBlock, 8);
+    assert.equal(result.enemyHpRemaining, 330);
+});
 
 function getExpectedIncomingDamage(battle) {
     if (battle.enemyIntent !== 'attack') return 0;
