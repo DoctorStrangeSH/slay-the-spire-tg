@@ -51,6 +51,50 @@ test('checkpoint preserves hero, deck and seeded map after restore', () => {
     assert.equal(next.mapGenerator.findNodeById(next.currentNodeId).visited, true);
 });
 
+test('checkpoint preserves deferred reward offers so they can resume without rerolling', () => {
+    const persistence = new RunSave(storage());
+    const original = game();
+    original.offeredCards = [{ id: 'strike', name: 'Удар', damage: 6 }];
+    assert.equal(persistence.save(original), true);
+
+    const restored = { player: null, offeredCards: [] };
+    assert.equal(persistence.restore(restored), true);
+    assert.deepEqual(
+        JSON.parse(JSON.stringify(restored.offeredCards)),
+        JSON.parse(JSON.stringify(original.offeredCards))
+    );
+});
+
+test('checkpoint rejects unknown deferred reward cards without mutating the target', () => {
+    const memory = storage();
+    const persistence = new RunSave(memory);
+    const original = game();
+    original.offeredCards = [{ id: 'strike' }];
+    assert.equal(persistence.save(original), true);
+
+    const corrupted = JSON.parse(memory.getItem(RunSave.KEY));
+    corrupted.offeredCards = [{ id: 'not-a-real-card' }];
+    memory.setItem(RunSave.KEY, JSON.stringify(corrupted));
+
+    const target = { player: null, offeredCards: ['untouched'] };
+    assert.equal(persistence.restore(target), false);
+    assert.equal(target.player, null);
+    assert.deepEqual(target.offeredCards, ['untouched']);
+});
+
+test('legacy checkpoint without deferred reward offers restores with an empty offer list', () => {
+    const memory = storage();
+    const persistence = new RunSave(memory);
+    assert.equal(persistence.save(game()), true);
+    const snapshot = JSON.parse(memory.getItem(RunSave.KEY));
+    delete snapshot.offeredCards;
+    memory.setItem(RunSave.KEY, JSON.stringify(snapshot));
+
+    const restored = { player: null };
+    assert.equal(persistence.restore(restored), true);
+    assert.deepEqual(restored.offeredCards, []);
+});
+
 test('battle state is never saved as an unsafe partial checkpoint', () => {
     const persistence = new RunSave(storage());
     const current = game();
