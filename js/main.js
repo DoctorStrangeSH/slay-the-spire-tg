@@ -18,12 +18,14 @@ document.addEventListener('DOMContentLoaded', () => {
             const rootStyle = document.documentElement.style;
             rootStyle.setProperty('--game-viewport-height', `${Math.round(height)}px`);
             const viewportFractions = {
-                '--game-viewport-90': 0.90,
-                '--game-viewport-92': 0.92,
-                '--game-viewport-85': 0.85,
-                '--game-viewport-75': 0.75,
-                '--game-viewport-73': 0.73
+                93: 0.93, 92: 0.92, 90: 0.90, 88: 0.88, 85: 0.85,
+                77: 0.77, 75: 0.75, 73: 0.73, 52: 0.52, 47: 0.47,
+                34: 0.34, 31: 0.31, 29: 0.29, 26: 0.26, 25: 0.25,
+                18: 0.18, 9: 0.09
             };
+            for (const [fraction, ratio] of Object.entries(viewportFractions)) {
+                rootStyle.setProperty(`--game-viewport-${fraction}`, `${Math.round(height * ratio)}px`);
+            }
             for (const [property, fraction] of Object.entries(viewportFractions)) {
                 rootStyle.setProperty(property, `${Math.round(height * fraction)}px`);
             }
