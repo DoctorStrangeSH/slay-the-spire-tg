@@ -113,3 +113,18 @@ test('Adrenaline Rush heals and draws once when the enemy is defeated', () => {
     assert.equal(battle.hand[0].id, 'bonus');
     assert.equal(battle.adrenalineRushTriggered, true);
 });
+
+test('Battle Madness keeps enemy-phase draws for the next player hand', () => {
+    const battle = createBattle(['battleMadness'], 30, 40);
+    battle.drawPile = [{ id: 'next_turn_draw', type: 'skill', cost: 0 }];
+    battle.enemy.damage = 1;
+    battle.enemyIntent = 'attack';
+
+    battle.endTurn();
+
+    assert.equal(battle.player.hp, 29);
+    assert.equal(battle.hand.length, 1);
+    assert.equal(battle.hand[0].id, 'next_turn_draw');
+    assert.equal(battle.battleMadnessPendingDraws, 0);
+    assert.equal(battle.isResolvingEnemyTurn, false);
+});
