@@ -699,6 +699,10 @@ class Game {
 
     beginEncounter(enemy) {
         this.currentBattle = new BattleSystem(this.player, enemy);
+        if (this.currentBattle.battleEnded || this.player.hp <= 0) {
+            this.endBattle(false);
+            return;
+        }
         if (enemy.isSecretBoss && Number(enemy.openingBlock) > 0) {
             this.currentBattle.enemyBlock += Math.floor(enemy.openingBlock);
         }

@@ -32,6 +32,7 @@ class BattleEffects {
         
         if (battle.hasPower('painPath')) {
             battle.takeDamage(1);
+            if (battle.player.hp <= 0) return;
             battle.statusEffects.player.strength = (battle.statusEffects.player.strength || 0) + 1;
         }
         
