@@ -308,8 +308,15 @@ class BattleCards {
         }
         
         totalDamage = Math.max(0, Math.floor(totalDamage));
+        const actualDamage = Math.min(Math.max(0, battle.enemy.hp), totalDamage);
         battle.enemy.hp -= totalDamage;
         battle.enemy.hp = Math.max(0, Math.floor(battle.enemy.hp));
+
+        if (actualDamage > 0 && battle.hasPower('vampirism') &&
+            battle.vampirismTriggersThisTurn < 3) {
+            battle.vampirismTriggersThisTurn++;
+            battle.player.hp = Math.min(battle.player.maxHp, battle.player.hp + 1);
+        }
         
         // Паралич от карты
         if (card.paralysis) {
@@ -349,6 +356,11 @@ class BattleCards {
     }
     
     applyPower(battle, card) {
+        if (card.id === 'reserve' && typeof ENGINEER_CARDS !== 'undefined' &&
+            ENGINEER_CARDS.smallTurret && battle.hand.length < GAME_CONFIG.maxHandSize) {
+            battle.hand.push({ ...ENGINEER_CARDS.smallTurret });
+        }
+        if (card.id === 'jetpack') battle.energy += 1;
         if (card.id === 'berserkMode') {
             battle.statusEffects.player.strength = (battle.statusEffects.player.strength || 0) + 2;
         }
