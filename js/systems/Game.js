@@ -909,8 +909,12 @@ class Game {
     }
 
     endBattle(victory) {
-        // Только один экран исхода: повторные события не начислят золото второй раз.
-        if (document.getElementById('battle-result-modal')) return;
+        // The battle object owns its terminal state. DOM presence is only a visual
+        // detail and must not be the authority for granting rewards exactly once.
+        if (!this.currentBattle || this.currentBattle.resultResolved === true ||
+            document.getElementById('battle-result-modal')) return false;
+        this.currentBattle.resultResolved = true;
+
         if (victory) {
             if (typeof this.recordCombatChallenge === 'function') this.recordCombatChallenge(true);
             const elite = this.currentBattleIsElite === true;

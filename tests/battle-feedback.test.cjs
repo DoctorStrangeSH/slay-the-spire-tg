@@ -303,13 +303,15 @@ test('elite victory grants a relic and improved gold without altering regular co
         BattleFeedback: { result: data => { result = data; } }
     });
     const Game = vm.runInContext(gameSource + '\nGame;', context);
-    const elite = { player: { gold: 0, heroId: 'berserk', relics: [] }, currentBattleIsElite: true };
+    const elite = { player: { gold: 0, heroId: 'berserk', relics: [] }, currentBattleIsElite: true,
+        currentBattle: { enemy: { hp: 0, isBoss: false, isSecretBoss: false } } };
     Game.prototype.endBattle.call(elite, true);
     assert.ok(elite.player.gold >= 25 && elite.player.gold <= 44);
     assert.deepEqual(elite.player.relics, ['eliteCharm']);
     assert.equal(result.relic.id, 'eliteCharm');
     assert.equal(elite.currentBattleIsElite, false);
-    const normal = { player: { gold: 0, heroId: 'berserk', relics: [] }, currentBattleIsElite: false };
+    const normal = { player: { gold: 0, heroId: 'berserk', relics: [] }, currentBattleIsElite: false,
+        currentBattle: { enemy: { hp: 0, isBoss: false, isSecretBoss: false } } };
     Game.prototype.endBattle.call(normal, true);
     assert.ok(normal.player.gold >= 10 && normal.player.gold <= 29);
     assert.equal(normal.player.relics.length, 0);
@@ -324,7 +326,8 @@ test('elite victory uses bonus gold when relic pool is exhausted', () => {
         BattleFeedback: { result() {} }
     });
     const Game = vm.runInContext(gameSource + '\nGame;', context);
-    const elite = { player: { gold: 0, heroId: 'berserk', relics: [] }, currentBattleIsElite: true };
+    const elite = { player: { gold: 0, heroId: 'berserk', relics: [] }, currentBattleIsElite: true,
+        currentBattle: { enemy: { hp: 0, isBoss: false, isSecretBoss: false } } };
     Game.prototype.endBattle.call(elite, true);
     assert.ok(elite.player.gold >= 65 && elite.player.gold <= 84);
 });
