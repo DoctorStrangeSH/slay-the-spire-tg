@@ -83,10 +83,10 @@ function simulate(heroId, enemyId, seed, elite = false, maxTurns = 30, build = n
     };
     const turnManager = battle.turnManager;
     const originalEndTurn = turnManager.endTurn.bind(turnManager);
-    turnManager.endTurn = currentBattle => {
+    turnManager.endTurn = (currentBattle, effects) => {
         resolvingEnemyEndTurn = true;
         try {
-            return originalEndTurn(currentBattle);
+            return originalEndTurn(currentBattle, effects);
         } finally {
             resolvingEnemyEndTurn = false;
         }
