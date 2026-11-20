@@ -264,7 +264,7 @@ const ENGINEER_CARDS = {
         type: CARD_TYPES.POWER,
         rarity: CARD_RARITY.COMMON,
         cost: 1,
-        description: 'В начале боя положите "Малую турель" в руку',
+        description: 'Добавьте "Малую турель" в руку',
         emoji: '📦'
     },
     
@@ -311,7 +311,7 @@ const ENGINEER_CARDS = {
         type: CARD_TYPES.POWER,
         rarity: CARD_RARITY.UNCOMMON,
         cost: 1,
-        description: 'В начале боя получите 1 Энергию',
+        description: 'Получите 1 Энергию',
         emoji: '🎒'
     },
     
