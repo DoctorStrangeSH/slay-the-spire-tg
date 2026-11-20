@@ -2,6 +2,11 @@
    Локальная типографика: без внешних запросов, быстро загружается в Telegram. */
 :root {
   --game-viewport-height: 100dvh;
+  --game-viewport-90: 90dvh;
+  --game-viewport-92: 92dvh;
+  --game-viewport-85: 85dvh;
+  --game-viewport-75: 75dvh;
+  --game-viewport-73: 73dvh;
   color-scheme: dark;
   --void: #090b10;
   --night: #11141b;
@@ -375,7 +380,7 @@ button:disabled { opacity: .42; filter: grayscale(.5); }
 .modal-content {
   width: min(100%, 420px);
   max-width: 100%;
-  max-height: min(85dvh, 800px);
+  max-height: min(var(--game-viewport-85, 85dvh), 800px);
   padding: 22px;
   border-radius: 9px;
   color: var(--ivory);
@@ -1255,7 +1260,7 @@ button:disabled { opacity: .42; filter: grayscale(.5); }
 .cathedral-event-modal[data-event-scene="altar"] { --event-accent: #e39ca7; --event-glow: #9b364e77; }
 .cathedral-event-modal[data-event-scene="mystery"] { --event-accent: #c6b0e4; --event-glow: #624b8d77; }
 .cathedral-event-modal .cathedral-event-content {
-  width: min(100%, 490px); max-height: min(90dvh, 800px); overflow-y: auto;
+  width: min(100%, 490px); max-height: min(var(--game-viewport-90, 90dvh), 800px); overflow-y: auto;
   padding: clamp(18px, 5vw, 28px); border: 1px solid var(--event-accent);
   background: radial-gradient(ellipse at 50% 15%, var(--event-glow), transparent 67%),
     linear-gradient(145deg, #29252e, #10141c 75%);
@@ -1532,7 +1537,7 @@ button:disabled { opacity: .42; filter: grayscale(.5); }
 }
 #map-screen #map-nodes {
   position: relative;
-  max-height: min(75dvh, 830px);
+  max-height: min(var(--game-viewport-75, 75dvh), 830px);
   padding: 10px 8px 0;
   border: 1px solid #a78b5f88;
   border-radius: 16px;
@@ -1595,7 +1600,7 @@ button:disabled { opacity: .42; filter: grayscale(.5); }
 @media (max-width: 420px) {
   #map-screen { padding: max(8px, env(safe-area-inset-top)) 6px 12px; }
   #map-screen .cathedral-act-banner { margin-bottom: 8px; }
-  #map-screen #map-nodes { padding: 5px 3px 0; max-height: 73dvh; }
+  #map-screen #map-nodes { padding: 5px 3px 0; max-height: var(--game-viewport-73, 73dvh); }
   #map-screen .map-legend { margin: 0 -3px; gap: 4px 9px; font-size: 9px; }
 }
 @media (prefers-reduced-motion: reduce) {
@@ -1897,7 +1902,7 @@ button:disabled { opacity: .42; filter: grayscale(.5); }
 .merchant-leave { width: 100%; border: 1px solid #d5ac75; background: #54422f; color: #fff3df; cursor: pointer; }
 @media (max-width: 640px) {
   .merchant-modal { padding: max(9px, env(safe-area-inset-top)) 9px max(9px, env(safe-area-inset-bottom)); }
-  .merchant-content { max-height: 92dvh; padding: 17px; }
+  .merchant-content { max-height: var(--game-viewport-92, 92dvh); padding: 17px; }
   .merchant-shelf { grid-template-columns: 1fr; gap: 10px; }
   .merchant-item { padding: 12px; }
   .merchant-leave { position: sticky; bottom: 0; box-shadow: 0 -8px 18px #111923; }
@@ -1923,7 +1928,7 @@ button:disabled { opacity: .42; filter: grayscale(.5); }
 .campfire-modal { z-index: 1100; padding: 12px; box-sizing: border-box; }
 .campfire-content {
   box-sizing: border-box; width: min(590px, 100%);
-  max-height: 90dvh; overflow-y: auto; padding: clamp(18px, 3vw, 28px);
+  max-height: var(--game-viewport-90, 90dvh); overflow-y: auto; padding: clamp(18px, 3vw, 28px);
   border: 1px solid #b4875d; border-radius: 16px;
   background: linear-gradient(145deg, #392b2b, #171c29 74%);
   color: #f6e9d5; box-shadow: 0 18px 70px #000b;
@@ -1947,7 +1952,7 @@ button:disabled { opacity: .42; filter: grayscale(.5); }
 .campfire-continue { width: 100%; margin-top: 14px; }
 @media (max-width: 640px) {
   .campfire-modal { padding: max(10px, env(safe-area-inset-top)) 10px max(10px, env(safe-area-inset-bottom)); }
-  .campfire-content { max-height: 92dvh; padding: 18px; }
+  .campfire-content { max-height: var(--game-viewport-92, 92dvh); padding: 18px; }
 }
 
 /* Run journal: compact, readable history rather than another long map panel. */
@@ -1988,7 +1993,7 @@ button:disabled { opacity: .42; filter: grayscale(.5); }
 .run-journal-entry small { font-weight: 700; letter-spacing: .02em; }
 
 /* Финальная летопись: плотная сетка для узких экранов Telegram. */
-.cathedral-result-panel { max-height: 92dvh; overflow-y: auto; }
+.cathedral-result-panel { max-height: var(--game-viewport-92, 92dvh); overflow-y: auto; }
 .cathedral-run-summary { margin: 18px 0; padding: 16px; border: 1px solid #ac865a;
   border-radius: 12px; background: linear-gradient(145deg, #201d2c, #111b27); color: #f3e2c7; }
 .cathedral-run-summary h3 { margin: 0 0 8px; font-size: 1.12rem; color: #f4d69b; }
