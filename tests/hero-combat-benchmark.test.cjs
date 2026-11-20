@@ -64,15 +64,29 @@ function simulate(heroId, enemyId, seed, elite = false, maxTurns = 30, build = n
                 const cost = battle.cards.calculateCardCost(battle, card, battle.cardsPlayedThisTurn + 1);
                 if (cost > battle.energy) continue;
                 const incoming = battle.enemyIntent === 'attack';
+                const incomingDamage = incoming
+                    ? Math.max(0, battle.getEnemyIntentInfo().afterBlock || 0)
+                    : 0;
+                const hits = Math.max(1, Number(card.hits) || 1);
                 let score = 0;
                 if (card.type === 'building') {
-                    score = battle.buildings?.hasFreeSlots() ? 18 + (card.damage || 0) + (card.block || 0) : -10;
+                    score = battle.buildings?.hasFreeSlots()
+                        ? 16 + (card.damage || 0) * hits + (card.block || 0)
+                        : -10;
                 } else if (card.damage > 0) {
-                    score = 20 + card.damage * (incoming ? 0.9 : 1);
+                    score = 24 + card.damage * hits * 1.15
+                        + ((card.bleed || 0) + (card.poison || 0) + (card.fire || 0) +
+                            (card.vulnerable || 0) * 2 + (card.weak || 0) * 2 +
+                            (card.paralysis || 0) * 2);
                 } else if (card.block > 0) {
-                    score = (incoming ? 35 : 8) + card.block;
+                    const usefulBlock = Math.min(card.block, incomingDamage);
+                    score = incoming
+                        ? 15 + usefulBlock * 1.3 - Math.max(0, card.block - incomingDamage) * 0.25
+                        : 5 + card.block * 0.2;
                 } else if (card.draw > 0) {
-                    score = 12 + card.draw;
+                    score = 18 + card.draw * 4;
+                } else if (card.type === 'power') {
+                    score = 12 + (card.strength || 0) * 2 + (card.draw || 0) * 3;
                 } else {
                     score = 1;
                 }
