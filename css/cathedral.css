@@ -2647,7 +2647,7 @@ button:disabled { opacity: .42; filter: grayscale(.5); }
   html[data-game-viewport-height="compact"] #action-buttons .end-btn,
   html[data-game-viewport-height="short"] #action-buttons .play-btn,
   html[data-game-viewport-height="short"] #action-buttons .end-btn {
-    min-height: 40px;
+    min-height: 44px;
     padding: 6px 4px;
   }
   html[data-game-viewport-height="compact"] #action-buttons .relic-btn,
@@ -2656,7 +2656,7 @@ button:disabled { opacity: .42; filter: grayscale(.5); }
   html[data-game-viewport-height="short"] #action-buttons .relic-btn,
   html[data-game-viewport-height="short"] #action-buttons .deck-btn,
   html[data-game-viewport-height="short"] #action-buttons .discard-btn {
-    min-height: 27px;
+    min-height: 36px;
     padding: 4px 2px;
   }
   html[data-game-viewport-height="compact"] #battle-preview,
