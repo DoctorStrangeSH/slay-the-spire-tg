@@ -261,11 +261,15 @@ test('act completion displays a transition after saving next map', () => {
     assert.equal(game.act, 2);
     assert.equal(game.floor, 0);
     assert.ok(game.saved);
+    assert.equal(game.actTransitionPending, true);
+    assert.equal(game.completeAct(), false);
+    assert.equal(game.act, 2);
     assert.equal(document.body.current.id, 'cathedral-act-transition');
     assert.equal(document.body.current.dataset.actTheme, 'depths');
     assert.ok(element.button.focused);
     element.button.handlers.click();
     assert.equal(element.removed, true);
+    assert.equal(game.actTransitionPending, false);
 });
 
 test('event scenes distinguish all choices and preserve failed bargain outcome', () => {
@@ -1164,4 +1168,31 @@ test('map UI explains the two exits available after a secret chamber', () => {
     assert.ok(ui.includes("spire-route--secret"));
     assert.ok(ui.includes("if (node.type === NODE_TYPES.SECRET && !hasChronicle) return"));
     assert.ok(ui.includes("Содержимое прохода скрыто до получения Хроники предвидения"));
+});
+
+test('final act completion is idempotent after the victory transition closes', () => {
+    const source = readFileSync(join(__dirname, '../js/systems/Game.js'), 'utf8');
+    const element = {
+        dataset: {}, attributes: {}, button: { handlers: {}, addEventListener(type, handler) { this.handlers[type] = handler; }, focus() {} },
+        setAttribute(key, value) { this.attributes[key] = value; },
+        querySelector() { return this.button; }, appendChild() {}, remove() {}
+    };
+    const document = { body: { appendChild(node) { this.current = node; } },
+        getElementById() { return null; }, createElement() { return element; } };
+    const Game = vm.runInNewContext(source + '\nGame;', {
+        document, GAME_CONFIG: { maxActs: 3 }, RunSave: class { clear() {} },
+        RunHistory: class {}
+    });
+    const game = new Game();
+    game.act = 3; game.floor = 14;
+    let recorded = 0; let cleared = 0;
+    game.recordFinishedRun = () => { recorded++; };
+    game.runSave.clear = () => { cleared++; };
+    game.showMenu = () => {};
+    game.showActTransition = () => {};
+    game.completeAct();
+    assert.equal(game.runCompleted, true);
+    assert.equal(game.completeAct(), false);
+    assert.equal(recorded, 1);
+    assert.equal(cleared, 1);
 });

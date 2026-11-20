@@ -16,6 +16,8 @@ class Game {
         this.runSave = new RunSave();
         this.runHistory = typeof RunHistory === 'function' ? new RunHistory() : null;
         this.runId = null;
+        this.actTransitionPending = false;
+        this.runCompleted = false;
     }
 
     selectHero(heroId) {
@@ -84,6 +86,8 @@ class Game {
         this.player.claimedTreasureNodes = [];
         this.player.shopVisits = {};
         this.player.pendingEvent = null;
+        this.actTransitionPending = false;
+        this.runCompleted = false;
         this.act = 1;
         this.floor = 0;
 
@@ -2502,6 +2506,8 @@ class Game {
     }
 
     completeAct() {
+        if (this.actTransitionPending || this.runCompleted) return false;
+        this.actTransitionPending = true;
         const completedAct = this.act;
         if (this.act < this.maxActs) {
             this.act++;
@@ -2511,11 +2517,13 @@ class Game {
             this.showMap();
             this.showActTransition(completedAct, false);
         } else {
+            this.runCompleted = true;
             this.recordFinishedRun(true);
             this.runSave.clear();
             this.showMenu();
             this.showActTransition(completedAct, true);
         }
+        return true;
     }
 
     getRunSummary(victory) {
@@ -2633,7 +2641,10 @@ class Game {
                 overlay.querySelector('.cathedral-transition-continue'));
         }
         const continueButton = overlay.querySelector('.cathedral-transition-continue');
-        continueButton.addEventListener('click', () => overlay.remove(), { once: true });
+        continueButton.addEventListener('click', () => {
+            if (!isVictory) this.actTransitionPending = false;
+            overlay.remove();
+        }, { once: true });
         document.body.appendChild(overlay);
         continueButton.focus();
     }
