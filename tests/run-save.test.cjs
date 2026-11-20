@@ -98,7 +98,34 @@ test('legacy checkpoint without deferred reward offers restores with an empty of
 test('checkpoint preserves a pending camp choice for recovery after reload', () => {
     const persistence = new RunSave(storage());
     const original = game();
+    const startId = original.currentNodeId;
+    const target = original.mapGenerator.allNodes.find(node => node.type === 'rest');
+    assert.ok(target, 'seed must contain a rest room');
+
+    const queue = [{ id: startId, path: [] }];
+    const seen = new Set([startId]);
+    let route = null;
+    while (queue.length && !route) {
+        const current = queue.shift();
+        if (current.id === target.id) {
+            route = current.path;
+            break;
+        }
+        const node = original.mapGenerator.findNodeById(current.id);
+        for (const id of node.connections) {
+            if (seen.has(id)) continue;
+            seen.add(id);
+            queue.push({ id, path: [...current.path, id] });
+        }
+    }
+    assert.ok(route, 'rest room must be reachable');
+    for (const id of route) {
+        original.mapGenerator.visitNode(id);
+        original.currentNodeId = id;
+        original.floor = original.mapGenerator.findNodeById(id).floor;
+    }
     original.player.pendingRest = true;
+    assert.equal(original.mapGenerator.findNodeById(original.currentNodeId).type, 'rest');
     assert.equal(persistence.save(original), true);
 
     const restored = { player: null };
