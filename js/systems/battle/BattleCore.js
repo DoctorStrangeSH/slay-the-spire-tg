@@ -25,6 +25,12 @@ class BattleCore {
         this.scryedThisTurn = false; // Смотрел ли колоду в этот ход
         this.stolenCards = []; // Украденные карты
         this.paralysisApplied = false; // Был ли паралич применён
+        this.battleMadnessTriggersThisTurn = 0;
+        this.battleMadnessPendingDraws = 0;
+        this.isResolvingEnemyTurn = false;
+        this.painIsPowerTriggeredThisTurn = false;
+        this.beastSkinBlockNextTurn = 0;
+        this.adrenalineRushTriggered = false;
         
         this.statusEffects = {
             player: { 
@@ -171,7 +177,30 @@ class BattleCore {
         const actualLoss = hpBefore - this.player.hp;
         this.damageTakenThisTurn += actualLoss;
         this.damageTakenThisBattle += actualLoss;
+        if (actualLoss > 0) {
+            if (this.hasPower('bloodletting')) {
+                this.statusEffects.enemy.bleed = (this.statusEffects.enemy.bleed || 0) + 1;
+            }
+            if (this.hasPower('battleMadness') && this.battleMadnessTriggersThisTurn < 2) {
+                this.battleMadnessTriggersThisTurn++;
+                if (this.isResolvingEnemyTurn) this.battleMadnessPendingDraws++;
+                else this.drawCards(1);
+            }
+            if (this.hasPower('beastSkin')) this.beastSkinBlockNextTurn++;
+            if (this.hasPower('painIsPower') && !this.painIsPowerTriggeredThisTurn) {
+                this.statusEffects.player.strength = (this.statusEffects.player.strength || 0) + 1;
+                this.painIsPowerTriggeredThisTurn = true;
+            }
+        }
         return actualLoss;
+    }
+
+    triggerAdrenalineRush() {
+        if (!this.hasPower('adrenalineRush') || this.adrenalineRushTriggered) return false;
+        this.adrenalineRushTriggered = true;
+        this.player.hp = Math.min(this.player.maxHp, this.player.hp + 2);
+        this.drawCards(1);
+        return true;
     }
 
     takeSelfDamage(damage) {
