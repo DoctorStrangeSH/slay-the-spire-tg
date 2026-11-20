@@ -243,7 +243,9 @@ class BattleCards {
         }
         
         // Предвидение activates only when the card is actually played.
-        const scryedCards = card.scry ? battle.scry(card.scry) : null;
+        const scryedCards = card.scry
+            ? battle.scry(card.scry)
+            : card.id === 'telepathicLink' ? battle.scry(3) : null;
         
         // Перемотка
         if (card.id === 'rewind') {
