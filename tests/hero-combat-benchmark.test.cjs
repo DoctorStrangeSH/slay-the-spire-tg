@@ -97,7 +97,9 @@ function simulate(heroId, enemyId, seed, elite = false, maxTurns = 30, build = n
         outcome: player.hp <= 0 ? 'loss' : enemy.hp <= 0 ? 'win' : 'timeout',
         turns,
         hpRemaining: player.hp,
-        enemyHpRemaining: enemy.hp
+        enemyHpRemaining: enemy.hp,
+        damageDealt: Math.max(0, enemy.maxHp - enemy.hp),
+        damageTaken: Number(battle.damageTakenThisBattle) || 0
     };
 }
 
@@ -237,7 +239,7 @@ test('act-ready deck progression benchmark compares all heroes under the same ac
             const results = [];
             const deckSizes = [];
             const relicCounts = [];
-            for (let seed = 1; seed <= 5; seed++) {
+            for (let seed = 1; seed <= 20; seed++) {
                 const build = buildActSnapshot(heroId, seed * 65537, act);
                 const result = simulate(heroId, ACT_BOSS_IDS[act - 1], seed * 130363,
                     false, 80, build);
@@ -259,6 +261,9 @@ test('act-ready deck progression benchmark compares all heroes under the same ac
                 losses: results.filter(result => result.outcome === 'loss').length,
                 averageTurns: Number((results.reduce((sum, result) => sum + result.turns, 0) / results.length).toFixed(2)),
                 averageHpRemaining: Number((results.reduce((sum, result) => sum + result.hpRemaining, 0) / results.length).toFixed(2)),
+                averageDamageDealt: Number((results.reduce((sum, result) => sum + result.damageDealt, 0) / results.length).toFixed(2)),
+                averageDamageTaken: Number((results.reduce((sum, result) => sum + result.damageTaken, 0) / results.length).toFixed(2)),
+                averageDamagePerTurn: Number((results.reduce((sum, result) => sum + result.damageDealt / Math.max(1, result.turns), 0) / results.length).toFixed(2)),
                 deckSize: deckSizes[0],
                 relics: relicCounts[0]
             });
