@@ -465,10 +465,10 @@ test('act boss benchmark measures sensitivity to health carried into the boss ro
 const mapSource = [
     readFileSync(join(root, 'js/config/constants.js'), 'utf8'),
     readFileSync(join(root, 'js/systems/MapGenerator.js'), 'utf8')
-].join('\\n');
+] .join('\n');
 
 function createRouteApi() {
-    return vm.runInNewContext(mapSource + '\\nMapGenerator;', { Math });
+    return vm.runInNewContext(mapSource + '\nMapGenerator;', { Math });', { Math });
 }
 
 function createRunRandom(seed) {
