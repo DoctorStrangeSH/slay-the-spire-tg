@@ -576,8 +576,11 @@ function simulateRouteCampaign(heroId, seed, policy = 'heal-when-useful') {
         const map = new api.MapGenerator(act, `route-aware-${heroId}-${seed}-act-${act}`);
         const route = chooseCompleteRoute(map, random);
         const stats = {
-            act, routeRooms: route.length - 2, battles: 0, elites: 0,
-            rests: 0, restHeals: 0, restUpgrades: 0, cardRewards: 0,
+            act, routeRooms: route.length - 2,
+            plannedRests: route.filter(node => node.type === 'rest').length,
+            plannedBattles: route.filter(node => node.type === 'battle').length,
+            plannedElites: route.filter(node => node.type === 'elite').length,
+            battles: 0, elites: 0, rests: 0, restHeals: 0, restUpgrades: 0, cardRewards: 0,
             relicRewards: 0, bossReached: false, bossWon: false,
             hpBeforeBoss: null, hpAfterAct: null, deckSizeBeforeBoss: null,
             relicCountBeforeBoss: null
@@ -670,8 +673,8 @@ test('route-aware boss benchmark carries real route rewards, elite relics, campf
             assert.ok(campaign.acts.length >= 1 && campaign.acts.length <= 3);
             assert.ok(campaign.finalHp >= 0 && campaign.finalHp <= apiMaxHp(heroId));
             for (const act of campaign.acts) {
-                assert.ok(act.rests >= 1, 'every generated route must include the pre-boss rest');
-                assert.ok(act.battles >= 0 && act.elites >= 0);
+                assert.ok(act.plannedRests >= 1, 'every generated route must include the pre-boss rest');
+                assert.ok(act.battles <= act.plannedBattles && act.elites <= act.plannedElites);
                 assert.ok(act.restHeals + act.restUpgrades <= act.rests);
                 if (act.bossReached) {
                     assert.ok(act.hpBeforeBoss > 0);
