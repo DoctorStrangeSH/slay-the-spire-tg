@@ -26,9 +26,6 @@ document.addEventListener('DOMContentLoaded', () => {
             for (const [fraction, ratio] of Object.entries(viewportFractions)) {
                 rootStyle.setProperty(`--game-viewport-${fraction}`, `${Math.round(height * ratio)}px`);
             }
-            for (const [property, fraction] of Object.entries(viewportFractions)) {
-                rootStyle.setProperty(property, `${Math.round(height * fraction)}px`);
-            }
         };
         syncGameViewportHeight();
         tg.onEvent?.('viewportChanged', syncGameViewportHeight);
