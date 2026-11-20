@@ -30,6 +30,7 @@ class BattleCore {
         this.isResolvingEnemyTurn = false;
         this.painIsPowerTriggeredThisTurn = false;
         this.beastSkinBlockNextTurn = 0;
+        this.vampirismTriggersThisTurn = 0;
         this.adrenalineRushTriggered = false;
         
         this.statusEffects = {
