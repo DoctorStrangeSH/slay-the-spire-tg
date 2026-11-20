@@ -1277,7 +1277,7 @@ class Game {
                 rare: Boolean(event.rare),
                 nodeId: String(this.currentNodeId || '')
             };
-            this.runSave?.save(this);
+            this.runSave?.save?.(this);
         }
         this.showEventModal(event, this.player?.pendingEvent?.id);
     }
@@ -2084,7 +2084,7 @@ class Game {
         const journal = Array.isArray(this.player?.journalLog) ? this.player.journalLog : [];
         if (journal.some(entry => entry?.id === eventId)) {
             if (this.player?.pendingEvent?.id === eventId) this.player.pendingEvent = null;
-            this.runSave?.save(this);
+            this.runSave?.save?.(this);
             return false;
         }
         if (this.player && this.player.pendingEvent?.id !== eventId) {
@@ -2092,7 +2092,7 @@ class Game {
                 id: eventId, name: event.name, rare: Boolean(event.rare),
                 nodeId: String(this.currentNodeId || '')
             };
-            this.runSave?.save(this);
+            this.runSave?.save?.(this);
         }
         const scene = this.getEventPresentation(event.name);
         const modal = document.createElement('div');
@@ -2132,7 +2132,7 @@ class Game {
                 if (previous.some(entry => entry?.id === eventId)) {
                     resolved = true;
                     if (this.player?.pendingEvent?.id === eventId) this.player.pendingEvent = null;
-                    this.runSave?.save(this);
+                    this.runSave?.save?.(this);
                     modal.remove();
                     return;
                 }
@@ -2142,7 +2142,7 @@ class Game {
                 this.recordEventDecision(event, option, before);
                 resolved = true;
                 if (this.player?.pendingEvent?.id === eventId) this.player.pendingEvent = null;
-                this.runSave?.save(this);
+                this.runSave?.save?.(this);
                 modal.remove();
                 if (result !== 'deferred') this.continueJourney();
             };
