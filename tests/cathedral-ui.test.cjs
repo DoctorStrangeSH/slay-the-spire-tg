@@ -84,3 +84,27 @@ test('atlas uses distinct illustrated materials for each act', () => {
     });
     assert.equal(new Set(sections).size, 3);
 });
+
+test('target mobile viewport profiles keep battle controls touch-accessible', () => {
+    const main = fs.readFileSync(path.join(root, 'js/main.js'), 'utf8');
+    const profiles = [
+        { width: 320, height: 568, expected: 'short' },
+        { width: 360, height: 640, expected: 'compact' },
+        { width: 390, height: 844, expected: 'normal' }
+    ];
+    const classify = height => height <= 520 ? 'short' : height <= 640 ? 'compact' : 'normal';
+
+    for (const viewport of profiles) {
+        assert.equal(classify(viewport.height), viewport.expected);
+        assert.ok(viewport.width <= 640, 'target must use mobile layout');
+        if (viewport.width <= 360) assert.match(css, /@media \(max-width: 360px\)/);
+        if (viewport.width <= 420) assert.match(css, /@media \(max-width: 420px\)/);
+    }
+
+    assert.match(main, /height <= 520 \? 'short' : height <= 640 \? 'compact' : 'normal'/);
+    assert.match(css, /html\[data-game-viewport-height="compact"\] #action-buttons \.play-btn,[\s\S]*?min-height: 44px/);
+    assert.match(css, /html\[data-game-viewport-height="compact"\] #action-buttons \.relic-btn,[\s\S]*?min-height: 36px/);
+    assert.match(css, /#hand-area \{[^}]*overflow-x: auto/);
+    assert.match(css, /#map-screen #map-nodes \{[^}]*max-height: min/);
+    assert.match(css, /env\(safe-area-inset-bottom\)/);
+});
