@@ -63,7 +63,7 @@ test('treasure reward callback grants only one reward on repeated activation', (
     goldButton.onclick();
 
     assert.equal(game.player.gold, 75);
-    assert.deepEqual(game.player.claimedTreasureNodes, ['floor_2_node_1']);
+    assert.equal(JSON.stringify(game.player.claimedTreasureNodes), JSON.stringify(['floor_2_node_1']));
     assert.equal(continues, 1);
     assert.equal(modal.removed, true);
 });
@@ -99,5 +99,5 @@ test('fresh runs clear previously claimed treasure room ids', () => {
     game.generateNewMap = () => {};
     game.showMap = () => {};
     game.startNewGame();
-    assert.deepEqual(game.player.claimedTreasureNodes, []);
+    assert.equal(JSON.stringify(game.player.claimedTreasureNodes), '[]');
 });
