@@ -65,11 +65,17 @@ const BattleUI = {
             const afterBlock = intent.maxAfterBlock > intent.afterBlock
                 ? `${intent.afterBlock}–${intent.maxAfterBlock}` : String(intent.afterBlock);
             const chance = intent.bonusChance ? ' · 30% усиленный удар' : '';
-            intentEl.innerHTML = `⚔️ <span class="intent-value">${range}</span><span class="intent-caption">После блока: ${afterBlock}${chance}</span>`;
+            const buildingTarget = intent.buildingTargetChance > 0
+                ? ` · постройка: ${Math.round(intent.buildingTargetChance * 100)}%`
+                : '';
+            const afterBlockLabel = intent.buildingTargetChance > 0
+                ? `Герою после блока: ${afterBlock}`
+                : `После блока: ${afterBlock}`;
+            intentEl.innerHTML = `⚔️ <span class="intent-value">${range}</span><span class="intent-caption">${afterBlockLabel}${chance}${buildingTarget}</span>`;
             intentEl.className = 'intent intent-attack';
-            intentLabel = `Следующее действие: атака на ${range} урона. После текущего блока героя: ${afterBlock}.${intent.bonusChance ? ' Шанс усиленного удара 30%.' : ''}`;
-            if (battle.buildings?.getBuildingCount?.() > 0) {
-                intentLabel += ' Враг также может атаковать постройку.';
+            intentLabel = `Следующее действие: атака на ${range} урона. ${afterBlockLabel}.${intent.bonusChance ? ' Шанс усиленного удара 30%.' : ''}`;
+            if (intent.buildingTargetChance > 0) {
+                intentLabel += ` Шанс выбора постройки целью: ${Math.round(intent.buildingTargetChance * 100)}% (${intent.buildingCount} шт.).`;
             }
         } else {
             const poisonText = intent.poison ? ` · ☠️ +${intent.poison} яда герою` : '';

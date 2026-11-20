@@ -196,11 +196,20 @@ class BattleCore {
             };
             damage = modify(damage);
             boosted = modify(boosted);
+            const buildingCount = Math.max(0, Number(this.buildings?.getBuildingCount?.()) || 0);
+            // Enemy attacks can be redirected to Engineer buildings. Keep the
+            // preview deterministic: report the exact target-selection chance
+            // without consuming the combat RNG.
+            const buildingTargetChance = buildingCount > 0
+                ? Math.round(Math.min(0.75, 0.30 + (buildingCount * 0.15)) * 100) / 100
+                : 0;
             return {
                 type: 'attack', damage, maxDamage: boosted,
                 bonusChance: boosted > damage ? 0.3 : 0,
                 afterBlock: Math.max(0, damage - this.block),
-                maxAfterBlock: Math.max(0, boosted - this.block)
+                maxAfterBlock: Math.max(0, boosted - this.block),
+                buildingCount,
+                buildingTargetChance
             };
         }
         let blockAmount = 10;
