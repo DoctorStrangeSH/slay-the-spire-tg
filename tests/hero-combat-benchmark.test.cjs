@@ -51,13 +51,54 @@ function simulate(heroId, enemyId, seed, elite = false, maxTurns = 30, build = n
         deck: (build?.deck || api.getStarterDeckForHero(heroId)).map(card => ({ ...card })),
         relics: [...(build?.relics || [])]
     };
-    const enemy = { ...api.ENEMIES[enemyId], pattern: [...api.ENEMIES[enemyId].pattern] };
+    const baseEnemy = build?.enemy || api.ENEMIES[enemyId];
+    const enemy = { ...baseEnemy, pattern: [...baseEnemy.pattern] };
     if (elite) {
         enemy.maxHp = Math.floor(enemy.maxHp * 1.5);
         enemy.hp = enemy.maxHp;
         enemy.damage = Math.floor(enemy.damage * 1.3);
     }
     const battle = new api.BattleSystem(player, enemy);
+    const conditions = build?.conditions ? { ...build.conditions } : null;
+    if (conditions && !battle.battleEnded && player.hp > 0) {
+        const blessing = Number(conditions.blessingBattles) || 0;
+        const curse = Number(conditions.curseBattles) || 0;
+        const oath = Number(conditions.oathBattles) || 0;
+        const ash = Number(conditions.ashBattles) || 0;
+        const exhaustion = Number(conditions.exhaustionBattles) || 0;
+        const bloodMark = Number(conditions.bloodMarkBattles) || 0;
+        if (enemy.isSecretBoss && Number(enemy.openingBlock) > 0) {
+            battle.enemyBlock += Math.floor(enemy.openingBlock);
+        }
+        if (blessing > 0) {
+            battle.block += 5;
+            conditions.blessingBattles = blessing - 1;
+        }
+        if (curse > 0) {
+            battle.energy = Math.max(0, battle.energy - 1);
+            conditions.curseBattles = curse - 1;
+        }
+        if (oath > 0) {
+            battle.energy += 1;
+            conditions.oathBattles = oath - 1;
+        }
+        if (ash > 0) {
+            battle.statusEffects.player.strength += 2;
+            conditions.ashBattles = ash - 1;
+        }
+        if (exhaustion > 0) {
+            battle.statusEffects.player.strength -= 2;
+            conditions.exhaustionBattles = exhaustion - 1;
+        }
+        if (bloodMark > 0) {
+            player.hp = Math.max(1, player.hp - 4);
+            conditions.bloodMarkBattles = bloodMark - 1;
+        }
+        if ((curse > 0 || exhaustion > 0 || bloodMark > 0) &&
+            player.relics.includes('bloodPact')) {
+            battle.statusEffects.player.strength += 2;
+        }
+    }
     const combatMetrics = {
         enemyAttacks: 0,
         enemyDefends: 0,
@@ -189,6 +230,7 @@ function simulate(heroId, enemyId, seed, elite = false, maxTurns = 30, build = n
         turns,
         hpRemaining: player.hp,
         enemyHpRemaining: enemy.hp,
+        conditions,
         damageDealt: Math.max(0, enemy.maxHp - enemy.hp),
         damageTaken: Number(battle.damageTakenThisBattle) || 0,
         combatMetrics
@@ -467,7 +509,7 @@ const mapSource = source + '\n' + readFileSync(join(root, 'js/systems/MapGenerat
 function createRouteApi(random = Math.random) {
     const seededMath = Object.create(Math);
     seededMath.random = random;
-    return vm.runInNewContext(mapSource + '\n({ MapGenerator, HEROES, getStarterDeckForHero, getRandomRewardCards, chooseRelic, getCardsForHero, getAvailableRelics, Game })', {
+    return vm.runInNewContext(mapSource + '\n({ MapGenerator, HEROES, getStarterDeckForHero, getRandomRewardCards, chooseRelic, getCardsForHero, getAvailableRelics, getVeiledBossForRun, Game })', {
         Math: seededMath,
         alert: () => {}
     });
@@ -765,6 +807,9 @@ function simulateRouteCampaign(heroId, seed, policy = 'heal-when-useful') {
         curseBattles: 0,
         bloodMarkBattles: 0,
         exhaustionBattles: 0,
+        blessingBattles: 0,
+        ashBattles: 0,
+        oathBattles: 0,
         veiledMerchantDebt: null,
         classEventDebt: null,
         archiveDebt: null,
@@ -809,13 +854,27 @@ function simulateRouteCampaign(heroId, seed, policy = 'heal-when-useful') {
                     stats.relicCountBeforeBoss = player.relics.length;
                 }
                 const combatSeed = Math.floor(combatRandom() * 0xffffffff) >>> 0;
+                const merchantTouched = (Number(player.veiledMerchantDeals) || 0) > 0 ||
+                    ['owed', 'settled', 'defaulted', 'declined', 'purchased'].includes(player.veiledMerchantDebt);
+                const enemyOverride = isBoss && act === 3 && merchantTouched
+                    ? api.getVeiledBossForRun(player) : null;
                 const result = simulate(heroId, enemyId, combatSeed, isElite, 80, {
                     currentHp: player.hp,
                     maxHp: player.maxHp,
                     deck: player.deck,
-                    relics: player.relics
+                    relics: player.relics,
+                    enemy: enemyOverride,
+                    conditions: {
+                        blessingBattles: player.blessingBattles,
+                        curseBattles: player.curseBattles,
+                        oathBattles: player.oathBattles,
+                        ashBattles: player.ashBattles,
+                        exhaustionBattles: player.exhaustionBattles,
+                        bloodMarkBattles: player.bloodMarkBattles
+                    }
                 });
                 player.hp = result.hpRemaining;
+                if (result.conditions) Object.assign(player, result.conditions);
                 if (result.outcome === 'win') {
                     const relicAvailable = isElite
                         ? api.chooseRelic(player.relics, rewardRandom, heroId)
@@ -825,7 +884,8 @@ function simulateRouteCampaign(heroId, seed, policy = 'heal-when-useful') {
                         stats.relicRewards++;
                     }
                     const goldReward = Math.floor(rewardRandom() * 20) +
-                        (isElite ? 25 : 10) + (isElite && !relicAvailable ? 40 : 0);
+                        (isElite ? 25 : 10) + (isElite && !relicAvailable ? 40 : 0) +
+                        (enemyOverride?.isSecretBoss ? 80 : 0);
                     player.gold += goldReward;
                     stats.goldEarned += goldReward;
                 }
