@@ -64,9 +64,7 @@ function simulate(heroId, enemyId, seed, elite = false, maxTurns = 30, build = n
                 const cost = battle.cards.calculateCardCost(battle, card, battle.cardsPlayedThisTurn + 1);
                 if (cost > battle.energy) continue;
                 const incoming = battle.enemyIntent === 'attack';
-                const incomingDamage = incoming
-                    ? Math.max(0, battle.getEnemyIntentInfo().afterBlock || 0)
-                    : 0;
+                const incomingDamage = getExpectedIncomingDamage(battle);
                 const hits = Math.max(1, Number(card.hits) || 1);
                 let score = 0;
                 if (card.type === 'building') {
@@ -116,6 +114,41 @@ function simulate(heroId, enemyId, seed, elite = false, maxTurns = 30, build = n
         damageTaken: Number(battle.damageTakenThisBattle) || 0
     };
 }
+
+function getExpectedIncomingDamage(battle) {
+    if (battle.enemyIntent !== 'attack') return 0;
+    const intent = battle.getEnemyIntentInfo();
+    const damageToHero = Math.max(0, Number(intent.afterBlock) || 0);
+    const buildingTargetChance = Math.max(0, Math.min(1, Number(intent.buildingTargetChance) || 0));
+    return damageToHero * (1 - buildingTargetChance);
+}
+
+test('benchmark values block using expected hero damage when attacks can be redirected to buildings', () => {
+    const cases = [
+        [0, 0],
+        [1, 5.5],
+        [2, 4],
+        [3, 2.5],
+        [4, 2.5]
+    ];
+    for (const [buildingCount, expected] of cases) {
+        let calls = 0;
+        const battle = {
+            enemyIntent: 'attack',
+            getEnemyIntentInfo() {
+                calls++;
+                return {
+                    afterBlock: 10,
+                    buildingTargetChance: buildingCount === 0 ? 0 :
+                        Math.round(Math.min(0.75, 0.30 + buildingCount * 0.15) * 100) / 100
+                };
+            }
+        };
+        assert.equal(getExpectedIncomingDamage(battle), expected);
+        assert.equal(calls, 1);
+    }
+    assert.equal(getExpectedIncomingDamage({ enemyIntent: 'defend' }), 0);
+});
 
 const HERO_IDS = ['berserk', 'engineer', 'psyker'];
 const ENEMY_IDS = ['slime', 'goblin', 'skeleton', 'wolf'];
