@@ -753,7 +753,8 @@ function simulateRouteCampaign(heroId, seed, policy = 'heal-when-useful') {
     const rewardRandom = createRunRandom(seed ^ 0x6c8e9cf5);
     const combatRandom = createRunRandom(seed ^ 0x1b873593);
     const hero = api.HEROES[heroId];
-    const player = {
+    let player = {
+        heroId,
         hp: hero.maxHp,
         maxHp: hero.maxHp,
         deck: api.getStarterDeckForHero(heroId).map(card => ({ ...card })),
