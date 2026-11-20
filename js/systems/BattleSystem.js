@@ -95,7 +95,7 @@ class BattleSystem extends BattleCore {
         const card = this.hand[cardIndex];
         const result = this.cards.playCard(this, cardIndex);
         if (result.success && this.enemy.hp <= 0) this.triggerAdrenalineRush?.();
-        if (result.success && card?.type === CARD_TYPES.ATTACK &&
+        if (result.success && card?.type === 'attack' &&
             this.hasPower('arsenal') && this.player.hp > 0 && this.enemy.hp > 0 &&
             this.hand.length < GAME_CONFIG.maxHandSize &&
             typeof ENGINEER_CARDS !== 'undefined' && ENGINEER_CARDS.spark) {
