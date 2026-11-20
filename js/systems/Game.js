@@ -118,7 +118,9 @@ class Game {
         this.showMap();
         const currentNode = this.mapGenerator.findNodeById(this.currentNodeId);
         const shopVisit = this.player.shopVisits?.[this.currentNodeId];
-        if (currentNode?.type === NODE_TYPES.SHOP && !shopVisit?.closed) {
+        if (this.offeredCards.length) {
+            this.offerCard(this.offeredCards);
+        } else if (currentNode?.type === NODE_TYPES.SHOP && !shopVisit?.closed) {
             this.openShop();
         } else if (currentNode?.type === NODE_TYPES.EVENT && this.player.pendingEvent) {
             this.resumePendingEvent();
@@ -1045,8 +1047,10 @@ class Game {
         }
     }
 
-    offerCard() {
-        this.offeredCards = getRandomRewardCards(this.player.heroId, 3);
+    offerCard(cards = null) {
+        this.offeredCards = Array.isArray(cards)
+            ? cards
+            : getRandomRewardCards(this.player.heroId, 3);
 
         const modal = document.createElement('div');
         modal.className = 'modal';
