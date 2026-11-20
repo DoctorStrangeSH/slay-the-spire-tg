@@ -163,6 +163,17 @@ test('run checkpoint retains battle wins, elite wins and boss wins', () => {
     assert.equal(restored.player.bossWins, 1);
 });
 
+test('checkpoint persists claimed treasure rooms to prevent reward duplication after reload', () => {
+    const persistence = new RunSave(storage());
+    const original = game();
+    original.player.claimedTreasureNodes = ['floor_1_node_0', 'floor_2_node_1'];
+    assert.equal(persistence.save(original), true);
+    const restored = { player: null };
+    assert.equal(persistence.restore(restored), true);
+    assert.equal(JSON.stringify(restored.player.claimedTreasureNodes),
+        JSON.stringify(['floor_1_node_0', 'floor_2_node_1']));
+});
+
 test('checkpoint retains the run id so outcomes are counted only once', () => {
     const persistence = new RunSave(storage());
     const original = game();
