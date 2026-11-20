@@ -612,6 +612,13 @@ function simulateRouteCampaign(heroId, seed, policy = 'heal-when-useful') {
                 player.hp = result.hpRemaining;
                 if (isBoss) {
                     stats.bossWon = result.outcome === 'win';
+                    if (stats.bossWon && random() < cardRewardChance) {
+                        const card = chooseBestReward(api, heroId, random);
+                        if (card) {
+                            player.deck.push(card);
+                            stats.cardRewards++;
+                        }
+                    }
                     alive = stats.bossWon;
                     break;
                 }
@@ -651,7 +658,10 @@ function simulateRouteCampaign(heroId, seed, policy = 'heal-when-useful') {
                     const cards = Object.values(api.getCardsForHero(heroId));
                     const rare = cards.filter(card => card.rarity === 'rare');
                     const pool = rare.length ? rare : cards;
-                    if (pool.length) player.deck.push({ ...pool[Math.floor(random() * pool.length)] });
+                    if (pool.length) {
+                        player.deck.push({ ...pool[Math.floor(random() * pool.length)] });
+                        stats.cardRewards++;
+                    }
                 }
             }
             // Shop/event choices are intentionally not fabricated. Their rooms
