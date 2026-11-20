@@ -26,6 +26,8 @@ class BattleCore {
         this.stolenCards = []; // Украденные карты
         this.paralysisApplied = false; // Был ли паралич применён
         this.battleMadnessTriggersThisTurn = 0;
+        this.battleMadnessPendingDraws = 0;
+        this.isResolvingEnemyTurn = false;
         this.painIsPowerTriggeredThisTurn = false;
         this.beastSkinBlockNextTurn = 0;
         this.adrenalineRushTriggered = false;
@@ -181,7 +183,8 @@ class BattleCore {
             }
             if (this.hasPower('battleMadness') && this.battleMadnessTriggersThisTurn < 2) {
                 this.battleMadnessTriggersThisTurn++;
-                this.drawCards(1);
+                if (this.isResolvingEnemyTurn) this.battleMadnessPendingDraws++;
+                else this.drawCards(1);
             }
             if (this.hasPower('beastSkin')) this.beastSkinBlockNextTurn++;
             if (this.hasPower('painIsPower') && !this.painIsPowerTriggeredThisTurn) {
