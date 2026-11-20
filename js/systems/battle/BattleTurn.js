@@ -23,15 +23,13 @@ class BattleTurn {
 
         // ПРОВЕРЯЕМ ПАРАЛИЧ
         const isParalyzed = battle.isEnemyParalyzed();
-        
+        const isControlled = battle.hasPower('absoluteControl') && battle.turn % 2 === 0;
+
         if (isParalyzed) {
-            // Враг пропускает ход
+            // Враг пропускает ход из-за Паралича.
             battle.statusEffects.enemy.paralysis--;
-            
-            // Пси-вампиризм - лечение при параличе
-            // (сработает в начале следующего хода)
-        } else {
-            // Ход врага
+        } else if (!isControlled) {
+            // Абсолютный контроль заставляет врага пропускать каждый второй ход.
             if (battle.enemyIntent === 'attack') {
                 this.enemyAttack(battle);
             } else if (battle.enemyIntent === 'defend') {
@@ -42,11 +40,6 @@ class BattleTurn {
         // Ментальная блокада - шанс паралича
         if (battle.hasPower('mentalBlockade') && Math.random() < 0.5) {
             battle.statusEffects.enemy.paralysis = (battle.statusEffects.enemy.paralysis || 0) + 1;
-        }
-        
-        // Абсолютный контроль - враг пропускает каждый 2-й ход
-        if (battle.hasPower('absoluteControl') && battle.turn % 2 === 1) {
-            // Уже парализован
         }
         
         // Ментальный шторм - урон всем врагам
