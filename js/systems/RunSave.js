@@ -65,8 +65,15 @@ class RunSave {
         if (!data || !data.player || !data.map || !Array.isArray(data.map.visited)) return false;
         if (!Number.isInteger(data.act) || data.act < 1 || data.act > GAME_CONFIG.maxActs) return false;
         if (!Number.isInteger(data.floor) || data.floor < 0) return false;
-        if (typeof data.player.heroId !== 'string' || !HEROES[data.player.heroId]) return false;
+        if (typeof data.player.heroId !== 'string' ||
+            !HEROES[data.player.heroId] || HEROES[data.player.heroId].unlocked !== true) return false;
         if (!Array.isArray(data.player.deck) || !Array.isArray(data.player.relics)) return false;
+        const availableCards = getCardsForHero(data.player.heroId);
+        if (data.player.deck.some(card => !card || typeof card !== 'object' ||
+            typeof card.id !== 'string' || !Object.prototype.hasOwnProperty.call(availableCards, card.id))) return false;
+        if (data.player.relics.some(id => typeof id !== 'string' ||
+            !Object.prototype.hasOwnProperty.call(RELIC_CATALOG, id)) ||
+            new Set(data.player.relics).size !== data.player.relics.length) return false;
         if (!Number.isFinite(data.player.hp) || data.player.hp <= 0 ||
             !Number.isFinite(data.player.maxHp) || data.player.maxHp <= 0 ||
             data.player.hp > data.player.maxHp ||
