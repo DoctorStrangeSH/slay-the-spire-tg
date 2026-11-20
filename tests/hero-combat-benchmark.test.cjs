@@ -52,6 +52,44 @@ function simulate(heroId, enemyId, seed, elite = false, maxTurns = 30, build = n
         enemy.damage = Math.floor(enemy.damage * 1.3);
     }
     const battle = new api.BattleSystem(player, enemy);
+    const combatMetrics = {
+        enemyAttacks: 0,
+        enemyDefends: 0,
+        heroTargetAttacks: 0,
+        buildingTargetAttacks: 0,
+        blockAbsorbed: 0,
+        buildingDamage: 0
+    };
+    const turnManager = battle.turnManager;
+    const originalChooseTarget = turnManager.chooseTarget.bind(turnManager);
+    turnManager.chooseTarget = currentBattle => {
+        const target = originalChooseTarget(currentBattle);
+        if (target.type === 'building') combatMetrics.buildingTargetAttacks++;
+        else combatMetrics.heroTargetAttacks++;
+        return target;
+    };
+    const originalEnemyAttack = turnManager.enemyAttack.bind(turnManager);
+    turnManager.enemyAttack = currentBattle => {
+        combatMetrics.enemyAttacks++;
+        return originalEnemyAttack(currentBattle);
+    };
+    const originalEnemyDefend = turnManager.enemyDefend.bind(turnManager);
+    turnManager.enemyDefend = currentBattle => {
+        combatMetrics.enemyDefends++;
+        return originalEnemyDefend(currentBattle);
+    };
+    const originalAttackPlayer = turnManager.attackPlayer.bind(turnManager);
+    turnManager.attackPlayer = (currentBattle, damage) => {
+        const blockBefore = currentBattle.block;
+        originalAttackPlayer(currentBattle, damage);
+        combatMetrics.blockAbsorbed += Math.max(0, blockBefore - currentBattle.block);
+    };
+    const originalAttackBuilding = turnManager.attackBuilding.bind(turnManager);
+    turnManager.attackBuilding = (currentBattle, building, damage) => {
+        const hpBefore = Math.max(0, Number(building.hp) || 0);
+        originalAttackBuilding(currentBattle, building, damage);
+        combatMetrics.buildingDamage += Math.min(hpBefore, Math.max(0, damage));
+    };
     let turns = 0;
 
     while (player.hp > 0 && enemy.hp > 0 && turns < maxTurns) {
@@ -111,7 +149,8 @@ function simulate(heroId, enemyId, seed, elite = false, maxTurns = 30, build = n
         hpRemaining: player.hp,
         enemyHpRemaining: enemy.hp,
         damageDealt: Math.max(0, enemy.maxHp - enemy.hp),
-        damageTaken: Number(battle.damageTakenThisBattle) || 0
+        damageTaken: Number(battle.damageTakenThisBattle) || 0,
+        combatMetrics
     };
 }
 
@@ -295,6 +334,11 @@ test('act-ready deck progression benchmark compares all heroes under the same ac
                     `${heroId} vs act ${act} boss returned an invalid outcome: ${JSON.stringify(result)}`);
                 assert.ok(result.hpRemaining >= 0 && Number.isFinite(result.hpRemaining));
                 assert.ok(result.enemyHpRemaining >= 0 && Number.isFinite(result.enemyHpRemaining));
+                assert.ok(result.combatMetrics.enemyAttacks >= result.combatMetrics.heroTargetAttacks +
+                    result.combatMetrics.buildingTargetAttacks - 0.000001);
+                assert.ok(result.combatMetrics.enemyDefends <= result.turns);
+                assert.ok(result.combatMetrics.blockAbsorbed >= 0);
+                assert.ok(result.combatMetrics.buildingDamage >= 0);
                 assert.equal(build.deck.length, apiStarterDeckSize(heroId) + act * 3,
                     'snapshot should add exactly three reward cards per completed act');
                 deckSizes.push(build.deck.length);
@@ -313,6 +357,12 @@ test('act-ready deck progression benchmark compares all heroes under the same ac
                 averageDamageDealt: Number((results.reduce((sum, result) => sum + result.damageDealt, 0) / results.length).toFixed(2)),
                 averageDamageTaken: Number((results.reduce((sum, result) => sum + result.damageTaken, 0) / results.length).toFixed(2)),
                 averageDamagePerTurn: Number((results.reduce((sum, result) => sum + result.damageDealt / Math.max(1, result.turns), 0) / results.length).toFixed(2)),
+                averageEnemyAttacks: Number((results.reduce((sum, result) => sum + result.combatMetrics.enemyAttacks, 0) / results.length).toFixed(2)),
+                averageEnemyDefends: Number((results.reduce((sum, result) => sum + result.combatMetrics.enemyDefends, 0) / results.length).toFixed(2)),
+                averageAttacksTargetingHero: Number((results.reduce((sum, result) => sum + result.combatMetrics.heroTargetAttacks, 0) / results.length).toFixed(2)),
+                averageAttacksTargetingBuildings: Number((results.reduce((sum, result) => sum + result.combatMetrics.buildingTargetAttacks, 0) / results.length).toFixed(2)),
+                averageBlockAbsorbed: Number((results.reduce((sum, result) => sum + result.combatMetrics.blockAbsorbed, 0) / results.length).toFixed(2)),
+                averageBuildingDamage: Number((results.reduce((sum, result) => sum + result.combatMetrics.buildingDamage, 0) / results.length).toFixed(2)),
                 deckSize: deckSizes[0],
                 relics: relicCounts[0]
             });
