@@ -197,6 +197,9 @@ class BattleBuildings {
     
     triggerStartOfTurn(battle) {
         const hasNexus = this.buildings.some(b => b.cardId === 'nexus');
+        const automationTarget = battle.hasPower('automation') && this.buildings.length > 0
+            ? this.buildings[Math.floor(Math.random() * this.buildings.length)]
+            : null;
         
         this.buildings.forEach(building => {
             if (building.cardId === 'nexus') return;
@@ -205,6 +208,7 @@ class BattleBuildings {
             if (battle.hasPower('engineeringNetwork')) triggers += 1;
             if (battle.hasPower('totalAutomation')) triggers += 1;
             if (hasNexus) triggers += 1;
+            if (automationTarget === building) triggers += 1;
             
             for (let i = 0; i < triggers; i++) {
                 this.triggerBuildingStart(battle, building);
