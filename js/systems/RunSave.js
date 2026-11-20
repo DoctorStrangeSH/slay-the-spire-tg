@@ -23,6 +23,9 @@ class RunSave {
             floor: game.floor,
             currentNodeId: game.currentNodeId,
             player: JSON.parse(JSON.stringify(game.player)),
+            offeredCards: Array.isArray(game.offeredCards)
+                ? JSON.parse(JSON.stringify(game.offeredCards))
+                : [],
             map: {
                 seed: game.mapGenerator.seed,
                 signature: this.mapSignature(game.mapGenerator),
@@ -71,6 +74,10 @@ class RunSave {
         const availableCards = getCardsForHero(data.player.heroId);
         if (data.player.deck.some(card => !card || typeof card !== 'object' ||
             typeof card.id !== 'string' || !Object.prototype.hasOwnProperty.call(availableCards, card.id))) return false;
+        const offeredCards = data.offeredCards === undefined ? [] : data.offeredCards;
+        if (!Array.isArray(offeredCards) || offeredCards.length > 3 ||
+            offeredCards.some(card => !card || typeof card !== 'object' ||
+                typeof card.id !== 'string' || !Object.prototype.hasOwnProperty.call(availableCards, card.id))) return false;
         if (data.player.relics.some(id => typeof id !== 'string' ||
             !Object.prototype.hasOwnProperty.call(RELIC_CATALOG, id)) ||
             new Set(data.player.relics).size !== data.player.relics.length) return false;
@@ -149,7 +156,7 @@ class RunSave {
         game.mapGenerator = map;
         game.currentBattle = null;
         game.currentEvent = null;
-        game.offeredCards = [];
+        game.offeredCards = JSON.parse(JSON.stringify(offeredCards));
         return true;
     }
 
