@@ -26,7 +26,7 @@ const files = [
 ];
 const source = files.map(file => readFileSync(join(root, file), 'utf8')).join('\n');
 
-function simulate(heroId, enemyId, seed, elite = false) {
+function simulate(heroId, enemyId, seed, elite = false, maxTurns = 30) {
     let state = seed >>> 0;
     const seededMath = Object.create(Math);
     seededMath.random = () => {
@@ -53,7 +53,7 @@ function simulate(heroId, enemyId, seed, elite = false) {
     const battle = new api.BattleSystem(player, enemy);
     let turns = 0;
 
-    while (player.hp > 0 && enemy.hp > 0 && turns < 30) {
+    while (player.hp > 0 && enemy.hp > 0 && turns < maxTurns) {
         let plays = 0;
         while (player.hp > 0 && enemy.hp > 0 && plays < 20) {
             let bestIndex = -1;
@@ -141,4 +141,33 @@ test('benchmark is reproducible for a fixed hero, enemy, encounter type and seed
             );
         }
     }
+});
+
+
+const ACT_BOSS_IDS = ['forestBoss', 'caveBoss', 'castleBoss'];
+
+test('act bosses resolve deterministic starter-deck benchmark encounters for all heroes', () => {
+    const report = [];
+    for (const heroId of HERO_IDS) {
+        for (const enemyId of ACT_BOSS_IDS) {
+            const results = [];
+            for (let seed = 1; seed <= 5; seed++) {
+                const result = simulate(heroId, enemyId, seed * 104729, false, 80);
+                assert.ok(['win', 'loss'].includes(result.outcome),
+                    `${heroId} vs ${enemyId} did not resolve within 80 turns: ${JSON.stringify(result)}`);
+                assert.ok(Number.isFinite(result.hpRemaining) && result.hpRemaining >= 0);
+                assert.ok(Number.isFinite(result.enemyHpRemaining) && result.enemyHpRemaining >= 0);
+                results.push(result);
+            }
+            report.push({
+                heroId,
+                bossId: enemyId,
+                wins: results.filter(result => result.outcome === 'win').length,
+                losses: results.filter(result => result.outcome === 'loss').length,
+                averageTurns: Number((results.reduce((sum, result) => sum + result.turns, 0) / results.length).toFixed(2)),
+                averageHpRemaining: Number((results.reduce((sum, result) => sum + result.hpRemaining, 0) / results.length).toFixed(2))
+            });
+        }
+    }
+    console.log('ACT_BOSS_STARTER_DECK_BENCHMARK ' + JSON.stringify(report));
 });
