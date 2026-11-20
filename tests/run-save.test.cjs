@@ -8,12 +8,18 @@ const vm = require('node:vm');
 const root = join(__dirname, '..');
 const source = [
     'js/config/constants.js',
+    'js/data/heroes.js',
+    'js/data/cards/common.js',
+    'js/data/cards/berserk.js',
+    'js/data/cards/engineer.js',
+    'js/data/cards/psyker.js',
+    'js/data/cards/index.js',
+    'js/data/relics.js',
     'js/systems/MapGenerator.js',
     'js/systems/RunSave.js'
 ].map(p => readFileSync(join(root, p), 'utf8')).join('\n');
 const context = vm.runInNewContext(source + '\n({ MapGenerator, RunSave, GAME_CONFIG })', {
-    Math, Date, JSON, console,
-    HEROES: { berserk: { id: 'berserk' } }
+    Math, Date, JSON, console
 });
 const { MapGenerator, RunSave } = context;
 function storage() {
@@ -27,7 +33,7 @@ function storage() {
 function game() {
     const mapGenerator = new MapGenerator(1, 'checkpoint-seed');
     return {
-        player: { heroId: 'berserk', hp: 48, maxHp: 80, gold: 50, deck: [{ id: 'attack' }], relics: [] },
+        player: { heroId: 'berserk', hp: 48, maxHp: 80, gold: 50, deck: [{ id: 'strike' }], relics: [] },
         act: 1, floor: 0, currentNodeId: 'floor_0_node_0', mapGenerator, gameState: 'map'
     };
 }
@@ -65,6 +71,50 @@ test('invalid and future-format saves are rejected without mutating game', () =>
     assert.equal(next.player, null);
     memory.setItem(RunSave.KEY, '{not json');
     assert.equal(persistence.restore(next), false);
+});
+
+test('checkpoint rejects unknown or locked heroes and cards without mutating game', () => {
+    const memory = storage();
+    const persistence = new RunSave(memory);
+    const original = game();
+    assert.equal(persistence.save(original), true);
+    const baseline = JSON.parse(memory.getItem(RunSave.KEY));
+    const target = { player: null, act: 77 };
+
+    const lockedHero = structuredClone(baseline);
+    lockedHero.player.heroId = 'plagueDoctor';
+    memory.setItem(RunSave.KEY, JSON.stringify(lockedHero));
+    assert.equal(persistence.restore(target), false);
+
+    const unknownCard = structuredClone(baseline);
+    unknownCard.player.deck[0].id = 'not-a-real-card';
+    memory.setItem(RunSave.KEY, JSON.stringify(unknownCard));
+    assert.equal(persistence.restore(target), false);
+
+    assert.equal(target.player, null);
+    assert.equal(target.act, 77);
+});
+
+test('checkpoint rejects unknown and duplicate relic identifiers', () => {
+    const memory = storage();
+    const persistence = new RunSave(memory);
+    const original = game();
+    original.player.relics = ['emberBattery'];
+    assert.equal(persistence.save(original), true);
+    const baseline = JSON.parse(memory.getItem(RunSave.KEY));
+    const target = { player: null };
+
+    const unknownRelic = structuredClone(baseline);
+    unknownRelic.player.relics = ['not-a-relic'];
+    memory.setItem(RunSave.KEY, JSON.stringify(unknownRelic));
+    assert.equal(persistence.restore(target), false);
+
+    const duplicateRelics = structuredClone(baseline);
+    duplicateRelics.player.relics = ['emberBattery', 'emberBattery'];
+    memory.setItem(RunSave.KEY, JSON.stringify(duplicateRelics));
+    assert.equal(persistence.restore(target), false);
+
+    assert.equal(target.player, null);
 });
 
 test('map tampering or incompatible generator version rejects checkpoint', () => {
