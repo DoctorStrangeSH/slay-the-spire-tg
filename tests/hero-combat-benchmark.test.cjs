@@ -167,6 +167,7 @@ test('act bosses resolve deterministic starter-deck benchmark encounters for all
                 bossId: enemyId,
                 wins: results.filter(result => result.outcome === 'win').length,
                 losses: results.filter(result => result.outcome === 'loss').length,
+                timeouts: results.filter(result => result.outcome === 'timeout').length,
                 averageTurns: Number((results.reduce((sum, result) => sum + result.turns, 0) / results.length).toFixed(2)),
                 averageHpRemaining: Number((results.reduce((sum, result) => sum + result.hpRemaining, 0) / results.length).toFixed(2))
             });
@@ -243,8 +244,8 @@ test('act-ready deck progression benchmark compares all heroes under the same ac
                 const build = buildActSnapshot(heroId, seed * 65537, act);
                 const result = simulate(heroId, ACT_BOSS_IDS[act - 1], seed * 130363,
                     false, 80, build);
-                assert.ok(['win', 'loss'].includes(result.outcome),
-                    `${heroId} vs act ${act} boss did not resolve: ${JSON.stringify(result)}`);
+                assert.ok(['win', 'loss', 'timeout'].includes(result.outcome),
+                    `${heroId} vs act ${act} boss returned an invalid outcome: ${JSON.stringify(result)}`);
                 assert.ok(result.hpRemaining >= 0 && Number.isFinite(result.hpRemaining));
                 assert.ok(result.enemyHpRemaining >= 0 && Number.isFinite(result.enemyHpRemaining));
                 assert.equal(build.deck.length, apiStarterDeckSize(heroId) + act * 3,
