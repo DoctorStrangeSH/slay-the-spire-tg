@@ -69,3 +69,43 @@ test('class story progress is reset for a new run and exposed in the run journal
     assert.ok(gameSource.includes("player.classEventDebt === 'engineer'"));
     assert.ok(gameSource.includes("player.classEventDebt === 'psyker'"));
 });
+
+test('class follow-ups appear only on a later floor and resolve once for every hero', () => {
+    const vm = require('node:vm');
+    const Game = vm.runInNewContext(gameSource + '\\nGame;', {
+        console, Math, Date, JSON,
+        RunSave: class { clear() {} },
+        GAME_CONFIG: { maxActs: 3 },
+        alert() {},
+        chooseRelic: () => ({ id: 'test-relic' })
+    });
+    const cases = [
+        { hero: 'berserk', choice: 0, title: 'Эхо Павшего Чемпиона', expected: 'berserk-resolved', hp: 58, gold: 0 },
+        { hero: 'engineer', choice: 1, title: 'Наследие Последнего Механика', expected: 'engineer-resolved', hp: 40, gold: 55 },
+        { hero: 'psyker', choice: 1, title: 'Ответ Звёздного Разлома', expected: 'psyker-resolved', hp: 40, gold: 40 }
+    ];
+
+    for (const scenario of cases) {
+        const game = Object.create(Game.prototype);
+        game.player = {
+            heroId: scenario.hero, hp: 40, maxHp: 80, gold: 0,
+            deck: [], relics: [], classEventDebt: scenario.hero,
+            classEventDebtAct: 1, classEventDebtFloor: 2
+        };
+        game.act = 1;
+        game.floor = 2;
+        assert.equal(game.canEncounterClassEventFollowUp(), false);
+        assert.equal(game.getEventsForAct().some(event => event.name === scenario.title), false);
+
+        game.floor = 3;
+        assert.equal(game.canEncounterClassEventFollowUp(), true);
+        const followUp = game.getEventsForAct().find(event => event.name === scenario.title);
+        assert.ok(followUp, 'Missing follow-up for ' + scenario.hero);
+        assert.equal(followUp.options[scenario.choice].action(), true);
+        assert.equal(game.player.classEventDebt, scenario.expected);
+        assert.equal(game.player.hp, scenario.hp);
+        assert.equal(game.player.gold, scenario.gold);
+        assert.equal(game.canEncounterClassEventFollowUp(), false);
+        assert.equal(game.getEventsForAct().some(event => event.name === scenario.title), false);
+    }
+});
