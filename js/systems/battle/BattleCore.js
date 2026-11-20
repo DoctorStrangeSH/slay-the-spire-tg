@@ -201,7 +201,7 @@ class BattleCore {
             // preview deterministic: report the exact target-selection chance
             // without consuming the combat RNG.
             const buildingTargetChance = buildingCount > 0
-                ? Math.min(0.75, 0.30 + (buildingCount * 0.15))
+                ? Math.round(Math.min(0.75, 0.30 + (buildingCount * 0.15)) * 100) / 100
                 : 0;
             return {
                 type: 'attack', damage, maxDamage: boosted,
