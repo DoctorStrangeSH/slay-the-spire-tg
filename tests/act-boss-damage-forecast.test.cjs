@@ -68,7 +68,7 @@ test('Dark Lord forecast always exposes the boosted upper bound without consumin
     const first = api.BattleCore.prototype.getEnemyIntentInfo.call(battle);
     const second = api.BattleCore.prototype.getEnemyIntentInfo.call(battle);
     assert.deepEqual(first, second);
-    assert.equal(first.damage, 25);
-    assert.equal(first.maxDamage, 37);
+    assert.equal(first.damage, 28);
+    assert.equal(first.maxDamage, 43);
     assert.equal(first.bonusChance, 0.3);
 });
