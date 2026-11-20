@@ -184,8 +184,8 @@ function buildActSnapshot(heroId, seed, targetAct) {
         state = (state * 1664525 + 1013904223) >>> 0;
         return state / 0x100000000;
     };
-    const api = vm.runInNewContext(source +
-        '\\n({ getStarterDeckForHero, getRandomRewardCards, chooseRelic, Game })',
+    const api = vm.runInNewContext(source + String.fromCharCode(10) +
+        '({ getStarterDeckForHero, getRandomRewardCards, chooseRelic, Game })',
         { Math: Object.assign(Object.create(Math), { random }) });
     const deck = api.getStarterDeckForHero(heroId);
     const relics = [];
@@ -268,6 +268,6 @@ test('act-ready deck progression benchmark compares all heroes under the same ac
 });
 
 function apiStarterDeckSize(heroId) {
-    const api = vm.runInNewContext(source + '\\n({ getStarterDeckForHero })', { Math });
+    const api = vm.runInNewContext(source + String.fromCharCode(10) + '({ getStarterDeckForHero })', { Math });
     return api.getStarterDeckForHero(heroId).length;
 }
