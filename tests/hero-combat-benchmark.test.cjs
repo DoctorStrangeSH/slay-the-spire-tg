@@ -615,7 +615,7 @@ function simulateRouteCampaign(heroId, seed, policy = 'heal-when-useful') {
                 if (isBoss) {
                     stats.bossWon = result.outcome === 'win';
                     if (stats.bossWon && rewardRandom() < cardRewardChance) {
-                        const card = chooseBestReward(api, heroId, random);
+                        const card = chooseBestReward(api, heroId, rewardRandom);
                         if (card) {
                             player.deck.push(card);
                             stats.cardRewards++;
@@ -639,7 +639,7 @@ function simulateRouteCampaign(heroId, seed, policy = 'heal-when-useful') {
                     stats.battles++;
                 }
                 if (rewardRandom() < cardRewardChance) {
-                    const card = chooseBestReward(api, heroId, random);
+                    const card = chooseBestReward(api, heroId, rewardRandom);
                     if (card) {
                         player.deck.push(card);
                         stats.cardRewards++;
