@@ -46,7 +46,7 @@ test('checkpoint preserves hero, deck and seeded map after restore', () => {
     assert.equal(persistence.restore(next), true);
     assert.equal(next.player.hp, 48);
     assert.equal(next.player.gold, 50);
-    assert.equal(next.player.deck[0].id, 'attack');
+    assert.equal(next.player.deck[0].id, 'strike');
     assert.equal(next.mapGenerator.seed, 'checkpoint-seed');
     assert.equal(next.mapGenerator.findNodeById(next.currentNodeId).visited, true);
 });
