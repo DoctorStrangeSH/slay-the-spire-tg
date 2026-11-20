@@ -44,7 +44,7 @@ test('Telegram stable viewport height is applied to game layout', () => {
     assert.equal(properties['--game-viewport-height'], '720px');
     const expected = { 93: 670, 92: 662, 90: 648, 88: 634, 85: 612, 77: 554,
         75: 540, 73: 526, 52: 374, 47: 338, 34: 245, 31: 223, 29: 209,
-        26: 187, 25: 180, 18: 130, 9: 65 };
+        26: 187, 25: 180, 18: 130, 9: 65, 8: 58 };
     for (const [fraction, pixels] of Object.entries(expected)) {
         assert.equal(properties[`--game-viewport-${fraction}`], `${pixels}px`);
     }
@@ -57,7 +57,7 @@ test('Telegram viewport changes update the game layout height', () => {
     assert.equal(properties['--game-viewport-height'], '604px');
     const expected = { 93: 562, 92: 556, 90: 544, 88: 532, 85: 513, 77: 465,
         75: 453, 73: 441, 52: 314, 47: 284, 34: 205, 31: 187, 29: 175,
-        26: 157, 25: 151, 18: 109, 9: 54 };
+        26: 157, 25: 151, 18: 109, 9: 54, 8: 48 };
     for (const [fraction, pixels] of Object.entries(expected)) {
         assert.equal(properties[`--game-viewport-${fraction}`], `${pixels}px`);
     }
