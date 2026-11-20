@@ -462,13 +462,10 @@ test('act boss benchmark measures sensitivity to health carried into the boss ro
 // Route-aware campaign diagnostics use the active organic map generator and
 // carry HP, cards and relics between rooms and acts. This remains a deterministic
 // policy benchmark, not an optimal-player simulation.
-const mapSource = [
-    readFileSync(join(root, 'js/config/constants.js'), 'utf8'),
-    readFileSync(join(root, 'js/systems/MapGenerator.js'), 'utf8')
-] .join('\n');
+const mapSource = source + '\n' + readFileSync(join(root, 'js/systems/MapGenerator.js'), 'utf8');
 
 function createRouteApi() {
-    return vm.runInNewContext(mapSource + '\nMapGenerator;', { Math });
+    return vm.runInNewContext(mapSource + '\n({ MapGenerator, HEROES, getStarterDeckForHero, getRandomRewardCards, chooseRelic, getCardsForHero, Game })', { Math });
 }
 
 function createRunRandom(seed) {
