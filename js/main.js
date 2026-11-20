@@ -9,6 +9,16 @@ document.addEventListener('DOMContentLoaded', () => {
         tg.expand();
         document.body.style.backgroundColor = tg.backgroundColor;
         document.body.style.color = tg.textColor;
+
+        // Telegram WebView can be shorter than the browser's CSS 100dvh.
+        // Keep fixed-height gameplay screens aligned with Telegram's stable viewport.
+        const syncGameViewportHeight = () => {
+            const height = Number(tg.viewportStableHeight || tg.viewportHeight);
+            if (!Number.isFinite(height) || height <= 0) return;
+            document.documentElement.style.setProperty('--game-viewport-height', `${Math.round(height)}px`);
+        };
+        syncGameViewportHeight();
+        tg.onEvent?.('viewportChanged', syncGameViewportHeight);
     }
     
     // Версия сборки видна даже внутри Telegram WebView.
