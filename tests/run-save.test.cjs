@@ -95,6 +95,17 @@ test('legacy checkpoint without deferred reward offers restores with an empty of
     assert.deepEqual(restored.offeredCards, []);
 });
 
+test('checkpoint preserves a pending camp choice for recovery after reload', () => {
+    const persistence = new RunSave(storage());
+    const original = game();
+    original.player.pendingRest = true;
+    assert.equal(persistence.save(original), true);
+
+    const restored = { player: null };
+    assert.equal(persistence.restore(restored), true);
+    assert.equal(restored.player.pendingRest, true);
+});
+
 test('battle state is never saved as an unsafe partial checkpoint', () => {
     const persistence = new RunSave(storage());
     const current = game();
