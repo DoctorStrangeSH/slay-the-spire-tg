@@ -89,6 +89,17 @@ test('storage failures do not break gameplay', () => {
     assert.doesNotThrow(() => persistence.clear());
 });
 
+test('non-serializable checkpoint state fails safely without interrupting gameplay', () => {
+    const persistence = new RunSave(storage());
+    const current = game();
+    current.player.circularReference = current.player;
+
+    assert.doesNotThrow(() => {
+        assert.equal(persistence.save(current), false);
+    });
+    assert.equal(persistence.read(), null);
+});
+
 
 test('legacy treasure-as-shop map checkpoint still restores', () => {
     const persistence = new RunSave(storage());
