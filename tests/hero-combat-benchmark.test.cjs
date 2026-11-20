@@ -464,8 +464,13 @@ test('act boss benchmark measures sensitivity to health carried into the boss ro
 // policy benchmark, not an optimal-player simulation.
 const mapSource = source + '\n' + readFileSync(join(root, 'js/systems/MapGenerator.js'), 'utf8');
 
-function createRouteApi() {
-    return vm.runInNewContext(mapSource + '\n({ MapGenerator, HEROES, getStarterDeckForHero, getRandomRewardCards, chooseRelic, getCardsForHero, Game })', { Math });
+function createRouteApi(random = Math.random) {
+    const seededMath = Object.create(Math);
+    seededMath.random = random;
+    return vm.runInNewContext(mapSource + '\n({ MapGenerator, HEROES, getStarterDeckForHero, getRandomRewardCards, chooseRelic, getCardsForHero, getAvailableRelics, Game })', {
+        Math: seededMath,
+        alert: () => {}
+    });
 }
 
 function createRunRandom(seed) {
@@ -527,6 +532,94 @@ function chooseBestReward(api, heroId, rewardRandom) {
     return { ...offers.reduce((best, card) => score(card) > score(best) ? card : best) };
 }
 
+function scoreRouteCard(card) {
+    return (card.damage || 0) * (card.hits || 1) +
+        (card.block || 0) * 0.8 +
+        (card.draw || 0) * 5 +
+        (card.heal || 0) * 2 +
+        (card.bleed || 0) * 2 +
+        (card.poison || 0) * 2 +
+        (card.paralysis || 0) * 2 +
+        (card.strength || 0) * 3 +
+        (card.type === 'building' ? 8 : 0) -
+        (card.selfDamage || 0) * 2 -
+        (card.cost || 0) * 1.5;
+}
+
+function simulateRouteShop(api, player, seed, stats) {
+    const random = createRunRandom(seed);
+    const cards = Object.values(api.getCardsForHero(player.heroId));
+    const pool = [...cards];
+    for (let i = pool.length - 1; i > 0; i--) {
+        const j = Math.floor(random() * (i + 1));
+        [pool[i], pool[j]] = [pool[j], pool[i]];
+    }
+    const visit = { offerCardIds: pool.slice(0, 4).map(card => card.id), purchased: [], closed: false };
+    const game = Object.create(api.Game.prototype);
+    game.player = player;
+    game.runSave = { save: () => true };
+    const buy = (id, price, apply, rollback) =>
+        api.Game.prototype.commitShopPurchase.call(game, visit, id, price, apply, rollback);
+
+    // Policy: recover dangerous HP loss first, then improve the strongest eligible
+    // card, buy the best affordable offer, and thin oversized decks.
+    if (player.gold >= 35 && player.hp <= player.maxHp * 0.70) {
+        const before = player.hp;
+        const amount = Math.max(1, Math.floor(player.maxHp * 0.2));
+        if (buy('heal', 35,
+            () => { player.hp = Math.min(player.maxHp, player.hp + amount); return player.hp > before; },
+            () => { player.hp = before; })) stats.shopHeals++;
+    }
+
+    const eligible = player.deck.filter(card =>
+        api.Game.prototype.getCardUpgrade.call(game, card));
+    if (player.gold >= 75 && eligible.length) {
+        const target = [...eligible].sort((a, b) => scoreRouteCard(b) - scoreRouteCard(a))[0];
+        const before = { ...target };
+        if (buy('upgrade-card', 75,
+            () => api.Game.prototype.upgradeCard.call(game, target),
+            () => {
+                Object.keys(target).forEach(key => delete target[key]);
+                Object.assign(target, before);
+            })) stats.shopUpgrades++;
+    }
+
+    const offers = visit.offerCardIds.map(id => cards.find(card => card.id === id)).filter(Boolean);
+    const affordable = offers.filter(card =>
+        player.gold >= api.Game.prototype.getShopPrice.call(game, card));
+    if (affordable.length) {
+        const card = affordable.sort((a, b) => scoreRouteCard(b) - scoreRouteCard(a))[0];
+        const price = api.Game.prototype.getShopPrice.call(game, card);
+        const purchased = { ...card };
+        if (buy(`card:${card.id}`, price,
+            () => { player.deck.push(purchased); return true; },
+            () => {
+                const index = player.deck.indexOf(purchased);
+                if (index >= 0) player.deck.splice(index, 1);
+            })) stats.shopCards++;
+    }
+
+    if (player.gold >= 65 && player.deck.length > 8) {
+        const weakest = player.deck.reduce((best, card) =>
+            scoreRouteCard(card) < scoreRouteCard(best) ? card : best, player.deck[0]);
+        const index = player.deck.indexOf(weakest);
+        const removed = player.deck[index];
+        if (buy('remove-card', 65,
+            () => player.deck.splice(index, 1).length === 1,
+            () => player.deck.splice(index, 0, removed))) stats.shopRemovals++;
+    }
+
+    stats.shopGoldSpent += visit.purchased.reduce((sum, id) => {
+        if (id === 'heal') return sum + 35;
+        if (id === 'upgrade-card') return sum + 75;
+        if (id === 'remove-card') return sum + 65;
+        const card = cards.find(item => id === `card:${item.id}`);
+        return sum + (card ? api.Game.prototype.getShopPrice.call(game, card) : 0);
+    }, 0);
+    stats.shopPurchases += visit.purchased.length;
+    return visit;
+}
+
 function applyRouteRest(api, player, policy) {
     const healAmount = Math.max(1, Math.floor(player.maxHp * 0.3));
     const actualHeal = Math.min(healAmount, player.maxHp - player.hp);
@@ -560,7 +653,8 @@ function applyRouteRest(api, player, policy) {
 }
 
 function simulateRouteCampaign(heroId, seed, policy = 'heal-when-useful') {
-    const api = createRouteApi();
+    const apiRandom = createRunRandom(seed ^ 0x27d4eb2f);
+    const api = createRouteApi(apiRandom);
     const routeRandom = createRunRandom(seed ^ 0x5f3759df);
     const rewardRandom = createRunRandom(seed ^ 0x6c8e9cf5);
     const combatRandom = createRunRandom(seed ^ 0x1b873593);
@@ -586,7 +680,9 @@ function simulateRouteCampaign(heroId, seed, policy = 'heal-when-useful') {
             plannedBattles: route.filter(node => node.type === 'battle').length,
             plannedElites: route.filter(node => node.type === 'elite').length,
             battles: 0, elites: 0, rests: 0, restHeals: 0, restUpgrades: 0, cardRewards: 0,
-            relicRewards: 0, bossReached: false, bossWon: false,
+            relicRewards: 0, goldEarned: 0, shopVisits: 0, shopPurchases: 0,
+            shopCards: 0, shopHeals: 0, shopUpgrades: 0, shopRemovals: 0, shopGoldSpent: 0,
+            bossReached: false, bossWon: false,
             hpBeforeBoss: null, hpAfterAct: null, deckSizeBeforeBoss: null,
             relicCountBeforeBoss: null
         };
@@ -612,6 +708,19 @@ function simulateRouteCampaign(heroId, seed, policy = 'heal-when-useful') {
                     relics: player.relics
                 });
                 player.hp = result.hpRemaining;
+                if (result.outcome === 'win') {
+                    const relicAvailable = isElite
+                        ? api.chooseRelic(player.relics, rewardRandom, heroId)
+                        : null;
+                    if (relicAvailable) {
+                        player.relics.push(relicAvailable.id);
+                        stats.relicRewards++;
+                    }
+                    const goldReward = Math.floor(rewardRandom() * 20) +
+                        (isElite ? 25 : 10) + (isElite && !relicAvailable ? 40 : 0);
+                    player.gold += goldReward;
+                    stats.goldEarned += goldReward;
+                }
                 if (isBoss) {
                     stats.bossWon = result.outcome === 'win';
                     if (stats.bossWon && rewardRandom() < cardRewardChance) {
@@ -630,11 +739,6 @@ function simulateRouteCampaign(heroId, seed, policy = 'heal-when-useful') {
                 }
                 if (isElite) {
                     stats.elites++;
-                    const relic = api.chooseRelic(player.relics, rewardRandom, heroId);
-                    if (relic) {
-                        player.relics.push(relic.id);
-                        stats.relicRewards++;
-                    }
                 } else {
                     stats.battles++;
                 }
@@ -645,6 +749,9 @@ function simulateRouteCampaign(heroId, seed, policy = 'heal-when-useful') {
                         stats.cardRewards++;
                     }
                 }
+            } else if (node.type === 'shop') {
+                stats.shopVisits++;
+                simulateRouteShop(api, player, seed ^ (act * 65537) ^ (stats.shopVisits * 8191), stats);
             } else if (node.type === 'rest') {
                 stats.rests++;
                 const decision = applyRouteRest(api, player, policy);
