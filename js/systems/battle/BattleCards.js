@@ -349,6 +349,9 @@ class BattleCards {
     }
     
     applyPower(battle, card) {
+        if (card.id === 'berserkMode') {
+            battle.statusEffects.player.strength = (battle.statusEffects.player.strength || 0) + 2;
+        }
         if (card.strength) {
             battle.statusEffects.player.strength = (battle.statusEffects.player.strength || 0) + card.strength;
         }
