@@ -31,12 +31,16 @@ function bootTelegramApp(initialHeight = 720) {
         querySelector() { return { content: 'test-build' }; },
         getElementById(id) { return elements[id] || null; },
         body: { style: {} },
-        documentElement: { style: { setProperty(name, value) { properties[name] = value; } } }
+        documentElement: {
+            attributes: {},
+            setAttribute(name, value) { this.attributes[name] = value; },
+            style: { setProperty(name, value) { properties[name] = value; } }
+        }
     };
     class Game { showMenu() {} }
     vm.runInNewContext(source, { document, window: { Telegram: { WebApp: tg } }, Game });
     ready();
-    return { tg, properties, viewportChanged };
+    return { tg, properties, viewportChanged, root: document.documentElement };
 }
 
 test('Telegram stable viewport height is applied to game layout', () => {
@@ -77,4 +81,27 @@ test('invalid Telegram viewport height does not overwrite the last valid value',
     tg.viewportHeight = Number.NaN;
     viewportChanged();
     assert.equal(properties['--game-viewport-height'], '720px');
+});
+
+test('Telegram stable height activates compact layout even when CSS viewport is taller', () => {
+    const { root, tg, viewportChanged } = bootTelegramApp(720);
+    assert.equal(root.attributes['data-game-viewport-height'], 'normal');
+    tg.viewportStableHeight = 604;
+    viewportChanged();
+    assert.equal(root.attributes['data-game-viewport-height'], 'compact');
+    tg.viewportStableHeight = 500;
+    viewportChanged();
+    assert.equal(root.attributes['data-game-viewport-height'], 'short');
+    tg.viewportStableHeight = 680;
+    viewportChanged();
+    assert.equal(root.attributes['data-game-viewport-height'], 'normal');
+});
+
+test('invalid Telegram height preserves the previous compact mode', () => {
+    const { root, tg, viewportChanged } = bootTelegramApp(604);
+    assert.equal(root.attributes['data-game-viewport-height'], 'compact');
+    tg.viewportStableHeight = 0;
+    tg.viewportHeight = Number.NaN;
+    viewportChanged();
+    assert.equal(root.attributes['data-game-viewport-height'], 'compact');
 });
