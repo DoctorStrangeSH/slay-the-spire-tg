@@ -458,8 +458,10 @@ class Game {
             try { this.player = JSON.parse(playerSnapshot); }
             catch (error) { console.error('Не удалось восстановить состояние после события:', error); }
             this.offeredCards = offeredCardsSnapshot;
-            document.getElementById('reward-modal')?.remove();
-            document.getElementById('card-modal')?.remove();
+            if (typeof document !== 'undefined') {
+                document.getElementById('reward-modal')?.remove();
+                document.getElementById('card-modal')?.remove();
+            }
         };
 
         try {
