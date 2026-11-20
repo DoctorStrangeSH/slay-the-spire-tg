@@ -4,7 +4,9 @@ const { readFileSync } = require('node:fs');
 const { join } = require('node:path');
 const vm = require('node:vm');
 const source = readFileSync(join(__dirname, '../js/systems/Game.js'), 'utf8');
-const Game = vm.runInNewContext(source + '\nGame;', { console, Math, Date });
+const Game = vm.runInNewContext(source + '\nGame;', {
+    console, Math, Date, getStarterDeckForHero: () => []
+});
 function makeGame() {
     const event = { name: 'Испытание памяти', rare: false, description: 'Проверка сохранения события', options: [{ text: 'Принять', action: () => true }] };
     const game = Object.create(Game.prototype);
