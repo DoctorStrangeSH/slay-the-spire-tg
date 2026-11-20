@@ -75,7 +75,9 @@ class BattleSystem extends BattleCore {
         const card = this.hand[cardIndex];
         const result = this.cards.playCard(this, cardIndex);
         
-        if (result.success && card) {
+        // A lethal card ends resolution immediately: no relic/after-play effects
+        // may mutate a run after either side has reached a terminal HP state.
+        if (result.success && card && this.player.hp > 0 && this.enemy.hp > 0) {
             this.effects.applyAfterPlayEffects(this, card);
         }
         
