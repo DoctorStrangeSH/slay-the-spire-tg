@@ -56,6 +56,14 @@ class BattleTurn {
             battle.statusEffects.enemy.poison--;
         }
 
+        // Огонь наносит периодический урон в конце хода, затем затухает.
+        if (battle.statusEffects.enemy.fire > 0) {
+            battle.enemy.hp = Math.max(0, Math.floor(
+                battle.enemy.hp - battle.statusEffects.enemy.fire
+            ));
+            battle.statusEffects.enemy.fire--;
+        }
+
         // Кровотечение врага. Берсерк может преобразовать фактически нанесённый
         // кровотечением урон в лечение; избыточный урон сверх оставшегося HP не лечит.
         if (battle.statusEffects.enemy.bleed > 0) {
