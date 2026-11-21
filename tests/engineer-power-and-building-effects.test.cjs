@@ -138,6 +138,17 @@ test('Lubricant doubles both construction trigger phases on the following turn o
     assert.equal(ends.length, 8, 'the following turn returns to normal end triggers');
 });
 
+test('Target Designator applies Vulnerability at the start of the turn, not at turn end', () => {
+    const { api, battle } = setup();
+    addBuilding(api, battle, 'targetDesignator');
+
+    battle.buildings.triggerBuildingStart(battle, battle.buildings.getBuilding(0));
+    assert.equal(battle.statusEffects.enemy.vulnerable, 1);
+
+    battle.buildings.triggerBuildingEnd(battle, battle.buildings.getBuilding(0));
+    assert.equal(battle.statusEffects.enemy.vulnerable, 1, 'the same trigger is not applied a second time at turn end');
+});
+
 test('Weapons Factory respects the maximum hand size', () => {
     const { api, battle } = setup();
     battle.player.relics.push('weaponsFactory');
