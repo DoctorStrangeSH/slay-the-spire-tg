@@ -210,7 +210,10 @@ class Game {
     }
 
     showRunHistory() {
-        document.getElementById('cathedral-history-modal')?.remove();
+        const previous = document.getElementById('cathedral-history-modal');
+        previous?.__gameModalCleanup?.(false);
+        previous?.remove();
+        const returnFocus = document.activeElement;
         const data = this.runHistory.read();
         const modal = document.createElement('div');
         modal.id = 'cathedral-history-modal';
@@ -396,11 +399,18 @@ class Game {
         close.type = 'button';
         close.className = 'run-journal-close';
         close.textContent = 'Закрыть';
-        close.onclick = () => modal.remove();
+        const accessibility = bindGameModalAccessibility(modal, {
+            label: 'История восхождений', returnFocus,
+            onEscape: () => { accessibility.cleanup(); modal.remove(); }
+        });
+        close.onclick = () => { accessibility.cleanup(); modal.remove(); };
         panel.appendChild(close);
         modal.appendChild(panel);
         document.body.appendChild(modal);
-        close.focus();
+        close.focus?.();
+        modal.addEventListener?.('click', event => {
+            if (event.target === modal) { accessibility.cleanup(); modal.remove(); }
+        });
     }
 
     // Коллекция доступна между комнатами и во время боя; не меняет состояние забега.
@@ -593,7 +603,10 @@ class Game {
 
     showRunJournal() {
         if (!this.player) return;
-        document.getElementById('run-journal-modal')?.remove();
+        const previous = document.getElementById('run-journal-modal');
+        previous?.__gameModalCleanup?.(false);
+        previous?.remove();
+        const returnFocus = document.activeElement;
         const modal = document.createElement('div');
         modal.id = 'run-journal-modal';
         modal.className = 'modal run-journal-modal';
@@ -649,11 +662,18 @@ class Game {
         close.type = 'button';
         close.className = 'run-journal-close';
         close.textContent = 'Вернуться к карте';
-        close.onclick = () => modal.remove();
+        const accessibility = bindGameModalAccessibility(modal, {
+            label: 'Журнал текущего забега', returnFocus,
+            onEscape: () => { accessibility.cleanup(); modal.remove(); }
+        });
+        close.onclick = () => { accessibility.cleanup(); modal.remove(); };
         panel.appendChild(close);
         modal.appendChild(panel);
         document.body.appendChild(modal);
-        close.focus();
+        close.focus?.();
+        modal.addEventListener?.('click', event => {
+            if (event.target === modal) { accessibility.cleanup(); modal.remove(); }
+        });
     }
 
     showRelics() {
@@ -1119,6 +1139,10 @@ class Game {
     }
 
     offerCard(cards = null) {
+        const previous = document.getElementById('reward-modal');
+        previous?.__gameModalCleanup?.(false);
+        previous?.remove();
+        const returnFocus = document.activeElement;
         this.offeredCards = Array.isArray(cards)
             ? cards
             : getRandomRewardCards(this.player.heroId, 3);
@@ -1131,7 +1155,7 @@ class Game {
                 <h3>Выберите карту:</h3>
                 <div class="reward-cards">
                     ${this.offeredCards.map((card, index) => `
-                        <div class="reward-card reward-reveal card-rarity-${CardArt.rarity(card).key}" style="--reveal-order: ${index}" onclick="game.showCardModalFromReward(${index})">
+                        <div class="reward-card reward-reveal card-rarity-${CardArt.rarity(card).key}" style="--reveal-order: ${index}" role="button" tabindex="0" aria-label="Посмотреть карту: ${card.name}" onclick="game.showCardModalFromReward(${index})" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();game.showCardModalFromReward(${index})}">
                             <div class="reward-card-art">${CardArt.markup(card, 'reward-art-image')}</div>
                             <div class="reward-card-name">${card.name}</div>
                             <div class="reward-card-rarity"><span aria-hidden="true">${CardArt.rarity(card).sigil}</span> ${CardArt.rarity(card).label}</div>
@@ -1145,13 +1169,22 @@ class Game {
             </div>
         `;
 
+        modal.setAttribute('role', 'dialog');
+        modal.setAttribute('aria-modal', 'true');
+        modal.setAttribute('aria-label', 'Выбор награды');
         document.body.appendChild(modal);
+        bindGameModalAccessibility(modal, {
+            label: 'Выбор награды', returnFocus,
+            initialFocus: modal.querySelector('.reward-card button') || modal.querySelector('button')
+        });
     }
 
     skipCardReward() {
         if (!this.offeredCards.length) return;
         this.offeredCards = [];
-        document.getElementById('reward-modal')?.remove();
+        const rewardModal = document.getElementById('reward-modal');
+        rewardModal?.__gameModalCleanup?.(false);
+        rewardModal?.remove();
         this.closeCardModal();
         this.continueJourney();
     }
@@ -1160,7 +1193,7 @@ class Game {
         const card = this.offeredCards[index];
         if (card) {
             this.currentRewardIndex = index;
-            this.showCardModal(card, 'reward');
+            this.showCardModal(card, 'reward', document.activeElement);
         }
     }
 
@@ -1170,6 +1203,7 @@ class Game {
             this.offeredCards = []; // Защита от повторной выдачи при двойном клике.
             this.player.deck.push({ ...card });
             const modal = document.getElementById('reward-modal');
+            modal?.__gameModalCleanup?.(false);
             if (modal) modal.remove();
             this.closeCardModal();
             alert(`Карта "${card.name}" добавлена!`);
@@ -1177,8 +1211,8 @@ class Game {
         }
     }
 
-    showCardModal(card, context = 'view') {
-        this.closeCardModal();
+    showCardModal(card, context = 'view', returnFocus = document.activeElement) {
+        this.closeCardModal(false);
 
         const modal = document.createElement('div');
         modal.className = 'modal';
@@ -1203,11 +1237,22 @@ class Game {
             </div>
         `;
 
+        modal.setAttribute('role', 'dialog');
+        modal.setAttribute('aria-modal', 'true');
+        modal.setAttribute('aria-label', `Карта: ${card.name}`);
         document.body.appendChild(modal);
+        const accessibility = bindGameModalAccessibility(modal, {
+            label: `Карта: ${card.name}`, returnFocus,
+            onEscape: () => this.closeCardModal()
+        });
+        modal.querySelector('.card-modal-buttons button:last-child')?.addEventListener('click', () => {
+            accessibility.cleanup();
+        });
     }
 
-    closeCardModal() {
+    closeCardModal(restoreFocus = true) {
         const modal = document.getElementById('card-modal');
+        modal?.__gameModalCleanup?.(restoreFocus);
         if (modal) modal.remove();
     }
 
@@ -1253,6 +1298,7 @@ class Game {
             alert(isDraw ? 'Колода пуста' : 'Сброс пуст');
             return;
         }
+        const returnFocus = document.activeElement;
         const modal = document.createElement('div');
         modal.className = 'modal';
         modal.innerHTML = `
@@ -1271,9 +1317,19 @@ class Game {
                         </button>
                     `).join('')}
                 </div>
-                <button onclick="this.closest('.modal').remove()">Закрыть</button>
+                <button type="button" class="pile-gallery-close">Закрыть</button>
             </div>
         `;
+        modal.setAttribute('role', 'dialog');
+        modal.setAttribute('aria-modal', 'true');
+        modal.setAttribute('aria-label', isDraw ? 'Колода' : 'Сброс');
+        const accessibility = bindGameModalAccessibility(modal, {
+            label: isDraw ? 'Колода' : 'Сброс', returnFocus,
+            onEscape: () => { accessibility.cleanup(); modal.remove(); }
+        });
+        modal.querySelector('.pile-gallery-close')?.addEventListener('click', () => {
+            accessibility.cleanup(); modal.remove();
+        });
         document.body.appendChild(modal);
     }
 
@@ -1298,7 +1354,7 @@ class Game {
         }
 
         if (card) {
-            this.showCardModal(card, 'view');
+            this.showCardModal(card, 'view', document.activeElement);
         }
     }
 
