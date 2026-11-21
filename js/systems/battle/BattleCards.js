@@ -131,6 +131,9 @@ class BattleCards {
         
         if (card.block) {
             preview.block = card.block + (battle.statusEffects.player.dexterity || 0);
+            if (card.id === 'energyShield' && battle.buildings?.getBuildingCount?.() > 0) {
+                preview.block += 4;
+            }
         }
         
         if (card.heal) preview.heal = card.heal;
