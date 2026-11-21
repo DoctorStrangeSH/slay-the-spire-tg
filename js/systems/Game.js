@@ -31,9 +31,9 @@ function bindGameModalAccessibility(modal, options = {}) {
     modal.setAttribute?.('role', 'dialog');
     modal.setAttribute?.('aria-modal', 'true');
     if (options.label) modal.setAttribute?.('aria-label', options.label);
-    document.addEventListener('keydown', onKeyDown);
+    document.addEventListener?.('keydown', onKeyDown);
     const cleanup = (restoreFocus = true) => {
-        document.removeEventListener('keydown', onKeyDown);
+        document.removeEventListener?.('keydown', onKeyDown);
         if (restoreFocus && returnFocus?.isConnected) returnFocus.focus({ preventScroll: true });
     };
     modal.__gameModalCleanup = cleanup;
