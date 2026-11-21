@@ -95,7 +95,8 @@ const BattleUI = {
             { icon: '🎯', value: battle.statusEffects.enemy.vulnerable, type: 'debuff', key: 'vulnerable', label: 'Уязвимость', name: 'Уязвимость', description: 'Получает на 50% больше урона.' },
             { icon: '📉', value: battle.statusEffects.enemy.weak, type: 'debuff', key: 'weak', label: 'Слабость', name: 'Слабость', description: 'Наносит на 25% меньше урона.' },
             { icon: '🩸', value: battle.statusEffects.enemy.bleed, type: 'debuff', key: 'bleed', label: 'Кровотечение', name: 'Кровотечение', description: 'Получает урон в конце хода.' },
-            { icon: '☠️', value: battle.statusEffects.enemy.poison, type: 'debuff', key: 'poison', label: 'Яд', name: 'Яд', description: 'Получает урон в конце хода.' }
+            { icon: '☠️', value: battle.statusEffects.enemy.poison, type: 'debuff', key: 'poison', label: 'Яд', name: 'Яд', description: 'Получает урон в конце хода.' },
+            { icon: '🔥', value: battle.statusEffects.enemy.fire, type: 'debuff', key: 'fire', label: 'Огонь', name: 'Огонь', description: 'Получает урон огнём в конце хода; интенсивность уменьшается на 1.' }
         ];
         
         this.renderStatusBadges(effectsEl, effects);
