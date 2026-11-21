@@ -360,16 +360,89 @@ class BattleCards {
     applySkill(battle, card) {
         if (card.block) {
             let blockAmount = card.block + (battle.statusEffects.player.dexterity || 0);
+            if (card.id === 'energyShield' && battle.buildings?.getBuildingCount() > 0) {
+                blockAmount += 4;
+            }
             battle.block += Math.floor(blockAmount);
         }
-        
+
+        const buildings = battle.buildings;
+        const mostDamaged = () => buildings?.buildings
+            .slice()
+            .sort((a, b) => (a.hp / Math.max(1, a.maxHp)) - (b.hp / Math.max(1, b.maxHp)))[0] || null;
+
+        // Engineer skill effects operate on the active construction field.
+        if (card.id === 'repair') {
+            const target = mostDamaged();
+            if (target) target.hp = Math.min(target.maxHp, target.hp + 3);
+        }
+        if (card.id === 'reinforcement') {
+            const target = mostDamaged();
+            if (target) target.block += 4;
+        }
+        if (card.id === 'blueprints') {
+            for (const held of battle.hand) {
+                if (held.type === CARD_TYPES.BUILDING) held.cost = Math.max(0, (Number(held.cost) || 0) - 1);
+            }
+        }
+        if (card.id === 'quickAssembly') {
+            const previousHandSize = battle.hand.length;
+            battle.drawCards(1);
+            const drawn = battle.hand.slice(previousHandSize);
+            for (const held of drawn) {
+                if (held.type === CARD_TYPES.BUILDING) held.cost = 0;
+            }
+        }
+        if (card.id === 'repairDrone' || card.id === 'nanobots') {
+            const repairAmount = card.id === 'repairDrone' ? 5 : 2;
+            for (const building of buildings?.buildings || []) {
+                building.hp = Math.min(building.maxHp, building.hp + repairAmount);
+            }
+        }
+        if (card.id === 'evacuation' && buildings?.buildings.length > 0 &&
+            battle.hand.length < GAME_CONFIG.maxHandSize) {
+            const target = mostDamaged();
+            const index = buildings.buildings.indexOf(target);
+            if (index !== -1) {
+                buildings.buildings.splice(index, 1);
+                const original = ENGINEER_CARDS[target.cardId];
+                battle.hand.push(original ? { ...original } : {
+                    id: target.cardId, name: target.name, type: CARD_TYPES.BUILDING,
+                    cost: target.cost, hp: target.maxHp, damage: target.damage,
+                    block: target.block, emoji: target.emoji
+                });
+                battle.energy += Math.max(0, Number(target.cost) || 0);
+            }
+        }
+        if (card.id === 'modernization') {
+            for (const building of buildings?.buildings || []) {
+                if (building.damage > 0) building.damage += 2;
+                else building.block += 3;
+                building.upgraded = true;
+            }
+        }
+        if (card.id === 'factoryReset' && buildings) {
+            const demolished = buildings.demolishAll(battle);
+            battle.energy += demolished;
+            battle.drawCards(demolished);
+        }
+        if (card.id === 'engineeringGenius') {
+            const previousHandSize = battle.hand.length;
+            battle.drawCards(3);
+            for (const held of battle.hand.slice(0, previousHandSize + 3)) {
+                if (held.type === CARD_TYPES.BUILDING) held.cost = 0;
+            }
+        }
+
         // Паралич от навыка
         if (card.paralysis) {
             battle.statusEffects.enemy.paralysis = (battle.statusEffects.enemy.paralysis || 0) + card.paralysis;
         }
-        
+
         if (card.heal) battle.player.hp = Math.min(battle.player.maxHp, Math.floor(battle.player.hp + card.heal));
-        if (card.draw) battle.drawCards(card.draw);
+        if (card.draw && !['quickAssembly', 'engineeringGenius', 'blueprints'].includes(card.id)) {
+            battle.drawCards(card.draw);
+        }
         if (card.bleed) battle.statusEffects.enemy.bleed = (battle.statusEffects.enemy.bleed || 0) + card.bleed;
         if (card.selfDamage) battle.takeSelfDamage(card.selfDamage);
         if (card.weak) battle.statusEffects.enemy.weak = (battle.statusEffects.enemy.weak || 0) + card.weak;
