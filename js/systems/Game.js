@@ -1155,7 +1155,7 @@ class Game {
                 <h3>Выберите карту:</h3>
                 <div class="reward-cards">
                     ${this.offeredCards.map((card, index) => `
-                        <div class="reward-card reward-reveal card-rarity-${CardArt.rarity(card).key}" style="--reveal-order: ${index}" role="button" tabindex="0" aria-label="Посмотреть карту: ${card.name}" onclick="game.showCardModalFromReward(${index})" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();game.showCardModalFromReward(${index})}">
+                        <div class="reward-card reward-reveal card-rarity-${CardArt.rarity(card).key}" style="--reveal-order: ${index}" role="group" tabindex="0" aria-label="Посмотреть карту: ${card.name}" onclick="game.showCardModalFromReward(${index})" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();game.showCardModalFromReward(${index})}">
                             <div class="reward-card-art">${CardArt.markup(card, 'reward-art-image')}</div>
                             <div class="reward-card-name">${card.name}</div>
                             <div class="reward-card-rarity"><span aria-hidden="true">${CardArt.rarity(card).sigil}</span> ${CardArt.rarity(card).label}</div>
