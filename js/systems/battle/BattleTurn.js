@@ -170,7 +170,9 @@ class BattleTurn {
         if (battle.statusEffects.player.vulnerable > 0) damage = Math.floor(damage * 1.5);
         if (battle.statusEffects.enemy.weak > 0) damage = Math.floor(damage * 0.75);
         if (battle.hasPower('invulnerability')) damage = Math.max(0, damage - 2);
-        
+        // Negative attack values must never heal a construction or increase block.
+        damage = Math.max(0, Math.floor(Number(damage) || 0));
+
         // Пси-отражение
         if (battle.hasPower('psyReflection') && damage > 0) {
             battle.enemy.hp -= 3;
