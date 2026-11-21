@@ -165,3 +165,25 @@ test('journal, reward, card detail and pile dialogs preserve keyboard focus', ()
     assert.ok(game.includes('role="group" tabindex="0" aria-label="Посмотреть карту:'));
     assert.ok(game.includes("modal?.__gameModalCleanup?.(false)"));
 });
+
+
+test('merchant, campfire and result screens use managed accessible dialogs', () => {
+    const game = fs.readFileSync(path.join(root, 'js/systems/Game.js'), 'utf8');
+    assert.ok(game.includes("label: 'Магазин странствующего торговца', returnFocus"));
+    assert.ok(game.includes("initialFocus: leave"));
+    assert.ok(game.includes("label: 'Привал у костра', returnFocus"));
+    assert.ok(game.includes("initialFocus: healButton.disabled ?"));
+    assert.ok(game.includes("label: victory ? 'Итоги победы' : 'Итоги поражения', returnFocus"));
+    assert.ok(game.includes("label: isVictory ? 'Победа в забеге' : 'Новая глава', returnFocus"));
+    assert.ok(game.includes("const gameModalAccessibilityStack = []"));
+    assert.ok(game.includes("gameModalAccessibilityStack[gameModalAccessibilityStack.length - 1] !== entry"));
+});
+
+test('building, scry and battle card detail dialogs manage keyboard focus', () => {
+    const battleUI = fs.readFileSync(path.join(root, 'js/ui/BattleUI.js'), 'utf8');
+    assert.ok(battleUI.includes("label: `${building.name}: управление постройкой`, returnFocus"));
+    assert.ok(battleUI.includes("label: 'Предвидение', returnFocus"));
+    assert.ok(battleUI.includes("label: `Карта ${card.name}`, returnFocus"));
+    assert.ok(battleUI.includes("onEscape: () => closeButton?.click()"));
+    assert.ok(battleUI.includes("modal.__gameModalCleanup?.(false)"));
+});
