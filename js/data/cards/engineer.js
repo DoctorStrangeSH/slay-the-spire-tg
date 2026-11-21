@@ -85,7 +85,7 @@ const ENGINEER_CARDS = {
         type: CARD_TYPES.ATTACK,
         rarity: CARD_RARITY.UNCOMMON,
         cost: 1,
-        description: 'Уничтожьте Конструкцию. Нанесите урон = её HP (макс 15)',
+        description: 'Уничтожает Конструкцию с наибольшим HP. Наносит урон = её HP (макс. 15)',
         emoji: '💥'
     },
     
