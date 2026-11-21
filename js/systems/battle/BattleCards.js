@@ -404,7 +404,7 @@ class BattleCards {
             }
         }
         if (card.id === 'evacuation' && buildings?.buildings.length > 0 &&
-            battle.hand.length < GAME_CONFIG.maxHandSize) {
+            battle.hand.length <= GAME_CONFIG.maxHandSize) {
             const target = mostDamaged();
             const index = buildings.buildings.indexOf(target);
             if (index !== -1) {
