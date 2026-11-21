@@ -45,7 +45,7 @@ test('after-play effects do not run after a card defeats the enemy', () => {
 
 
 const battleCardsSource = readFileSync(join(__dirname, '../js/systems/battle/BattleCards.js'), 'utf8');
-const BattleCards = vm.runInNewContext(battleCardsSource + '\\nBattleCards;', {
+const BattleCards = vm.runInNewContext(battleCardsSource + '\nBattleCards;', {
     CARD_TYPES: { ATTACK: 'attack', SKILL: 'skill', POWER: 'power' }
 });
 
