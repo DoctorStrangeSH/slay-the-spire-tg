@@ -40,8 +40,13 @@ class BattleSystem extends BattleCore {
         this.scryedThisTurn = false;
         
         this.effects.applyStartTurnEffects(this);
-        // Start-of-turn relics can be lethal. Do not let a dead hero draw,
-        // trigger buildings, or receive an enemy intent for a turn they cannot take.
+        // Start-of-turn self-damage must use the same one-shot survival relics
+        // as damage received during the enemy phase.
+        if (this.player.hp <= 0) {
+            this.turnManager?.resolvePlayerDefeat(this);
+        }
+        // Do not let a truly defeated hero draw, trigger buildings, or receive
+        // an enemy intent for a turn they cannot take.
         if (this.player.hp <= 0) {
             this.battleEnded = true;
             this.enemyIntent = null;
