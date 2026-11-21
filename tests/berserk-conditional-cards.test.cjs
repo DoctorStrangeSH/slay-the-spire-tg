@@ -1,0 +1,128 @@
+// Runtime regression coverage for Berserker conditional card text.
+const test = require('node:test');
+const assert = require('node:assert/strict');
+const { readFileSync } = require('node:fs');
+const { join } = require('node:path');
+const vm = require('node:vm');
+
+const root = join(__dirname, '..');
+const source = [
+    'js/config/constants.js',
+    'js/data/cards/common.js',
+    'js/data/cards/berserk.js',
+    'js/systems/battle/BattleCore.js',
+    'js/systems/battle/BattleEffects.js',
+    'js/systems/battle/BattleCards.js',
+    'js/systems/battle/BattleTurn.js',
+    'js/systems/BattleSystem.js'
+].map(file => readFileSync(join(root, file), 'utf8')).join('\n');
+
+function api() {
+    const math = Object.create(Math);
+    math.random = () => 0.99;
+    return vm.runInNewContext(source + '\n({ BattleSystem, BERSERK_CARDS })', { Math: math });
+}
+
+function battle({ hp = 50, maxHp = 100, enemyHp = 100, enemyMaxHp = 100, bleed = 0, strength = 0 } = {}) {
+    const { BattleSystem } = api();
+    const instance = new BattleSystem(
+        { heroId: 'berserk', hp, maxHp, deck: [], relics: [] },
+        { id: 'dummy', name: 'Манекен', hp: enemyHp, maxHp: enemyMaxHp,
+            damage: 0, pattern: ['defend'], patternIndex: 0 }
+    );
+    instance.statusEffects.enemy.bleed = bleed;
+    instance.statusEffects.player.strength = strength;
+    instance.energy = 10;
+    return instance;
+}
+
+function play(instance, cardId) {
+    const { BERSERK_CARDS } = api();
+    instance.hand = [{ ...BERSERK_CARDS[cardId] }];
+    instance.energy = 10;
+    return instance.playCard(0);
+}
+
+test('Retaliation Strike doubles damage only below half health', () => {
+    const wounded = battle({ hp: 49 });
+    play(wounded, 'retaliationStrike');
+    assert.equal(wounded.enemy.hp, 88);
+
+    const healthy = battle({ hp: 50 });
+    play(healthy, 'retaliationStrike');
+    assert.equal(healthy.enemy.hp, 94);
+});
+
+test('Cut Wound and Mercy Strike use the current bleed threshold', () => {
+    const cut = battle({ bleed: 1 });
+    play(cut, 'cutWound');
+    assert.equal(cut.enemy.hp, 92);
+
+    const mercy = battle({ bleed: 10 });
+    play(mercy, 'mercyStrike');
+    assert.equal(mercy.enemy.hp, 86);
+
+    const below = battle({ bleed: 9 });
+    play(below, 'mercyStrike');
+    assert.equal(below.enemy.hp, 96);
+});
+
+test('Execution uses the strict below-30-percent enemy health threshold', () => {
+    const below = battle({ enemyHp: 29, enemyMaxHp: 100 });
+    play(below, 'execution');
+    assert.equal(below.enemy.hp, 0);
+
+    const boundary = battle({ enemyHp: 30, enemyMaxHp: 100 });
+    play(boundary, 'execution');
+    assert.equal(boundary.enemy.hp, 20);
+});
+
+test('Beheading heals eight HP only when its attack kills the enemy', () => {
+    const lethal = battle({ hp: 20, enemyHp: 18 });
+    play(lethal, 'beheading');
+    assert.equal(lethal.player.hp, 28);
+
+    const nonlethal = battle({ hp: 20, enemyHp: 19 });
+    play(nonlethal, 'beheading');
+    assert.equal(nonlethal.player.hp, 20);
+});
+
+test('Berserker block skills apply their documented low-health bonuses', () => {
+    const stance = battle({ hp: 49 });
+    play(stance, 'berserkStance');
+    assert.equal(stance.block, 20);
+
+    const fortification = battle({ hp: 49 });
+    play(fortification, 'spiritFortification');
+    assert.equal(fortification.block, 14);
+
+    const lastStand = battle({ hp: 24 });
+    play(lastStand, 'lastStand');
+    assert.equal(lastStand.block, 30);
+
+    const lastStandBoundary = battle({ hp: 25 });
+    play(lastStandBoundary, 'lastStand');
+    assert.equal(lastStandBoundary.block, 15);
+
+    const finalBattle = battle({ hp: 19 });
+    play(finalBattle, 'finalBattle');
+    assert.equal(finalBattle.block, 35);
+});
+
+test('Fresh Wound doubles bleed below half health', () => {
+    const wounded = battle({ hp: 49 });
+    play(wounded, 'freshWound');
+    assert.equal(wounded.statusEffects.enemy.bleed, 8);
+
+    const healthy = battle({ hp: 50 });
+    play(healthy, 'freshWound');
+    assert.equal(healthy.statusEffects.enemy.bleed, 4);
+});
+
+test('Blood Sacrifice doubles existing strength after its self-damage', () => {
+    const instance = battle({ hp: 30, strength: 3 });
+    play(instance, 'bloodSacrifice');
+    assert.equal(instance.player.hp, 25);
+    assert.equal(instance.statusEffects.player.strength, 6);
+    assert.equal(instance.exhaustPile.length, 1);
+});
