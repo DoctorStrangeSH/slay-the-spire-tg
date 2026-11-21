@@ -142,6 +142,10 @@ const BattleUI = {
     },
     
     showBuildingOptions(game, battle, building) {
+        const previous = document.getElementById('building-modal');
+        previous?.__gameModalCleanup?.(false);
+        previous?.remove();
+        const returnFocus = document.activeElement;
         const modal = document.createElement('div');
         modal.className = 'modal';
         modal.id = 'building-modal';
@@ -154,10 +158,20 @@ const BattleUI = {
                 ${building.block > 0 ? `<p>🛡️ Блок: ${building.block}</p>` : ''}
                 ${building.upgraded ? '<p>⭐ Улучшена</p>' : ''}
                 <button onclick="game.demolishBuilding(${building.id})">🗑️ Снести</button>
-                <button onclick="document.getElementById('building-modal').remove()">Закрыть</button>
+                <button type="button" data-building-close>Закрыть</button>
             </div>
         `;
         
+        modal.setAttribute('role', 'dialog');
+        modal.setAttribute('aria-modal', 'true');
+        modal.setAttribute('aria-label', `${building.name}: управление постройкой`);
+        const accessibility = bindGameModalAccessibility(modal, {
+            label: `${building.name}: управление постройкой`, returnFocus,
+            onEscape: () => { accessibility.cleanup(); modal.remove(); }
+        });
+        modal.querySelector('[data-building-close]')?.addEventListener('click', () => {
+            accessibility.cleanup(); modal.remove();
+        });
         document.body.appendChild(modal);
     },
     
@@ -331,8 +345,10 @@ const BattleUI = {
         return cardDiv;
     },
     
-    showCardDetails(card, rarity, returnFocus) {
-        document.getElementById('card-details-modal')?.remove();
+    showCardDetails(card, rarity, returnFocus = document.activeElement) {
+        const previous = document.getElementById('card-details-modal');
+        previous?.__gameModalCleanup?.(false);
+        previous?.remove();
         const overlay = document.createElement('div');
         overlay.id = 'card-details-modal';
         overlay.className = 'modal card-details-overlay';
@@ -357,19 +373,17 @@ const BattleUI = {
         closeButton.type = 'button';
         closeButton.className = 'card-details-close';
         closeButton.textContent = 'Закрыть';
-        const close = () => {
-            document.removeEventListener('keydown', onKeyDown);
-            overlay.remove();
-            if (returnFocus?.isConnected) returnFocus.focus({ preventScroll: true });
-        };
-        const onKeyDown = event => { if (event.key === 'Escape') close(); };
+        const accessibility = bindGameModalAccessibility(overlay, {
+            label: `Карта ${card.name}`, returnFocus,
+            onEscape: () => closeButton.click(), initialFocus: closeButton
+        });
+        const close = () => { accessibility.cleanup(); overlay.remove(); };
         closeButton.onclick = close;
         overlay.onclick = event => { if (event.target === overlay) close(); };
         panel.append(heading, meta, artwork, description, closeButton);
         overlay.appendChild(panel);
         document.body.appendChild(overlay);
-        document.addEventListener('keydown', onKeyDown);
-        closeButton.focus();
+        closeButton.focus?.();
     },
 
     updatePreview(game, battle) {
@@ -453,6 +467,10 @@ const BattleUI = {
     
     // Показать модальное окно с просмотром карт (Scry)
     showScryModal(game, cards, allowDiscard = false) {
+        const previous = document.getElementById('scry-modal');
+        previous?.__gameModalCleanup?.(false);
+        previous?.remove();
+        const returnFocus = document.activeElement;
         const modal = document.createElement('div');
         modal.className = 'modal';
         modal.id = 'scry-modal';
@@ -480,13 +498,24 @@ const BattleUI = {
         modal.querySelectorAll('[data-scry-discard-index]').forEach(button => {
             button.addEventListener('click', () => {
                 const index = Number(button.getAttribute('data-scry-discard-index'));
-                if (game.discardScryedCard(index)) modal.remove();
+                if (game.discardScryedCard(index)) {
+                    modal.__gameModalCleanup?.(false);
+                    modal.remove();
+                }
             });
         });
 
+        modal.setAttribute('role', 'dialog');
+        modal.setAttribute('aria-modal', 'true');
+        modal.setAttribute('aria-label', 'Предвидение');
         const closeButton = modal.querySelector('[data-scry-close]');
+        const accessibility = bindGameModalAccessibility(modal, {
+            label: 'Предвидение', returnFocus,
+            onEscape: () => closeButton?.click(), initialFocus: closeButton
+        });
         closeButton?.addEventListener('click', () => {
             game.closeScryModal?.();
+            accessibility.cleanup();
             modal.remove();
         });
     }
