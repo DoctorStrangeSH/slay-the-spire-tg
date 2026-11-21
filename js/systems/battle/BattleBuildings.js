@@ -128,9 +128,14 @@ class BattleBuildings {
     
     // Срабатывание статусов на конструкциях в конце хода
     triggerStatusEffects(battle) {
+        // A destroyed enemy ends the battle immediately; later structure ticks
+        // must not mutate a terminal encounter or trigger additional overloads.
+        if (battle.enemy.hp <= 0) return;
+
         // Iterate backwards: removing a destroyed building must not skip the next
         // building when multiple structures expire during the same end-of-turn tick.
         for (let index = this.buildings.length - 1; index >= 0; index--) {
+            if (battle.enemy.hp <= 0) return;
             const building = this.buildings[index];
 
             if (building.statusEffects.poison > 0) {
@@ -143,6 +148,7 @@ class BattleBuildings {
                         battle.enemy.hp -= 3;
                         battle.enemy.hp = Math.max(0, battle.enemy.hp);
                     }
+                    if (battle.enemy.hp <= 0) return;
                     continue;
                 }
             }
@@ -157,6 +163,7 @@ class BattleBuildings {
                         battle.enemy.hp -= 3;
                         battle.enemy.hp = Math.max(0, battle.enemy.hp);
                     }
+                    if (battle.enemy.hp <= 0) return;
                 }
             }
         }
@@ -168,20 +175,26 @@ class BattleBuildings {
         
         // Сначала статусы на конструкциях
         this.triggerStatusEffects(battle);
-        
-        this.buildings.forEach(building => {
-            if (building.cardId === 'nexus') return;
-            
+        if (battle.enemy.hp <= 0) return;
+
+        for (const building of this.buildings) {
+            if (battle.enemy.hp <= 0) break;
+            if (building.cardId === 'nexus') continue;
+
             let triggers = 1;
             if (battle.hasPower('engineeringNetwork')) triggers += 1;
             if (doubleTrigger) triggers += 1;
             if (hasNexus) triggers += 1;
-            
+
             for (let i = 0; i < triggers; i++) {
                 this.triggerBuildingEnd(battle, building);
+                if (battle.enemy.hp <= 0) break;
             }
-        });
-        
+        }
+
+        // A lethal building trigger must not create drones after the encounter ends.
+        if (battle.enemy.hp <= 0) return;
+
         // Фабрика дронов
         const droneFactory = this.buildings.find(b => b.cardId === 'droneFactory');
         if (droneFactory && this.hasFreeSlots()) {
