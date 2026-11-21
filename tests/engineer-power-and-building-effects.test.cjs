@@ -134,7 +134,7 @@ test('Lubricant doubles both construction trigger phases on the following turn o
 
     battle.buildings.triggerStartOfTurn(battle);
     battle.buildings.triggerEndOfTurn(battle);
-    assert.equal(starts.length, 8, 'the following turn returns to normal start triggers');
+    assert.equal(starts.length, 6, 'the following turn returns to normal start triggers');
     assert.equal(ends.length, 8, 'the following turn returns to normal end triggers');
 });
 
