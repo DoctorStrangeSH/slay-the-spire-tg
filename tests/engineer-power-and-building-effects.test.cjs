@@ -67,6 +67,21 @@ test('Overproduction draws exactly one card when a construction is placed', () =
     assert.equal(battle.hand[0].id, 'test_draw');
 });
 
+test('Overproduction draws into the slot freed by the played construction at full hand', () => {
+    const { api, battle } = setup();
+    battle.player.relics.push('overproduction');
+    battle.hand = [
+        { ...api.ENGINEER_CARDS.smallTurret },
+        ...Array.from({ length: 9 }, (_, index) => ({ id: 'held_' + index, type: api.CARD_TYPES.SKILL, cost: 0 }))
+    ];
+    battle.drawPile = [{ id: 'overproduction_draw', type: api.CARD_TYPES.SKILL, cost: 0 }];
+
+    assert.equal(battle.playCard(0).success, true);
+    assert.equal(battle.hand.length, 10);
+    assert.ok(battle.hand.some(card => card.id === 'overproduction_draw'));
+    assert.equal(battle.buildings.getBuildingCount(), 1);
+});
+
 test('Modular Construction grants 2 passive block to all constructions without healing them', () => {
     const { api, battle } = setup();
     battle.player.relics.push('modularConstruction');
