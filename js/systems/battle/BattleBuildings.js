@@ -211,8 +211,12 @@ class BattleBuildings {
         }
         const lubricantActive = Boolean(battle.engineerLubricantActiveThisTurn);
         const hasNexus = this.buildings.some(b => b.cardId === 'nexus');
-        const automationTarget = battle.hasPower('automation') && this.buildings.length > 0
-            ? this.buildings[Math.floor(Math.random() * this.buildings.length)]
+        // Nexus is a passive multiplier, not a triggerable construction.
+        // Exclude it from Automation's random target pool so the bonus trigger
+        // can never be silently wasted on a structure that is skipped below.
+        const automationCandidates = this.buildings.filter(building => building.cardId !== 'nexus');
+        const automationTarget = battle.hasPower('automation') && automationCandidates.length > 0
+            ? automationCandidates[Math.floor(Math.random() * automationCandidates.length)]
             : null;
         
         this.buildings.forEach(building => {
