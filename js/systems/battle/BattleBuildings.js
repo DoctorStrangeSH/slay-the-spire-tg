@@ -181,7 +181,8 @@ class BattleBuildings {
         this.triggerStatusEffects(battle);
         if (battle.enemy.hp <= 0) return;
 
-        for (const building of this.buildings) {
+        // Snapshot prevents newly summoned drones from triggering immediately.
+        for (const building of [...this.buildings]) {
             if (battle.enemy.hp <= 0) break;
             if (building.cardId === 'nexus') continue;
 
@@ -199,18 +200,6 @@ class BattleBuildings {
 
         // A lethal building trigger must not create drones after the encounter ends.
         if (battle.enemy.hp <= 0) return;
-
-        // Фабрика дронов
-        const droneFactory = this.buildings.find(b => b.cardId === 'droneFactory');
-        if (droneFactory && this.hasFreeSlots()) {
-            this.placeBuilding(battle, {
-                id: 'drone',
-                name: 'Дрон',
-                emoji: '🛸',
-                hp: 3,
-                damage: 2
-            });
-        }
 
         if (lubricantActive) battle.engineerLubricantActiveThisTurn = false;
     }
@@ -240,18 +229,6 @@ class BattleBuildings {
                 this.triggerBuildingStart(battle, building);
             }
         });
-        
-        const energyCore = this.buildings.find(b => b.cardId === 'energyCore');
-        if (energyCore) {
-            battle.energy += this.buildings.length;
-        }
-        
-        const workshop = this.buildings.find(b => b.cardId === 'workshop');
-        if (workshop && battle.hand.length < GAME_CONFIG.maxHandSize && Math.random() < 0.5) {
-            const buildingCards = Object.values(ENGINEER_CARDS).filter(c => c.type === CARD_TYPES.BUILDING);
-            const randomBuilding = buildingCards[Math.floor(Math.random() * buildingCards.length)];
-            if (randomBuilding) battle.hand.push({ ...randomBuilding });
-        }
         
         if (battle.hasPower('weaponsFactory') && battle.hand.length < GAME_CONFIG.maxHandSize) {
             battle.hand.push({ ...ENGINEER_CARDS.smallTurret });
@@ -291,7 +268,18 @@ class BattleBuildings {
         if (building.weak > 0) {
             battle.statusEffects.enemy.weak = (battle.statusEffects.enemy.weak || 0) + building.weak;
         }
-        
+
+        // Drone Factory is a normal end-of-turn trigger and therefore respects
+        // Engineering Network, Total Automation, Nexus and Lubricant.
+        if (battle.enemy.hp > 0 && building.cardId === 'droneFactory' && this.hasFreeSlots()) {
+            this.placeBuilding(battle, {
+                id: 'drone',
+                name: 'Дрон',
+                emoji: '🛸',
+                hp: 3,
+                damage: 2
+            });
+        }
     }
     
     triggerBuildingStart(battle, building) {
@@ -309,6 +297,18 @@ class BattleBuildings {
         
         if (building.energy > 0) {
             battle.energy += building.energy;
+        }
+
+        // Special buildings resolve inside their trigger so every multiplier
+        // applies consistently to them as well.
+        if (building.cardId === 'energyCore') {
+            battle.energy += this.buildings.length;
+        }
+        if (building.cardId === 'workshop' &&
+            battle.hand.length < GAME_CONFIG.maxHandSize && Math.random() < 0.5) {
+            const buildingCards = Object.values(ENGINEER_CARDS).filter(c => c.type === CARD_TYPES.BUILDING);
+            const randomBuilding = buildingCards[Math.floor(Math.random() * buildingCards.length)];
+            if (randomBuilding) battle.hand.push({ ...randomBuilding });
         }
     }
     
