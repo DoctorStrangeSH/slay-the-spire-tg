@@ -106,6 +106,62 @@ test('dark magic forecast shows real 30 percent risk and root grasp poison', () 
 });
 
 
+test('poison and bleed continue ticking when the enemy turn is skipped by paralysis', () => {
+    const state = battle({
+        enemy: { hp: 20 },
+        statusEffects: {
+            player: { poison: 0, vulnerable: 0, thorns: 0 },
+            enemy: { paralysis: 1, poison: 3, bleed: 2, weak: 0, strength: 0 }
+        }
+    });
+
+    const outcome = new BattleTurn().endTurn(state, effects);
+
+    assert.equal(outcome.battleEnded, false);
+    assert.equal(state.player.hp, 20, 'a paralyzed enemy does not attack');
+    assert.equal(state.enemy.hp, 15, 'both enemy damage-over-time effects still resolve');
+    assert.equal(state.statusEffects.enemy.paralysis, 0);
+    assert.equal(state.statusEffects.enemy.poison, 2);
+    assert.equal(state.statusEffects.enemy.bleed, 1);
+});
+
+test('damage over time can defeat a paralyzed enemy before the next player turn', () => {
+    const state = battle({
+        enemy: { hp: 2, damage: 99 },
+        statusEffects: {
+            player: { poison: 0, vulnerable: 0, thorns: 0 },
+            enemy: { paralysis: 1, poison: 2, bleed: 0, weak: 0, strength: 0 }
+        }
+    });
+
+    const outcome = new BattleTurn().endTurn(state, effects);
+
+    assert.equal(outcome.battleEnded, true);
+    assert.equal(outcome.victory, true);
+    assert.equal(state.enemy.hp, 0);
+    assert.equal(state.player.hp, 20, 'the defeated enemy never attacks');
+    assert.equal(state.started, undefined, 'a new player turn does not start after victory');
+});
+
+test('player poison still resolves when a paralyzed enemy skips its action', () => {
+    const state = battle({
+        player: { hp: 2 },
+        enemy: { hp: 20, damage: 99 },
+        statusEffects: {
+            player: { poison: 2, vulnerable: 0, thorns: 0 },
+            enemy: { paralysis: 1, poison: 0, bleed: 0, weak: 0, strength: 0 }
+        }
+    });
+
+    const outcome = new BattleTurn().endTurn(state, effects);
+
+    assert.equal(outcome.battleEnded, true);
+    assert.equal(outcome.victory, false);
+    assert.equal(state.player.hp, 0);
+    assert.equal(state.enemy.hp, 20, 'paralysis and player poison resolve independently');
+    assert.equal(state.started, undefined);
+});
+
 test('enemy poison deals damage and loses one stack at end of turn', () => {
     const state = battle({
         enemy: { hp: 20 },
