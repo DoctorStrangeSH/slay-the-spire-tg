@@ -158,6 +158,51 @@ test('Game does not show an enemy attack animation on an Absolute Control skip t
     assert.equal(bossAttackFeedback, 0);
 });
 
+test('Psyker conditional attacks use paralysis and scry state at the moment of play', () => {
+    const { PSYKER_CARDS } = api();
+
+    const telekinesis = createBattle();
+    telekinesis.statusEffects.enemy.paralysis = 1;
+    telekinesis.hand = [{ ...PSYKER_CARDS.telekinesis }];
+    telekinesis.energy = 3;
+    telekinesis.playCard(0);
+    assert.equal(telekinesis.enemy.hp, 88);
+
+    const mindStrike = createBattle();
+    mindStrike.scryedThisTurn = true;
+    mindStrike.hand = [{ ...PSYKER_CARDS.mindStrike }];
+    mindStrike.energy = 3;
+    mindStrike.playCard(0);
+    assert.equal(mindStrike.enemy.hp, 91);
+
+    const telepathicStrike = createBattle();
+    telepathicStrike.statusEffects.enemy.paralysis = 1;
+    telepathicStrike.hand = [{ ...PSYKER_CARDS.telepathicStrike }];
+    telepathicStrike.energy = 3;
+    telepathicStrike.playCard(0);
+    assert.equal(telepathicStrike.enemy.hp, 82);
+
+    const mentalBomb = createBattle();
+    mentalBomb.statusEffects.enemy.paralysis = 2;
+    mentalBomb.hand = [{ ...PSYKER_CARDS.mentalBomb }];
+    mentalBomb.energy = 3;
+    mentalBomb.playCard(0);
+    assert.equal(mentalBomb.enemy.hp, 80);
+});
+
+test('Psy Aura ignores exactly two points of enemy block', () => {
+    const { PSYKER_CARDS } = api();
+    const battle = createBattle(['psyAura']);
+    battle.enemyBlock = 5;
+    battle.hand = [{ ...PSYKER_CARDS.psyStrike }];
+    battle.energy = 3;
+
+    battle.playCard(0);
+
+    assert.equal(battle.enemy.hp, 99);
+    assert.equal(battle.enemyBlock, 2);
+});
+
 test('Mental Blockade applies paralysis only on its 50 percent roll', () => {
     const triggered = createBattle(['mentalBlockade'], 20, [], 0.1);
     triggered.enemyIntent = 'defend';
