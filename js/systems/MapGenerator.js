@@ -14,6 +14,8 @@ class MapGenerator {
         this.random = createMapRandom(this.seed);
         this.floors = 16;
 
+        // Квоты используются только старым quota-layout для совместимости с legacy-сохранениями.
+        // Активный organic-layout задаёт стратегические комнаты через buildStrategicFloors().
         this.quotas = {
             shops: 3,
             elites: 5,
