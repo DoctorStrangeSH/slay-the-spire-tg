@@ -2,9 +2,9 @@
 // и возвращает его к открывшему элементу после закрытия.
 function bindGameModalAccessibility(modal, options = {}) {
     const returnFocus = options.returnFocus || document.activeElement;
-    const focusable = () => [...modal.querySelectorAll(
+    const focusable = () => [...(modal.querySelectorAll?.(
         'button:not([disabled]), a[href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
-    )].filter(element => !element.hidden && element.getAttribute('aria-hidden') !== 'true');
+    ) || [])].filter(element => !element.hidden && element.getAttribute?.('aria-hidden') !== 'true');
     const onKeyDown = event => {
         if (event.key === 'Escape' && typeof options.onEscape === 'function') {
             event.preventDefault();
@@ -20,17 +20,17 @@ function bindGameModalAccessibility(modal, options = {}) {
         }
         const first = items[0];
         const last = items[items.length - 1];
-        if (event.shiftKey && (document.activeElement === first || !modal.contains(document.activeElement))) {
+        if (event.shiftKey && (document.activeElement === first || !modal.contains?.(document.activeElement))) {
             event.preventDefault();
             last.focus();
-        } else if (!event.shiftKey && (document.activeElement === last || !modal.contains(document.activeElement))) {
+        } else if (!event.shiftKey && (document.activeElement === last || !modal.contains?.(document.activeElement))) {
             event.preventDefault();
             first.focus();
         }
     };
-    modal.setAttribute('role', 'dialog');
-    modal.setAttribute('aria-modal', 'true');
-    if (options.label) modal.setAttribute('aria-label', options.label);
+    modal.setAttribute?.('role', 'dialog');
+    modal.setAttribute?.('aria-modal', 'true');
+    if (options.label) modal.setAttribute?.('aria-label', options.label);
     document.addEventListener('keydown', onKeyDown);
     const cleanup = (restoreFocus = true) => {
         document.removeEventListener('keydown', onKeyDown);
