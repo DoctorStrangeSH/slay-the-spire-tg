@@ -317,9 +317,6 @@ class BattleCards {
         } else if (card.id === 'massOverload' && buildingCount > 0) {
             const destroyed = battle.buildings.demolishAll(battle);
             baseDamage = destroyed * 6;
-            if (battle.hasPower('systemOverload')) {
-                battle.enemy.hp = Math.max(0, battle.enemy.hp - destroyed * 3);
-            }
         }
 
         // Destroyer strips the enemy's entire block before dealing its hit.
