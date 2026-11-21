@@ -97,3 +97,43 @@ test('Vampirism heals at most three times per turn and only for unblocked HP dam
     assert.equal(battle.player.hp, 10, 'fully blocked damage does not trigger healing');
     assert.equal(battle.vampirismTriggersThisTurn, 0);
 });
+
+
+test('Automation never wastes its bonus trigger on the passive Nexus', () => {
+    const battle = createBattle(['automation']);
+    const { ENGINEER_CARDS } = api();
+    battle.buildings.placeBuilding(battle, ENGINEER_CARDS.generator);
+    battle.buildings.placeBuilding(battle, ENGINEER_CARDS.nexus);
+    const triggered = [];
+    battle.buildings.triggerBuildingStart = (_battle, building) => triggered.push(building.cardId);
+
+    // With both structures in the pool, this seed previously selected Nexus.
+    // Nexus is passive and skipped, so the old implementation lost the bonus.
+    battle.buildings.triggerStartOfTurn(battle);
+
+    assert.deepEqual(Array.from(triggered), ['generator', 'generator']);
+});
+
+test('Engineer start and end trigger multipliers stack only in their intended phases', () => {
+    const battle = createBattle([
+        'engineeringNetwork', 'totalAutomation', 'automation'
+    ]);
+    const { ENGINEER_CARDS } = api();
+    battle.buildings.placeBuilding(battle, ENGINEER_CARDS.generator);
+    battle.buildings.placeBuilding(battle, ENGINEER_CARDS.nexus);
+    battle.engineerLubricantActiveThisTurn = true;
+
+    const starts = [];
+    const ends = [];
+    battle.buildings.triggerBuildingStart = (_battle, building) => starts.push(building.cardId);
+    battle.buildings.triggerBuildingEnd = (_battle, building) => ends.push(building.cardId);
+
+    battle.buildings.triggerStartOfTurn(battle);
+    battle.buildings.triggerEndOfTurn(battle);
+
+    assert.equal(starts.length, 5, 'base + Network + Total Automation + Nexus + Automation + Lubricant');
+    assert.deepEqual(Array.from(starts), Array(5).fill('generator'));
+    assert.equal(ends.length, 3, 'base + Engineering Network + Lubricant; start-only powers do not apply');
+    assert.deepEqual(Array.from(ends), Array(3).fill('generator'));
+    assert.equal(battle.engineerLubricantActiveThisTurn, false);
+});
