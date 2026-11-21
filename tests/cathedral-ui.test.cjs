@@ -114,6 +114,7 @@ test('target mobile viewport profiles keep battle controls touch-accessible', ()
 
 test('mobile event and reward dialogs respect safe viewport and touch targets', () => {
     const mainMobile = css.slice(css.lastIndexOf('/* Mobile dialog ergonomics:'));
+    const baseCss = fs.readFileSync(path.join(root, 'css/style.css'), 'utf8');
     assert.match(mainMobile, /\.cathedral-event-modal,[\s\S]*?#reward-modal\s*\{[^}]*env\(safe-area-inset-top\)[^}]*env\(safe-area-inset-bottom\)/);
     assert.match(mainMobile, /\.cathedral-event-modal \.cathedral-event-content\s*\{[^}]*box-sizing:\s*border-box/);
     assert.match(mainMobile, /\.cathedral-event-modal \.cathedral-event-content\s*\{[^}]*max-height:\s*calc\(var\(--game-viewport-height/);
