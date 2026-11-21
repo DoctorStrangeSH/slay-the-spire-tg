@@ -18,14 +18,14 @@ const source = [
     'js/systems/BattleSystem.js'
 ].map(file => readFileSync(join(root, file), 'utf8')).join('\n');
 
-function createApi() {
+function createApi(random = 0.99) {
     const math = Object.create(Math);
-    math.random = () => 0.99;
+    math.random = random;
     return vm.runInNewContext(source + '\n({ BattleSystem, ENGINEER_CARDS, CARD_TYPES })', { Math: math });
 }
 
-function setup() {
-    const api = createApi();
+function setup(random = 0.99) {
+    const api = createApi(random);
     const battle = new api.BattleSystem(
         { heroId: 'engineer', hp: 30, maxHp: 40, deck: [], relics: [] },
         { id: 'dummy', name: 'Манекен', hp: 100, maxHp: 100, damage: 0,
@@ -136,6 +136,40 @@ test('Lubricant doubles both construction trigger phases on the following turn o
     battle.buildings.triggerEndOfTurn(battle);
     assert.equal(starts.length, 6, 'the following turn returns to normal start triggers');
     assert.equal(ends.length, 8, 'the following turn returns to normal end triggers');
+});
+
+test('Engineering Network doubles Energy Core energy generation', () => {
+    const { api, battle } = setup();
+    battle.player.relics.push('engineeringNetwork');
+    addBuilding(api, battle, 'energyCore');
+    addBuilding(api, battle, 'barrier');
+    const before = battle.energy;
+
+    battle.buildings.triggerStartOfTurn(battle);
+
+    assert.equal(battle.energy, before + 4, 'two structures × two Energy Core triggers');
+});
+
+test('Engineering Network doubles Workshop generation while respecting hand capacity', () => {
+    const { api, battle } = setup(() => 0.1);
+    battle.player.relics.push('engineeringNetwork');
+    addBuilding(api, battle, 'workshop');
+
+    battle.buildings.triggerStartOfTurn(battle);
+
+    assert.equal(battle.hand.length, 2, 'Workshop resolves once per start trigger');
+    assert.ok(battle.hand.every(card => card.type === api.CARD_TYPES.BUILDING));
+});
+
+test('Engineering Network doubles Drone Factory summons without triggering new drones immediately', () => {
+    const { api, battle } = setup();
+    battle.player.relics.push('engineeringNetwork');
+    addBuilding(api, battle, 'droneFactory');
+
+    battle.buildings.triggerEndOfTurn(battle);
+
+    assert.equal(battle.buildings.getBuildingCount(), 3);
+    assert.equal(battle.buildings.buildings.filter(item => item.cardId === 'drone').length, 2);
 });
 
 test('Target Designator applies Vulnerability at the start of the turn, not at turn end', () => {
