@@ -193,7 +193,25 @@ class BattleCards {
         }
         
         if (card.block) {
-            preview.block = card.block + (battle.statusEffects.player.dexterity || 0);
+            let baseBlock = Number(card.block) || 0;
+            const blockUpgradeBonus = card.upgraded ? 3 : 0;
+
+            // Mirror the conditional block branches in applySkill() so the
+            // preview reflects the exact low-health threshold and upgrade.
+            if (card.id === 'berserkStance' && battle.isBerserkWounded()) {
+                baseBlock = 20 + blockUpgradeBonus;
+            }
+            if (card.id === 'spiritFortification' && battle.isBerserkWounded()) {
+                baseBlock = 14 + blockUpgradeBonus;
+            }
+            if (card.id === 'lastStand' && battle.player.hp < battle.player.maxHp * 0.25) {
+                baseBlock = 30 + blockUpgradeBonus;
+            }
+            if (card.id === 'finalBattle' && battle.player.hp < battle.player.maxHp * 0.20) {
+                baseBlock = 35 + blockUpgradeBonus;
+            }
+
+            preview.block = baseBlock + (battle.statusEffects.player.dexterity || 0);
             if (card.id === 'energyShield' && battle.buildings?.getBuildingCount?.() > 0) {
                 preview.block += 4;
             }
