@@ -73,7 +73,10 @@ test('Blueprints draws two cards and reduces all held construction costs by one'
     battle.energy = 10;
     assert.equal(battle.playCard(0).success, true);
     assert.equal(battle.hand.length, 3);
-    assert.ok(battle.hand.every(card => card.type !== api.CARD_TYPES.BUILDING || card.cost === 0));
+    const costs = Object.fromEntries(battle.hand.map(card => [card.id, card.cost]));
+    assert.equal(costs.smallTurret, 0);
+    assert.equal(costs.barrier, 0);
+    assert.equal(costs.generator, 1, 'the 2-cost Generator receives a one-energy discount');
 });
 
 test('Quick Assembly makes the construction it draws free', () => {
