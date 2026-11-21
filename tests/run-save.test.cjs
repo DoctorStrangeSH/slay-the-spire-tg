@@ -19,7 +19,7 @@ const source = [
     'js/systems/RunSave.js',
     'js/systems/Game.js'
 ].map(p => readFileSync(join(root, p), 'utf8')).join('\n');
-const context = vm.runInNewContext(source + '\n({ MapGenerator, RunSave, Game, GAME_CONFIG })', {
+const context = vm.runInNewContext(source + '\n({ MapGenerator, RunSave, Game, GAME_CONFIG, getCardsForHero })', {
     Math, Date, JSON, console
 });
 const { MapGenerator, RunSave, Game, getCardsForHero } = context;
