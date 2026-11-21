@@ -121,6 +121,23 @@ test('Fresh Wound doubles bleed below half health', () => {
     assert.equal(healthy.statusEffects.enemy.bleed, 4);
 });
 
+test('Mad Dash discounts attacks by one energy on the next turn only', () => {
+    const instance = battle();
+    play(instance, 'madDash');
+    assert.equal(instance.berserkAttackDiscountNextTurn, true);
+    assert.equal(instance.berserkAttackDiscountActive, false);
+
+    instance.startTurn();
+    assert.equal(instance.berserkAttackDiscountActive, true);
+    instance.hand = [{ id: 'test_attack', type: 'attack', cost: 2, damage: 1 }];
+    instance.energy = 1;
+    assert.equal(instance.playCard(0).success, true, 'the next-turn attack costs one less');
+
+    instance.startTurn();
+    assert.equal(instance.berserkAttackDiscountActive, false);
+    assert.equal(instance.berserkAttackDiscountNextTurn, false);
+});
+
 test('Blood Sacrifice doubles existing strength after its self-damage', () => {
     const instance = battle({ hp: 30, strength: 3 });
     play(instance, 'bloodSacrifice');
