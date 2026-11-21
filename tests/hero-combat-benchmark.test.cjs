@@ -856,53 +856,105 @@ function simulateRouteShop(api, player, seed, stats) {
     game.runSave = { save: () => true };
     const buy = (id, price, apply, rollback) =>
         api.Game.prototype.commitShopPurchase.call(game, visit, id, price, apply, rollback);
+    const candidates = [];
 
-    // Policy: recover dangerous HP loss first, then improve the strongest eligible
-    // card, buy the best affordable offer, and thin oversized decks.
-    if (player.gold >= 35 && player.hp <= player.maxHp * 0.70) {
-        const before = player.hp;
-        const amount = Math.max(1, Math.floor(player.maxHp * 0.2));
-        if (buy('heal', 35,
-            () => { player.hp = Math.min(player.maxHp, player.hp + amount); return player.hp > before; },
-            () => { player.hp = before; })) stats.shopHeals++;
+    const healPrice = 35;
+    const healAmount = Math.max(1, Math.floor(player.maxHp * 0.2));
+    const effectiveHeal = Math.min(healAmount, player.maxHp - player.hp);
+    const hpRatio = player.hp / Math.max(1, player.maxHp);
+    if (effectiveHeal > 0 && player.gold >= healPrice && hpRatio <= 0.65) {
+        const urgency = hpRatio <= 0.4 ? 1.55 : hpRatio <= 0.55 ? 1.3 : 1.05;
+        candidates.push({
+            id: 'heal', price: healPrice, utility: effectiveHeal * urgency,
+            run: () => {
+                const before = player.hp;
+                if (buy('heal', healPrice,
+                    () => { player.hp = Math.min(player.maxHp, player.hp + healAmount); return player.hp > before; },
+                    () => { player.hp = before; })) stats.shopHeals++;
+            }
+        });
     }
 
-    const eligible = player.deck.filter(card =>
-        api.Game.prototype.getCardUpgrade.call(game, card));
-    if (player.gold >= 75 && eligible.length) {
-        const target = [...eligible].sort((a, b) => scoreRouteCard(b) - scoreRouteCard(a))[0];
-        const before = { ...target };
-        if (buy('upgrade-card', 75,
-            () => api.Game.prototype.upgradeCard.call(game, target),
-            () => {
-                Object.keys(target).forEach(key => delete target[key]);
-                Object.assign(target, before);
-            })) stats.shopUpgrades++;
+    const eligible = player.deck.map(card => ({
+        card,
+        change: api.Game.prototype.getCardUpgrade.call(game, card)
+    })).filter(item => item.change);
+    const bestUpgrade = eligible.map(item => {
+        const upgraded = { ...item.card, [item.change.stat]: item.change.next, upgraded: true };
+        return { ...item, gain: scoreRouteCard(upgraded) - scoreRouteCard(item.card) };
+    }).sort((a, b) => b.gain - a.gain)[0];
+    const upgradePrice = 75;
+    if (bestUpgrade && bestUpgrade.gain >= 1.5 && player.gold >= upgradePrice) {
+        candidates.push({
+            id: 'upgrade-card', price: upgradePrice, utility: bestUpgrade.gain * 2.5,
+            run: () => {
+                const target = bestUpgrade.card;
+                const before = { ...target };
+                if (buy('upgrade-card', upgradePrice,
+                    () => api.Game.prototype.upgradeCard.call(game, target),
+                    () => {
+                        Object.keys(target).forEach(key => delete target[key]);
+                        Object.assign(target, before);
+                    })) stats.shopUpgrades++;
+            }
+        });
     }
 
     const offers = visit.offerCardIds.map(id => cards.find(card => card.id === id)).filter(Boolean);
-    const affordable = offers.filter(card =>
-        player.gold >= api.Game.prototype.getShopPrice.call(game, card));
-    if (affordable.length) {
-        const card = affordable.sort((a, b) => scoreRouteCard(b) - scoreRouteCard(a))[0];
-        const price = api.Game.prototype.getShopPrice.call(game, card);
-        const purchased = { ...card };
-        if (buy(`card:${card.id}`, price,
-            () => { player.deck.push(purchased); return true; },
-            () => {
-                const index = player.deck.indexOf(purchased);
-                if (index >= 0) player.deck.splice(index, 1);
-            })) stats.shopCards++;
+    const deckAverage = player.deck.length
+        ? player.deck.reduce((sum, card) => sum + scoreRouteCard(card), 0) / player.deck.length
+        : 0;
+    const cardPrice = card => api.Game.prototype.getShopPrice.call(game, card);
+    const bestCard = offers.map(card => ({
+        card,
+        price: cardPrice(card),
+        utility: scoreRouteCard(card) - deckAverage * 0.65 -
+            Math.max(0, player.deck.length - 8) * 2
+    })).filter(item => item.utility >= 4 && player.gold >= item.price)
+        .sort((a, b) => b.utility / b.price - a.utility / a.price)[0];
+    if (bestCard) {
+        candidates.push({
+            id: `card:${bestCard.card.id}`, price: bestCard.price, utility: bestCard.utility,
+            run: () => {
+                const purchased = { ...bestCard.card };
+                if (buy(`card:${bestCard.card.id}`, bestCard.price,
+                    () => { player.deck.push(purchased); return true; },
+                    () => {
+                        const index = player.deck.indexOf(purchased);
+                        if (index >= 0) player.deck.splice(index, 1);
+                    })) stats.shopCards++;
+            }
+        });
     }
 
-    if (player.gold >= 65 && player.deck.length > 8) {
+    if (player.gold >= 65 && player.deck.length > 8 && player.deck.length > 5) {
         const weakest = player.deck.reduce((best, card) =>
             scoreRouteCard(card) < scoreRouteCard(best) ? card : best, player.deck[0]);
-        const index = player.deck.indexOf(weakest);
-        const removed = player.deck[index];
-        if (buy('remove-card', 65,
-            () => player.deck.splice(index, 1).length === 1,
-            () => player.deck.splice(index, 0, removed))) stats.shopRemovals++;
+        const weakestScore = scoreRouteCard(weakest);
+        const removalUtility = Math.max(0, deckAverage - weakestScore) * 0.8 +
+            Math.max(0, player.deck.length - 8) * 2;
+        if (weakestScore <= deckAverage * 0.55 || player.deck.length >= 11) {
+            candidates.push({
+                id: 'remove-card', price: 65, utility: removalUtility,
+                run: () => {
+                    const index = player.deck.indexOf(weakest);
+                    if (index < 0) return;
+                    if (buy('remove-card', 65,
+                        () => player.deck.splice(index, 1).length === 1,
+                        () => player.deck.splice(index, 0, weakest))) stats.shopRemovals++;
+                }
+            });
+        }
+    }
+
+    // Spend on the strongest marginal improvement first; keep a small reserve
+    // once the run has enough gold to support future event choices.
+    candidates.sort((a, b) => b.utility / b.price - a.utility / a.price);
+    for (const candidate of candidates) {
+        const reserve = player.gold >= 100 && candidate.id !== 'heal' ? 20 : 0;
+        if (player.gold - candidate.price < reserve) continue;
+        if (candidate.utility / candidate.price < 0.1) continue;
+        candidate.run();
     }
 
     stats.shopGoldSpent += visit.purchased.reduce((sum, id) => {
@@ -910,7 +962,7 @@ function simulateRouteShop(api, player, seed, stats) {
         if (id === 'upgrade-card') return sum + 75;
         if (id === 'remove-card') return sum + 65;
         const card = cards.find(item => id === `card:${item.id}`);
-        return sum + (card ? api.Game.prototype.getShopPrice.call(game, card) : 0);
+        return sum + (card ? cardPrice(card) : 0);
     }, 0);
     stats.shopPurchases += visit.purchased.length;
     return visit;
@@ -1125,6 +1177,24 @@ function simulateRouteCampaign(heroId, seed, policy = 'heal-when-useful', routeP
         completed: report.length === 3 && report[2].bossWon
     };
 }
+
+test('shop policy prioritizes critical healing over low-value purchases', () => {
+    const api = createRouteApi(createRunRandom(2203));
+    const hero = api.HEROES.berserk;
+    const player = {
+        heroId: 'berserk', hp: 20, maxHp: hero.maxHp, gold: 35,
+        deck: api.getStarterDeckForHero('berserk').map(card => ({ ...card })),
+        relics: []
+    };
+    const stats = { shopHeals: 0, shopUpgrades: 0, shopCards: 0, shopRemovals: 0,
+        shopGoldSpent: 0, shopPurchases: 0 };
+    const visit = simulateRouteShop(api, player, 2203, stats);
+    assert.equal(stats.shopHeals, 1);
+    assert.equal(visit.purchased[0], 'heal');
+    assert.equal(stats.shopGoldSpent, 35);
+    assert.equal(player.gold, 0);
+    assert.ok(player.hp > 20);
+});
 
 test('event option evaluator executes real event actions and values healing at low HP', () => {
     const api = createRouteApi(createRunRandom(1907));
