@@ -8,6 +8,7 @@ const vm = require('node:vm');
 const root = join(__dirname, '..');
 const source = [
     'js/config/constants.js',
+    'js/data/cards/common.js',
     'js/data/cards/psyker.js',
     'js/systems/battle/BattleCore.js',
     'js/systems/battle/BattleEffects.js',
