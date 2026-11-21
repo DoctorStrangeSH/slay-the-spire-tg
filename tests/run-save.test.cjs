@@ -445,3 +445,87 @@ test('checkpoint rejects duplicate, future-floor and same-floor visited nodes', 
     }
     assert.equal(target.player, null);
 });
+
+
+function moveGameToRoom(original, roomType) {
+    const target = original.mapGenerator.allNodes.find(node => node.type === roomType);
+    assert.ok(target, 'seed must contain a ' + roomType + ' room');
+    const queue = [{ id: original.currentNodeId, path: [] }];
+    const seen = new Set([original.currentNodeId]);
+    let route = null;
+    while (queue.length && !route) {
+        const current = queue.shift();
+        if (current.id === target.id) { route = current.path; break; }
+        const node = original.mapGenerator.findNodeById(current.id);
+        for (const id of node.connections) {
+            if (seen.has(id)) continue;
+            seen.add(id);
+            queue.push({ id, path: [...current.path, id] });
+        }
+    }
+    assert.ok(route, roomType + ' room must be reachable');
+    for (const id of route) {
+        original.mapGenerator.visitNode(id);
+        original.currentNodeId = id;
+        original.floor = original.mapGenerator.findNodeById(id).floor;
+    }
+}
+
+test('pending event checkpoint restores only on its matching event room', () => {
+    const persistence = new RunSave(storage());
+    const original = game();
+    moveGameToRoom(original, 'event');
+    original.runId = 'event-resume-run';
+    original.player.pendingEvent = {
+        id: 'event-resume-run:1:' + (original.floor + 1) + ':испытание-памяти',
+        name: 'Испытание памяти',
+        rare: false,
+        nodeId: original.currentNodeId
+    };
+    assert.equal(persistence.save(original), true);
+
+    const restored = { player: null };
+    assert.equal(persistence.restore(restored), true);
+    assert.deepEqual(JSON.parse(JSON.stringify(restored.player.pendingEvent)),
+        JSON.parse(JSON.stringify(original.player.pendingEvent)));
+});
+
+test('checkpoint rejects malformed or mismatched pending event without mutating game', () => {
+    const memory = storage();
+    const persistence = new RunSave(memory);
+    const original = game();
+    moveGameToRoom(original, 'event');
+    original.player.pendingEvent = {
+        id: 'event-run:1:3:event',
+        name: 'Испытание памяти',
+        rare: false,
+        nodeId: original.currentNodeId
+    };
+    assert.equal(persistence.save(original), true);
+    const baseline = JSON.parse(memory.getItem(RunSave.KEY));
+    const target = { player: null, act: 77 };
+
+    const malformed = structuredClone(baseline);
+    malformed.player.pendingEvent.rare = 'no';
+    memory.setItem(RunSave.KEY, JSON.stringify(malformed));
+    assert.equal(persistence.restore(target), false);
+
+    const mismatchedRoom = structuredClone(baseline);
+    mismatchedRoom.player.pendingEvent.nodeId = 'another-room';
+    memory.setItem(RunSave.KEY, JSON.stringify(mismatchedRoom));
+    assert.equal(persistence.restore(target), false);
+
+    const noEventRoom = structuredClone(baseline);
+    const battle = original.mapGenerator.allNodes.find(node =>
+        node.type === 'battle' && node.floor > original.floor);
+    assert.ok(battle);
+    noEventRoom.currentNodeId = battle.id;
+    noEventRoom.floor = battle.floor;
+    noEventRoom.player.pendingEvent.nodeId = battle.id;
+    noEventRoom.map.visited.push(battle.id);
+    memory.setItem(RunSave.KEY, JSON.stringify(noEventRoom));
+    assert.equal(persistence.restore(target), false);
+
+    assert.equal(target.player, null);
+    assert.equal(target.act, 77);
+});
