@@ -445,7 +445,7 @@ const MapUI = {
             hitTarget.setAttribute('class', 'spire-room-hit-target');
             hitTarget.setAttribute('cx', cx);
             hitTarget.setAttribute('cy', cy);
-            hitTarget.setAttribute('r', Math.max(radius, 30));
+            hitTarget.setAttribute('r', Math.max(radius, 40));
             hitTarget.setAttribute('fill', 'transparent');
             hitTarget.setAttribute('pointer-events', 'all');
             group.appendChild(hitTarget);
