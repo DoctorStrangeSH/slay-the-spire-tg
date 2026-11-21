@@ -38,26 +38,26 @@ class BattleTurn {
         }
         
         // Ментальная блокада - шанс паралича
-        if (battle.hasPower('mentalBlockade') && Math.random() < 0.5) {
+        if (battle.enemy.hp > 0 && battle.hasPower('mentalBlockade') && Math.random() < 0.5) {
             battle.statusEffects.enemy.paralysis = (battle.statusEffects.enemy.paralysis || 0) + 1;
         }
         
         // Ментальный шторм - урон всем врагам
-        if (battle.hasPower('mentalStorm')) {
+        if (battle.enemy.hp > 0 && battle.hasPower('mentalStorm')) {
             battle.enemy.hp -= 3;
             battle.enemy.hp = Math.max(0, battle.enemy.hp);
         }
         
         // Яд врага наносит периодический урон в конце его хода.
         // Сначала проходит атака/защита, затем яд и кровотечение, как и остальные DOT-эффекты.
-        if (battle.statusEffects.enemy.poison > 0) {
+        if (battle.enemy.hp > 0 && battle.statusEffects.enemy.poison > 0) {
             battle.enemy.hp -= Math.floor(battle.statusEffects.enemy.poison);
             battle.enemy.hp = Math.max(0, Math.floor(battle.enemy.hp));
             battle.statusEffects.enemy.poison--;
         }
 
         // Огонь наносит периодический урон в конце хода, затем затухает.
-        if (battle.statusEffects.enemy.fire > 0) {
+        if (battle.enemy.hp > 0 && battle.statusEffects.enemy.fire > 0) {
             battle.enemy.hp = Math.max(0, Math.floor(
                 battle.enemy.hp - battle.statusEffects.enemy.fire
             ));
@@ -66,7 +66,7 @@ class BattleTurn {
 
         // Кровотечение врага. Берсерк может преобразовать фактически нанесённый
         // кровотечением урон в лечение; избыточный урон сверх оставшегося HP не лечит.
-        if (battle.statusEffects.enemy.bleed > 0) {
+        if (battle.enemy.hp > 0 && battle.statusEffects.enemy.bleed > 0) {
             const bleedDamage = Math.min(
                 Math.max(0, battle.enemy.hp),
                 Math.floor(battle.statusEffects.enemy.bleed)
