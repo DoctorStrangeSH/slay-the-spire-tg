@@ -2538,6 +2538,10 @@ class Game {
             .map(id => cards.find(card => card.id === id))
             .filter(Boolean);
         if (!Array.isArray(visit.purchased)) visit.purchased = [];
+        const previousModal = document.getElementById('merchant-modal');
+        previousModal?.__gameModalCleanup?.(false);
+        previousModal?.remove();
+        const returnFocus = document.activeElement;
         const modal = document.createElement('div');
         modal.className = 'modal merchant-modal';
         modal.id = 'merchant-modal';
@@ -2746,12 +2750,17 @@ class Game {
             if (visit.closed) return;
             visit.closed = true;
             this.runSave.save(this);
+            modal.__gameModalCleanup?.(false);
             modal.remove();
             this.continueJourney();
         };
         content.append(heading, balance, description, shelf, leave);
         modal.appendChild(content);
         document.body.appendChild(modal);
+        bindGameModalAccessibility(modal, {
+            label: 'Магазин странствующего торговца', returnFocus,
+            initialFocus: leave
+        });
         renderBalance();
         if (this.player.hp >= this.player.maxHp) healButton.textContent = 'Здоровье полное';
         if (this.player.deck.length <= 5) removalButton.textContent = 'Нужно больше 5 карт';
@@ -2846,7 +2855,10 @@ class Game {
     }
 
     showRunResult(victory) {
-        document.getElementById('cathedral-run-result')?.remove();
+        const previous = document.getElementById('cathedral-run-result');
+        previous?.__gameModalCleanup?.(false);
+        previous?.remove();
+        const returnFocus = document.activeElement;
         const overlay = document.createElement('div');
         overlay.id = 'cathedral-run-result';
         overlay.className = 'cathedral-act-transition';
@@ -2867,15 +2879,22 @@ class Game {
         button.type = 'button';
         button.className = 'cathedral-transition-continue';
         button.textContent = 'Вернуться в главное меню →';
-        button.onclick = () => overlay.remove();
+        const accessibility = bindGameModalAccessibility(overlay, {
+            label: victory ? 'Итоги победы' : 'Итоги поражения', returnFocus,
+            onEscape: () => button.click(), initialFocus: button
+        });
+        button.onclick = () => { accessibility.cleanup(); overlay.remove(); };
         panel.append(title, description, this.createRunSummaryElement(victory), button);
         overlay.appendChild(panel);
         document.body.appendChild(overlay);
-        button.focus();
+        button.focus?.();
     }
 
     showActTransition(completedAct, isVictory) {
-        document.getElementById('cathedral-act-transition')?.remove();
+        const previous = document.getElementById('cathedral-act-transition');
+        previous?.__gameModalCleanup?.(false);
+        previous?.remove();
+        const returnFocus = document.activeElement;
         const theme = isVictory
             ? { name: 'Шпиль покорён', subtitle: 'Сквозь тьму ты пронёс свою судьбу', sigil: '✦', style: 'victory' }
             : MapUI.getActTheme(this.act);
@@ -2903,12 +2922,17 @@ class Game {
                 overlay.querySelector('.cathedral-transition-continue'));
         }
         const continueButton = overlay.querySelector('.cathedral-transition-continue');
+        const accessibility = bindGameModalAccessibility(overlay, {
+            label: isVictory ? 'Победа в забеге' : 'Новая глава', returnFocus,
+            onEscape: () => continueButton.click(), initialFocus: continueButton
+        });
         continueButton.addEventListener('click', () => {
             if (!isVictory) this.actTransitionPending = false;
+            accessibility.cleanup();
             overlay.remove();
         }, { once: true });
         document.body.appendChild(overlay);
-        continueButton.focus();
+        continueButton.focus?.();
     }
 
     commitRestDecision(action = null) {
@@ -2942,6 +2966,10 @@ class Game {
 
     rest() {
         if (!this.player) return false;
+        const previous = document.querySelector('.campfire-modal');
+        previous?.__gameModalCleanup?.(false);
+        previous?.remove();
+        const returnFocus = document.activeElement;
         this.player.pendingRest = true;
         this.runSave?.save?.(this);
         const modal = document.createElement('div');
@@ -2997,6 +3025,7 @@ class Game {
         upgradeButton.disabled = eligible.length === 0;
         const finish = action => {
             if (!this.commitRestDecision(action)) return false;
+            modal.__gameModalCleanup?.(false);
             modal.remove();
             this.continueJourney();
             return true;
@@ -3026,7 +3055,11 @@ class Game {
         }
         modal.appendChild(panel);
         document.body.appendChild(modal);
-        (healButton.disabled ? (upgradeButton.disabled ? panel.children[3] : upgradeButton) : healButton).focus();
+        bindGameModalAccessibility(modal, {
+            label: 'Привал у костра', returnFocus,
+            initialFocus: healButton.disabled ? (upgradeButton.disabled ? panel.children[3] : upgradeButton) : healButton
+        });
+        (healButton.disabled ? (upgradeButton.disabled ? panel.children[3] : upgradeButton) : healButton).focus?.();
     }
 }
 
