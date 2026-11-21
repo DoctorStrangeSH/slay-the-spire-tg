@@ -591,3 +591,83 @@ test('a resumed reward choice reopens the original offered cards without rerolli
         ['strike']
     );
 });
+
+
+test('a fresh Game instance reopens the same unfinished shop after a simulated page reload', () => {
+    const memory = storage();
+    const persistence = new RunSave(memory);
+    const original = game();
+    moveGameToRoom(original, 'shop');
+    original.runId = 'shop-reload-resume';
+    original.player.gold = 95;
+    original.player.shopVisits = {
+        [original.currentNodeId]: {
+            offerCardIds: ['strike', 'defend'],
+            purchased: ['heal'],
+            closed: false
+        }
+    };
+    assert.equal(persistence.save(original), true);
+
+    const reloaded = Object.create(Game.prototype);
+    reloaded.runSave = new RunSave(memory);
+    let openedShop = false;
+    let shownMap = false;
+    reloaded.showMap = () => { shownMap = true; };
+    reloaded.openShop = () => { openedShop = true; };
+    assert.equal(reloaded.continueSavedGame(), true);
+
+    assert.equal(shownMap, true);
+    assert.equal(openedShop, true);
+    assert.equal(reloaded.runId, 'shop-reload-resume');
+    assert.equal(reloaded.player.gold, 95);
+    assert.deepEqual(
+        JSON.parse(JSON.stringify(reloaded.player.shopVisits[reloaded.currentNodeId])),
+        { offerCardIds: ['strike', 'defend'], purchased: ['heal'], closed: false }
+    );
+});
+
+test('a fresh Game instance resumes the pending event after a simulated page reload', () => {
+    const memory = storage();
+    const persistence = new RunSave(memory);
+    const original = game();
+    moveGameToRoom(original, 'event');
+    original.runId = 'event-reload-resume';
+    original.player.pendingEvent = {
+        id: 'event-reload-resume:1:' + (original.floor + 1) + ':memory-trial',
+        name: 'Испытание памяти',
+        rare: false,
+        nodeId: original.currentNodeId
+    };
+    assert.equal(persistence.save(original), true);
+
+    const reloaded = Object.create(Game.prototype);
+    reloaded.runSave = new RunSave(memory);
+    let resumedEvent = false;
+    reloaded.showMap = () => {};
+    reloaded.resumePendingEvent = () => { resumedEvent = true; return true; };
+    assert.equal(reloaded.continueSavedGame(), true);
+    assert.equal(resumedEvent, true);
+    assert.equal(reloaded.runId, 'event-reload-resume');
+    assert.equal(reloaded.player.pendingEvent.nodeId, reloaded.currentNodeId);
+});
+
+test('a fresh Game instance resumes the pending rest decision after a simulated page reload', () => {
+    const memory = storage();
+    const persistence = new RunSave(memory);
+    const original = game();
+    moveGameToRoom(original, 'rest');
+    original.runId = 'rest-reload-resume';
+    original.player.pendingRest = true;
+    assert.equal(persistence.save(original), true);
+
+    const reloaded = Object.create(Game.prototype);
+    reloaded.runSave = new RunSave(memory);
+    let resumedRest = false;
+    reloaded.showMap = () => {};
+    reloaded.rest = () => { resumedRest = true; };
+    assert.equal(reloaded.continueSavedGame(), true);
+    assert.equal(resumedRest, true);
+    assert.equal(reloaded.runId, 'rest-reload-resume');
+    assert.equal(reloaded.player.pendingRest, true);
+});
