@@ -283,3 +283,45 @@ test('Reinforcement preview reports the construction block it actually grants', 
     assert.equal(battle.playCard(0).success, true);
     assert.equal(damaged.block, 7);
 });
+
+
+test('construction card is rejected without spending energy or consuming the card when all four slots are occupied', () => {
+    const { api, battle } = setup();
+    for (let index = 0; index < 4; index++) {
+        addBuilding(api, battle, 'smallTurret');
+    }
+    const construction = { ...api.ENGINEER_CARDS.generator };
+    battle.hand = [construction];
+    battle.energy = 3;
+    battle.echoStacks = 1;
+    const cardsPlayed = battle.cardsPlayedThisTurn;
+
+    const result = battle.playCard(0);
+
+    assert.equal(result.success, false);
+    assert.equal(result.message, 'Нет свободных слотов!');
+    assert.equal(battle.energy, 3);
+    assert.equal(battle.hand.length, 1);
+    assert.equal(battle.hand[0].id, 'generator');
+    assert.equal(battle.cardsPlayedThisTurn, cardsPlayed);
+    assert.equal(battle.echoStacks, 1, 'a rejected play does not consume Echo');
+    assert.equal(battle.buildings.getBuildingCount(), 4);
+});
+
+test('construction card with Echo fills the last free slot once and never exceeds four constructions', () => {
+    const { api, battle } = setup();
+    for (let index = 0; index < 3; index++) {
+        addBuilding(api, battle, 'smallTurret');
+    }
+    battle.hand = [{ ...api.ENGINEER_CARDS.generator }];
+    battle.energy = 3;
+    battle.echoStacks = 1;
+
+    const result = battle.playCard(0);
+
+    assert.equal(result.success, true);
+    assert.equal(battle.buildings.getBuildingCount(), 4);
+    assert.equal(battle.buildings.getFreeSlots(), 0);
+    assert.equal(battle.hand.length, 0);
+    assert.equal(battle.echoStacks, 0);
+});
