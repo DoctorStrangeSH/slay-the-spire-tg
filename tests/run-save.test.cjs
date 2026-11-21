@@ -22,7 +22,8 @@ const source = [
 const context = vm.runInNewContext(source + '\n({ MapGenerator, RunSave, Game, GAME_CONFIG })', {
     Math, Date, JSON, console
 });
-const { MapGenerator, RunSave, Game } = context;
+const { MapGenerator, RunSave, Game, getCardsForHero } = context;
+const cardCopy = id => ({ ...getCardsForHero('berserk')[id] });
 function storage() {
     const values = new Map();
     return {
@@ -34,7 +35,7 @@ function storage() {
 function game() {
     const mapGenerator = new MapGenerator(1, 'checkpoint-seed');
     return {
-        player: { heroId: 'berserk', hp: 48, maxHp: 80, gold: 50, deck: [{ id: 'strike' }], relics: [] },
+        player: { heroId: 'berserk', hp: 48, maxHp: 80, gold: 50, deck: [cardCopy('strike')], relics: [] },
         act: 1, floor: 0, currentNodeId: 'floor_0_node_0', mapGenerator, gameState: 'map'
     };
 }
@@ -55,7 +56,7 @@ test('checkpoint preserves hero, deck and seeded map after restore', () => {
 test('checkpoint preserves deferred reward offers so they can resume without rerolling', () => {
     const persistence = new RunSave(storage());
     const original = game();
-    original.offeredCards = [{ id: 'strike', name: 'Удар', damage: 6 }];
+    original.offeredCards = [cardCopy('strike')];
     assert.equal(persistence.save(original), true);
 
     const restored = { player: null, offeredCards: [] };
@@ -70,7 +71,7 @@ test('checkpoint rejects unknown deferred reward cards without mutating the targ
     const memory = storage();
     const persistence = new RunSave(memory);
     const original = game();
-    original.offeredCards = [{ id: 'strike' }];
+    original.offeredCards = [cardCopy('strike')];
     assert.equal(persistence.save(original), true);
 
     const corrupted = JSON.parse(memory.getItem(RunSave.KEY));
@@ -201,6 +202,58 @@ test('checkpoint rejects unknown or locked heroes and cards without mutating gam
 
     assert.equal(target.player, null);
     assert.equal(target.act, 77);
+});
+
+
+test('checkpoint rejects modified known-card stats and extra properties without mutating the target', () => {
+    const memory = storage();
+    const persistence = new RunSave(memory);
+    const original = game();
+    original.offeredCards = [cardCopy('strike')];
+    assert.equal(persistence.save(original), true);
+    const baseline = JSON.parse(memory.getItem(RunSave.KEY));
+    const target = { player: null, offeredCards: ['untouched'] };
+
+    const forgedDeck = structuredClone(baseline);
+    forgedDeck.player.deck[0].damage = 999;
+    memory.setItem(RunSave.KEY, JSON.stringify(forgedDeck));
+    assert.equal(persistence.restore(target), false);
+
+    const forgedOffer = structuredClone(baseline);
+    forgedOffer.offeredCards[0].cost = 0;
+    memory.setItem(RunSave.KEY, JSON.stringify(forgedOffer));
+    assert.equal(persistence.restore(target), false);
+
+    const injectedProperty = structuredClone(baseline);
+    injectedProperty.player.deck[0].damageMultiplier = 100;
+    memory.setItem(RunSave.KEY, JSON.stringify(injectedProperty));
+    assert.equal(persistence.restore(target), false);
+
+    assert.equal(target.player, null);
+    assert.deepEqual(target.offeredCards, ['untouched']);
+});
+
+test('checkpoint preserves legitimate card upgrades and rejects forged upgrade values', () => {
+    const memory = storage();
+    const persistence = new RunSave(memory);
+    const original = game();
+    const upgraded = cardCopy('strike');
+    const upgrader = Object.create(Game.prototype);
+    assert.equal(upgrader.upgradeCard(upgraded), true);
+    original.player.deck = [upgraded];
+    assert.equal(persistence.save(original), true);
+
+    const restored = { player: null };
+    assert.equal(persistence.restore(restored), true);
+    assert.deepEqual(
+        JSON.parse(JSON.stringify(restored.player.deck[0])),
+        JSON.parse(JSON.stringify(upgraded))
+    );
+
+    const forged = JSON.parse(memory.getItem(RunSave.KEY));
+    forged.player.deck[0].damage += 100;
+    memory.setItem(RunSave.KEY, JSON.stringify(forged));
+    assert.equal(persistence.restore({ player: null }), false);
 });
 
 test('checkpoint rejects unknown and duplicate relic identifiers', () => {
@@ -572,7 +625,7 @@ test('a resumed reward choice reopens the original offered cards without rerolli
     const memory = storage();
     const persistence = new RunSave(memory);
     const original = game();
-    original.offeredCards = [{ id: 'strike', name: 'Удар', damage: 6 }];
+    original.offeredCards = [cardCopy('strike')];
     original.runId = 'pending-reward-resume';
     assert.equal(persistence.save(original), true);
 
