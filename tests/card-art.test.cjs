@@ -160,3 +160,24 @@ test('card inspection keyboard events never select a card or rely on global game
     card.onclick();
     assert.deepEqual(selections, [2, 2]);
 });
+
+
+test('unlocked cosmetic selection is applied to the active battle and the next battle', () => {
+    const game = fs.readFileSync(path.join(root, 'js/systems/Game.js'), 'utf8');
+    const history = fs.readFileSync(path.join(root, 'js/systems/RunHistory.js'), 'utf8');
+    const styles = fs.readFileSync(path.join(root, 'css/cathedral.css'), 'utf8');
+
+    const showBattle = game.slice(game.indexOf('    showBattle() {'), game.indexOf('    showMenu() {'));
+    assert.match(showBattle, /battleScreen\\.dataset\\.cardSkin = this\\.runHistory\\?\\.rewardForHero\\(this\\.player\\?\\.heroId\\)\\?\\.skin \\|\\| ''/);
+
+    const equipHandler = game.slice(game.indexOf("rewardSelect.addEventListener('change'"), game.indexOf('row.appendChild(rewardSelect)'));
+    assert.match(equipHandler, /this\\.runHistory\\.equipReward\\(id, rewardSelect\\.value\\)/);
+    assert.match(equipHandler, /this\\.runHistory\\.rewardForHero\\(id\\)/);
+    assert.match(equipHandler, /battle-screen'\\)\\.dataset\\.cardSkin = equipped\\?\\.skin \\|\\| ''/);
+
+    for (const skin of ['berserk', 'engineer', 'psyker', 'flawless']) {
+        assert.ok(history.includes("skin: '" + skin + "'"), 'missing ' + skin + ' cosmetic skin');
+        assert.ok(styles.includes('#battle-screen[data-card-skin="' + skin + '"] .card'),
+            'missing CSS selector for ' + skin + ' cards');
+    }
+});
