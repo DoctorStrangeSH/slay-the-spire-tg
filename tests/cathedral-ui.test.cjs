@@ -200,3 +200,17 @@ test('treasure reward choice is an accessible mandatory dialog', () => {
     assert.ok(method.includes("modal.__gameModalCleanup?.(false)"));
     assert.doesNotMatch(method, /onEscape:/);
 });
+
+
+test('mobile atlas room targets remain large enough for reliable touch selection', () => {
+    const mapUI = fs.readFileSync(path.join(root, 'js/ui/MapUI.js'), 'utf8');
+    const start = mapUI.indexOf('    createNodeElement(');
+    const end = mapUI.indexOf('    getNodeX(', start);
+    const method = mapUI.slice(start, end);
+    assert.match(method, /hitTarget\.setAttribute\('r', Math\.max\(radius, 30\)\)/);
+    assert.match(method, /hitTarget\.setAttribute\('pointer-events', 'all'\)/);
+    assert.match(method, /group\.setAttribute\('role', 'button'\)/);
+    assert.match(method, /group\.setAttribute\('tabindex', '0'\)/);
+    assert.match(css, /#map-nodes svg\s*\{[^}]*touch-action:\s*pan-y/);
+    assert.match(baseCss, /#map-nodes\s*\{[^}]*overflow-y:\s*auto/);
+});
