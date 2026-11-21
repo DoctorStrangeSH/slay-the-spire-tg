@@ -30,6 +30,10 @@ class BattleCards {
         if (battle.hasPower('titanRage') && card.type === CARD_TYPES.ATTACK) {
             cost = Math.max(0, cost - 1);
         }
+        if (card.id === 'bloodSmell' &&
+            battle.hand.some(held => held !== card && held.type === CARD_TYPES.ATTACK)) {
+            cost = Math.max(0, cost - 1);
+        }
         if (battle.berserkAttackDiscountActive && card.type === CARD_TYPES.ATTACK) {
             cost = Math.max(0, cost - 1);
         }
