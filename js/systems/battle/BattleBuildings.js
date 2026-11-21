@@ -173,8 +173,6 @@ class BattleBuildings {
     }
 
     triggerEndOfTurn(battle) {
-        const hasNexus = this.buildings.some(b => b.cardId === 'nexus');
-        const doubleTrigger = battle.hasPower('totalAutomation');
         const lubricantActive = Boolean(battle.engineerLubricantActiveThisTurn);
         
         // Сначала статусы на конструкциях
@@ -188,8 +186,6 @@ class BattleBuildings {
 
             let triggers = 1;
             if (battle.hasPower('engineeringNetwork')) triggers += 1;
-            if (doubleTrigger) triggers += 1;
-            if (hasNexus) triggers += 1;
             if (lubricantActive) triggers += 1;
 
             for (let i = 0; i < triggers; i++) {
