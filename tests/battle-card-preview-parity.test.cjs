@@ -6,7 +6,7 @@ const { join } = require('node:path');
 const vm = require('node:vm');
 
 const source = readFileSync(join(__dirname, '../js/systems/battle/BattleCards.js'), 'utf8');
-const BattleCards = vm.runInNewContext(source + '\\nBattleCards;', {
+const BattleCards = vm.runInNewContext(source + '\nBattleCards;', {
     CARD_TYPES: { ATTACK: 'attack', SKILL: 'skill', POWER: 'power', BUILDING: 'building' }
 });
 
