@@ -605,6 +605,71 @@ function chooseCompleteRoute(map, random) {
     return route;
 }
 
+function scoreStrategicRouteNode(node, player) {
+    const maxHp = Math.max(1, Number(player.maxHp) || 1);
+    const hp = Math.max(0, Math.min(maxHp, Number(player.hp) || 0));
+    const hpRatio = hp / maxHp;
+    const missingHp = maxHp - hp;
+    const hasUpgrade = (player.deck || []).some(card => {
+        const upgraded = card?.upgraded || card?.upgrade;
+        return !upgraded && (card?.upgradeDamage || card?.upgradeBlock ||
+            card?.upgradeDraw || card?.upgradeCost !== undefined);
+    });
+
+    switch (node.type) {
+        case 'battle':
+            return 5 - maxHp * 0.08 * (hpRatio < 0.4 ? 1.8 : hpRatio < 0.65 ? 1.3 : 1);
+        case 'elite':
+            return 24 - maxHp * 0.16 * (hpRatio < 0.4 ? 1.8 : hpRatio < 0.65 ? 1.3 : 1);
+        case 'rest':
+            return 5 + Math.min(missingHp, maxHp * 0.3) * 0.75 + (hasUpgrade ? 4 : 0);
+        case 'shop': {
+            const affordableOptions = Number(player.gold) >= 75 ? 3
+                : Number(player.gold) >= 35 ? 2
+                    : Number(player.gold) >= 30 ? 1 : 0;
+            return 2 + Math.min(120, Math.max(0, Number(player.gold) || 0)) * 0.1
+                + affordableOptions * 1.5;
+        }
+        case 'event':
+            return 7 + (player.pendingEvent ? 0 : 1);
+        case 'treasure':
+            return 12 + Math.min(missingHp, maxHp * 0.35) * 0.35;
+        case 'secret':
+            return hpRatio >= 0.6 ? 12 : 7;
+        case 'boss':
+        case 'start':
+        default:
+            return 0;
+    }
+}
+
+function chooseStrategicRoute(map, player, random = Math.random) {
+    const byId = new Map(map.allNodes.map(node => [node.id, node]));
+    const memo = new Map();
+    const bestFrom = node => {
+        if (memo.has(node.id)) return memo.get(node.id);
+        const children = node.connections.map(id => byId.get(id)).filter(Boolean);
+        const ownScore = scoreStrategicRouteNode(node, player);
+        if (!children.length) {
+            const result = { score: ownScore, nodes: [node] };
+            memo.set(node.id, result);
+            return result;
+        }
+        const candidates = children.map(child => {
+            const tail = bestFrom(child);
+            return { score: ownScore + tail.score, nodes: [node, ...tail.nodes] };
+        });
+        const bestScore = Math.max(...candidates.map(candidate => candidate.score));
+        const best = candidates.filter(candidate => Math.abs(candidate.score - bestScore) < 1e-9);
+        const selected = best[Math.min(best.length - 1, Math.floor(random() * best.length))];
+        memo.set(node.id, selected);
+        return selected;
+    };
+    const start = map.paths?.[0]?.[0] || map.allNodes.find(node => node.type === 'start');
+    if (!start) return { nodes: [], score: 0 };
+    return bestFrom(start);
+}
+
 function chooseBestReward(api, heroId, rewardRandom) {
     const offers = api.getRandomRewardCards(heroId, 3, rewardRandom);
     if (!offers.length) return null;
@@ -838,7 +903,7 @@ function applyRouteRest(api, player, policy) {
     return 'skip';
 }
 
-function simulateRouteCampaign(heroId, seed, policy = 'heal-when-useful') {
+function simulateRouteCampaign(heroId, seed, policy = 'heal-when-useful', routePolicy = 'random') {
     const apiRandom = createRunRandom(seed ^ 0x27d4eb2f);
     const api = createRouteApi(apiRandom);
     const routeRandom = createRunRandom(seed ^ 0x5f3759df);
@@ -872,9 +937,14 @@ function simulateRouteCampaign(heroId, seed, policy = 'heal-when-useful') {
 
     for (let act = 1; act <= 3 && alive; act++) {
         const map = new api.MapGenerator(act, `route-aware-${heroId}-${seed}-act-${act}`);
-        const route = chooseCompleteRoute(map, routeRandom);
+        const routeChoice = routePolicy === 'risk-aware'
+            ? chooseStrategicRoute(map, player, routeRandom)
+            : { nodes: chooseCompleteRoute(map, routeRandom), score: null };
+        const route = routeChoice.nodes;
+        const routeScore = routeChoice.score ?? route
+            .reduce((sum, node) => sum + scoreStrategicRouteNode(node, player), 0);
         const stats = {
-            act, routeRooms: route.length - 2,
+            act, routePolicy, routeScore: Number(routeScore.toFixed(2)), routeRooms: route.length - 2,
             plannedRests: route.filter(node => node.type === 'rest').length,
             plannedBattles: route.filter(node => node.type === 'battle').length,
             plannedElites: route.filter(node => node.type === 'elite').length,
@@ -1005,21 +1075,75 @@ function simulateRouteCampaign(heroId, seed, policy = 'heal-when-useful') {
         if (!alive) break;
     }
     return {
-        heroId, seed, policy, acts: report, finalHp: player.hp, finalGold: player.gold,
+        heroId, seed, policy, routePolicy, acts: report, finalHp: player.hp, finalGold: player.gold,
         deckSize: player.deck.length, relicCount: player.relics.length,
         completed: report.length === 3 && report[2].bossWon
     };
 }
 
+test('risk-aware route selection chooses elite at high HP and rest at critical HP', () => {
+    const map = {
+        paths: [[{ id: 'start', type: 'start', connections: ['elite', 'rest'] }]],
+        allNodes: [
+            { id: 'start', type: 'start', connections: ['elite', 'rest'] },
+            { id: 'elite', type: 'elite', connections: ['boss'] },
+            { id: 'rest', type: 'rest', connections: ['boss'] },
+            { id: 'boss', type: 'boss', connections: [] }
+        ]
+    };
+    const healthy = chooseStrategicRoute(map, { hp: 80, maxHp: 80, gold: 0, deck: [] }, () => 0);
+    const critical = chooseStrategicRoute(map, { hp: 20, maxHp: 80, gold: 0, deck: [] }, () => 0);
+    assert.deepEqual(healthy.nodes.map(node => node.id), ['start', 'elite', 'boss']);
+    assert.deepEqual(critical.nodes.map(node => node.id), ['start', 'rest', 'boss']);
+});
+
+test('risk-aware route selection values a shop only when current gold makes it useful', () => {
+    const map = {
+        paths: [[{ id: 'start', type: 'start', connections: ['shop', 'event'] }]],
+        allNodes: [
+            { id: 'start', type: 'start', connections: ['shop', 'event'] },
+            { id: 'shop', type: 'shop', connections: ['boss'] },
+            { id: 'event', type: 'event', connections: ['boss'] },
+            { id: 'boss', type: 'boss', connections: [] }
+        ]
+    };
+    const poor = chooseStrategicRoute(map, { hp: 80, maxHp: 80, gold: 0, deck: [] }, () => 0);
+    const wealthy = chooseStrategicRoute(map, { hp: 80, maxHp: 80, gold: 120, deck: [] }, () => 0);
+    assert.deepEqual(poor.nodes.map(node => node.id), ['start', 'event', 'boss']);
+    assert.deepEqual(wealthy.nodes.map(node => node.id), ['start', 'shop', 'boss']);
+});
+
+test('risk-aware route selection is deterministic and only follows connected nodes', () => {
+    const map = {
+        paths: [[{ id: 'start', type: 'start', connections: ['left', 'right'] }]],
+        allNodes: [
+            { id: 'start', type: 'start', connections: ['left', 'right'] },
+            { id: 'left', type: 'event', connections: ['boss'] },
+            { id: 'right', type: 'treasure', connections: ['boss'] },
+            { id: 'unreachable', type: 'elite', connections: ['boss'] },
+            { id: 'boss', type: 'boss', connections: [] }
+        ]
+    };
+    const randomA = createRunRandom(9137);
+    const randomB = createRunRandom(9137);
+    const a = chooseStrategicRoute(map, { hp: 80, maxHp: 80, gold: 0, deck: [] }, randomA);
+    const b = chooseStrategicRoute(map, { hp: 80, maxHp: 80, gold: 0, deck: [] }, randomB);
+    assert.deepEqual(a.nodes.map(node => node.id), b.nodes.map(node => node.id));
+    assert.ok(a.nodes.every(node => node.id !== 'unreachable'));
+    assert.equal(a.score, b.score);
+});
+
 test('route-aware boss benchmark compares campfire policies while carrying route rewards and HP across acts', () => {
     const report = [];
     const policies = ['heal-when-useful', 'upgrade-unless-critical'];
+    const routePolicies = ['random', 'risk-aware'];
     for (const heroId of HERO_IDS) {
         const policyReports = [];
         for (const policy of policies) {
+            for (const routePolicy of routePolicies) {
             const campaigns = [];
-            for (let seed = 1; seed <= 12; seed++) {
-                const campaign = simulateRouteCampaign(heroId, seed * 104729, policy);
+            for (let seed = 1; seed <= 18; seed++) {
+                const campaign = simulateRouteCampaign(heroId, seed * 104729, policy, routePolicy);
                 campaigns.push(campaign);
                 assert.ok(campaign.acts.length >= 1 && campaign.acts.length <= 3);
                 assert.ok(campaign.finalHp >= 0 && campaign.finalHp <= apiMaxHp(heroId));
@@ -1044,6 +1168,7 @@ test('route-aware boss benchmark compares campfire policies while carrying route
             }
             policyReports.push({
                 policy,
+                routePolicy,
                 campaigns: campaigns.length,
                 fullRunWins: campaigns.filter(item => item.completed).length,
                 reachedBosses: campaigns.reduce((sum, item) =>
@@ -1055,6 +1180,8 @@ test('route-aware boss benchmark compares campfire policies while carrying route
                         act,
                         bossAttempts: bossRows.length,
                         bossWins: bossRows.filter(item => item.bossWon).length,
+                        averageRouteScore: Number((rows.reduce((sum, item) => sum + item.routeScore, 0)
+                            / Math.max(1, rows.length)).toFixed(2)),
                         averageHpBeforeBoss: bossRows.length
                             ? Number((bossRows.reduce((sum, item) => sum + item.hpBeforeBoss, 0)
                                 / bossRows.length).toFixed(2)) : null,
@@ -1087,6 +1214,7 @@ test('route-aware boss benchmark compares campfire policies while carrying route
                     };
                 })
             });
+            }
         }
         report.push({ heroId, policies: policyReports });
     }
