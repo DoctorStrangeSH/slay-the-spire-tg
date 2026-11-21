@@ -146,3 +146,17 @@ test('conditional Berserker block previews match health thresholds and upgrades'
         assert.equal(preview.block, scenario.expected, scenario.id + ' at ' + scenario.hp + '/' + scenario.maxHp + ' HP');
     }
 });
+
+
+test('Fresh Wound preview doubles bleed only below half health', () => {
+    const card = { id: 'freshWound', type: 'skill', bleed: 4 };
+    const wounded = state(card, {
+        player: { hp: 19, maxHp: 40, relics: [] }
+    });
+    const healthy = state(card, {
+        player: { hp: 20, maxHp: 40, relics: [] }
+    });
+
+    assert.equal(new BattleCards().calculateCardPreview(wounded, card).bleed, 8);
+    assert.equal(new BattleCards().calculateCardPreview(healthy, card).bleed, 4);
+});
