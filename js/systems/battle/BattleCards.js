@@ -219,7 +219,11 @@ class BattleCards {
         
         if (card.heal) preview.heal = card.heal;
         if (card.selfDamage) preview.selfDamage = card.selfDamage;
-        if (card.bleed) preview.bleed = card.bleed;
+        if (card.bleed) {
+            preview.bleed = card.id === 'freshWound' && battle.isBerserkWounded()
+                ? 8
+                : card.bleed;
+        }
         if (card.vulnerable) preview.vulnerable = card.vulnerable;
         if (card.weak) preview.weak = card.weak;
         if (card.fire) preview.fire = card.fire;
