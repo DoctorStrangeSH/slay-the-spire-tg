@@ -111,7 +111,7 @@ test('Automation never wastes its bonus trigger on the passive Nexus', () => {
     // Nexus is passive and skipped, so the old implementation lost the bonus.
     battle.buildings.triggerStartOfTurn(battle);
 
-    assert.deepEqual(Array.from(triggered), ['generator', 'generator']);
+    assert.deepEqual(Array.from(triggered), ['generator', 'generator', 'generator']);
 });
 
 test('Engineer start and end trigger multipliers stack only in their intended phases', () => {
