@@ -229,3 +229,57 @@ test('Engineering Genius draws three and makes all constructions currently in ha
     assert.equal(battle.hand.length, 4);
     assert.ok(battle.hand.every(card => card.type !== api.CARD_TYPES.BUILDING || card.cost === 0));
 });
+
+
+test('Engineer repair previews show capped HP restored to the same targets as card resolution', () => {
+    const { api, battle } = setup();
+    const damaged = addBuilding(api, battle, 'barrier', 2);
+    const healthy = addBuilding(api, battle, 'smallTurret', 5);
+
+    const repair = { ...api.ENGINEER_CARDS.repair };
+    battle.hand = [repair];
+    assert.equal(battle.cards.calculateCardPreview(battle, repair).buildingRepair, 3);
+    battle.selectedCards = [0];
+    assert.match(battle.cards.calculateTotalPreview(battle).description, /Ремонт конструкций: 3 HP/);
+    assert.equal(battle.playCard(0).success, true);
+    assert.equal(damaged.hp, 5);
+    assert.equal(healthy.hp, 5);
+
+    damaged.hp = 7;
+    const capped = battle.cards.calculateCardPreview(battle, repair);
+    assert.equal(capped.buildingRepair, 1, 'repair preview respects missing HP rather than showing the full nominal amount');
+});
+
+test('Repair Drone and Nanobots previews sum actual capped recovery across all constructions', () => {
+    const { api, battle } = setup();
+    const first = addBuilding(api, battle, 'smallTurret', 1);
+    const second = addBuilding(api, battle, 'barrier', 6);
+
+    const drone = { ...api.ENGINEER_CARDS.repairDrone };
+    assert.equal(battle.cards.calculateCardPreview(battle, drone).buildingRepair, 7);
+    battle.hand = [drone];
+    assert.equal(battle.playCard(0).success, true);
+    assert.equal(first.hp, 6);
+    assert.equal(second.hp, 8);
+
+    first.hp = 2;
+    second.hp = 7;
+    const nanobots = { ...api.ENGINEER_CARDS.nanobots };
+    assert.equal(battle.cards.calculateCardPreview(battle, nanobots).buildingRepair, 3);
+    battle.hand = [nanobots];
+    assert.equal(battle.playCard(0).success, true);
+    assert.equal(first.hp, 4);
+    assert.equal(second.hp, 8);
+});
+
+test('Reinforcement preview reports the construction block it actually grants', () => {
+    const { api, battle } = setup();
+    const damaged = addBuilding(api, battle, 'barrier', 3);
+    const reinforcement = { ...api.ENGINEER_CARDS.reinforcement };
+    assert.equal(battle.cards.calculateCardPreview(battle, reinforcement).buildingBlock, 4);
+    battle.hand = [reinforcement];
+    battle.selectedCards = [0];
+    assert.match(battle.cards.calculateTotalPreview(battle).description, /Блок конструкций: \+4/);
+    assert.equal(battle.playCard(0).success, true);
+    assert.equal(damaged.block, 7);
+});
