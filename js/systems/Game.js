@@ -706,8 +706,8 @@ class Game {
         content.appendChild(close);
         modal.appendChild(content);
         document.body.appendChild(modal);
-        close.focus();
-        modal.addEventListener('click', event => {
+        close.focus?.();
+        modal.addEventListener?.('click', event => {
             if (event.target === modal) { accessibility.cleanup(); modal.remove(); }
         });
     }
@@ -806,8 +806,8 @@ class Game {
         content.appendChild(close);
         modal.appendChild(content);
         document.body.appendChild(modal);
-        close.focus();
-        modal.addEventListener('click', event => {
+        close.focus?.();
+        modal.addEventListener?.('click', event => {
             if (event.target === modal) { accessibility.cleanup(); modal.remove(); }
         });
     }
