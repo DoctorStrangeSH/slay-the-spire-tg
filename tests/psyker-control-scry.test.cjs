@@ -27,7 +27,7 @@ function api(overrides = {}, randomValue = 0.99) {
         BattleFeedback: { snapshot() { return {}; }, show() {}, bossAttack() {} },
         ...overrides
     };
-    return vm.runInNewContext(source + '\n({ BattleSystem, CARD_TYPES, Game })', context);
+    return vm.runInNewContext(source + '\n({ BattleSystem, CARD_TYPES, PSYKER_CARDS, Game })', context);
 }
 
 function createBattle(powers = [], hp = 20, deck = [], randomValue = 0.99) {
