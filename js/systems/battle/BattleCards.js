@@ -209,7 +209,8 @@ class BattleCards {
             playCount += 1;
         }
         
-        // Разыгрываем карту playCount раз
+        // Разыгрываем карту playCount раз. Повторения прекращаются сразу,
+        // когда одно из срабатываний завершает бой.
         for (let i = 0; i < playCount; i++) {
             if (card.type === 'building') {
                 battle.buildings.placeBuilding(battle, card);
@@ -226,40 +227,46 @@ class BattleCards {
                         break;
                 }
             }
+            if (battle.player.hp <= 0 || battle.enemy.hp <= 0) break;
         }
-        
-        // Пси-резонанс - навык наносит урон
-        if (card.type === CARD_TYPES.SKILL && battle.hasPower('psyResonance')) {
-            battle.enemy.hp -= 1;
-            battle.enemy.hp = Math.max(0, battle.enemy.hp);
-        }
-        
-        // Устанавливаем эхо от карты
-        if (card.echo) {
-            battle.echoStacks += card.echo;
-        }
-        if (card.echoSkill) {
-            battle.echoSkillStacks += card.echoSkill;
-        }
-        
-        // Предвидение activates only when the card is actually played.
-        const scryedCards = card.scry
-            ? battle.scry(card.scry)
-            : card.id === 'telepathicLink' ? battle.scry(3) : null;
-        
-        // Перемотка
-        if (card.id === 'rewind') {
-            battle.rewindHand();
-        }
-        
-        // Копия
-        if (card.id === 'copy' && cardIndex < battle.hand.length) {
-            battle.copyCard(cardIndex);
-        }
-        
-        // Кража
-        if (card.steal) {
-            battle.stealEnemyCard();
+
+        const battleStillActive = battle.player.hp > 0 && battle.enemy.hp > 0;
+        let scryedCards = null;
+        // Дополнительные эффекты карты не должны менять состояние после исхода боя.
+        if (battleStillActive) {
+            // Пси-резонанс - навык наносит урон
+            if (card.type === CARD_TYPES.SKILL && battle.hasPower('psyResonance')) {
+                battle.enemy.hp -= 1;
+                battle.enemy.hp = Math.max(0, battle.enemy.hp);
+            }
+
+            // Устанавливаем эхо от карты
+            if (card.echo) {
+                battle.echoStacks += card.echo;
+            }
+            if (card.echoSkill) {
+                battle.echoSkillStacks += card.echoSkill;
+            }
+
+            // Предвидение activates only when the card is actually played.
+            scryedCards = card.scry
+                ? battle.scry(card.scry)
+                : card.id === 'telepathicLink' ? battle.scry(3) : null;
+
+            // Перемотка
+            if (card.id === 'rewind') {
+                battle.rewindHand();
+            }
+
+            // Копия
+            if (card.id === 'copy' && cardIndex < battle.hand.length) {
+                battle.copyCard(cardIndex);
+            }
+
+            // Кража
+            if (card.steal) {
+                battle.stealEnemyCard();
+            }
         }
         
         const playedCard = battle.hand.splice(cardIndex, 1)[0];
