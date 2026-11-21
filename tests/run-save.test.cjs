@@ -596,7 +596,7 @@ test('a fresh Game instance resumes the same saved run after a simulated page re
     original.floor = next.floor;
     original.player.hp = 37;
     original.player.gold = 125;
-    original.player.deck.push({ id: 'defend' });
+    original.player.deck.push(cardCopy('defend'));
     original.runId = 'reload-resume-stable-id';
     assert.equal(persistence.save(original), true);
 
