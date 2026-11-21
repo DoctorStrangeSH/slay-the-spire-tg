@@ -25,6 +25,7 @@ class BattleTurn {
         const isParalyzed = battle.isEnemyParalyzed();
         const isControlled = battle.hasPower('absoluteControl') && battle.turn % 2 === 0;
 
+        let enemyActionResolved = false;
         if (isParalyzed) {
             // Враг пропускает ход из-за Паралича.
             battle.statusEffects.enemy.paralysis--;
@@ -32,18 +33,22 @@ class BattleTurn {
             // Абсолютный контроль заставляет врага пропускать каждый второй ход.
             if (battle.enemyIntent === 'attack') {
                 this.enemyAttack(battle);
+                enemyActionResolved = true;
             } else if (battle.enemyIntent === 'defend') {
                 this.enemyDefend(battle);
+                enemyActionResolved = true;
             }
         }
         
+        // Эффекты "после действия врага" не срабатывают, если тот пропустил ход.
         // Ментальная блокада - шанс паралича
-        if (battle.enemy.hp > 0 && battle.hasPower('mentalBlockade') && Math.random() < 0.5) {
+        if (enemyActionResolved && battle.enemy.hp > 0 &&
+            battle.hasPower('mentalBlockade') && Math.random() < 0.5) {
             battle.statusEffects.enemy.paralysis = (battle.statusEffects.enemy.paralysis || 0) + 1;
         }
         
-        // Ментальный шторм - урон всем врагам
-        if (battle.enemy.hp > 0 && battle.hasPower('mentalStorm')) {
+        // Ментальный шторм - урон после фактически выполненного действия врага
+        if (enemyActionResolved && battle.enemy.hp > 0 && battle.hasPower('mentalStorm')) {
             battle.enemy.hp -= 3;
             battle.enemy.hp = Math.max(0, battle.enemy.hp);
         }
