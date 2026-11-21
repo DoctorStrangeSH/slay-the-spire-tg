@@ -16,12 +16,13 @@ const source = [
     'js/data/cards/index.js',
     'js/data/relics.js',
     'js/systems/MapGenerator.js',
-    'js/systems/RunSave.js'
+    'js/systems/RunSave.js',
+    'js/systems/Game.js'
 ].map(p => readFileSync(join(root, p), 'utf8')).join('\n');
-const context = vm.runInNewContext(source + '\n({ MapGenerator, RunSave, GAME_CONFIG })', {
+const context = vm.runInNewContext(source + '\n({ MapGenerator, RunSave, Game, GAME_CONFIG })', {
     Math, Date, JSON, console
 });
-const { MapGenerator, RunSave } = context;
+const { MapGenerator, RunSave, Game } = context;
 function storage() {
     const values = new Map();
     return {
@@ -528,4 +529,65 @@ test('checkpoint rejects malformed or mismatched pending event without mutating 
 
     assert.equal(target.player, null);
     assert.equal(target.act, 77);
+});
+
+
+test('a fresh Game instance resumes the same saved run after a simulated page reload', () => {
+    const memory = storage();
+    const persistence = new RunSave(memory);
+    const original = game();
+    const next = original.mapGenerator.getAvailableNodes(original.currentNodeId)[0];
+    assert.ok(next);
+    original.mapGenerator.visitNode(next.id);
+    original.currentNodeId = next.id;
+    original.floor = next.floor;
+    original.player.hp = 37;
+    original.player.gold = 125;
+    original.player.deck.push({ id: 'defend' });
+    original.runId = 'reload-resume-stable-id';
+    assert.equal(persistence.save(original), true);
+
+    // A new Game object and RunSave instance represent a browser page reload.
+    const reloaded = Object.create(Game.prototype);
+    reloaded.runSave = new RunSave(memory);
+    let shownMap = false;
+    reloaded.showMap = () => { shownMap = true; };
+    assert.equal(reloaded.continueSavedGame(), true);
+
+    assert.equal(shownMap, true);
+    assert.equal(reloaded.runId, 'reload-resume-stable-id');
+    assert.equal(reloaded.player.heroId, 'berserk');
+    assert.equal(reloaded.player.hp, 37);
+    assert.equal(reloaded.player.gold, 125);
+    assert.deepEqual(
+        JSON.parse(JSON.stringify(reloaded.player.deck.map(card => card.id))),
+        ['strike', 'defend']
+    );
+    assert.equal(reloaded.currentNodeId, next.id);
+    assert.equal(reloaded.floor, next.floor);
+    assert.equal(reloaded.mapGenerator.findNodeById(next.id).visited, true);
+});
+
+test('a resumed reward choice reopens the original offered cards without rerolling', () => {
+    const memory = storage();
+    const persistence = new RunSave(memory);
+    const original = game();
+    original.offeredCards = [{ id: 'strike', name: 'Удар', damage: 6 }];
+    original.runId = 'pending-reward-resume';
+    assert.equal(persistence.save(original), true);
+
+    const reloaded = Object.create(Game.prototype);
+    reloaded.runSave = new RunSave(memory);
+    let shownMap = false;
+    let resumedCards = null;
+    reloaded.showMap = () => { shownMap = true; };
+    reloaded.offerCard = cards => { resumedCards = cards; };
+    assert.equal(reloaded.continueSavedGame(), true);
+
+    assert.equal(shownMap, true);
+    assert.equal(reloaded.runId, 'pending-reward-resume');
+    assert.deepEqual(
+        JSON.parse(JSON.stringify(resumedCards.map(card => card.id))),
+        ['strike']
+    );
 });
