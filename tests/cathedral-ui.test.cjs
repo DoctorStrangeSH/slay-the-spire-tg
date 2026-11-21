@@ -208,7 +208,7 @@ test('mobile atlas room targets meet narrow-phone touch size and preserve zoom a
     const start = mapUI.indexOf('    createNodeElement(');
     const end = mapUI.indexOf('\n    },', start);
     const method = mapUI.slice(start, end);
-    assert.match(method, /hitTarget\.setAttribute\('r', Math\.max\(radius, 40\)\)/);
+    assert.ok(method.includes("hitTarget.setAttribute('r', Math.max(radius, 40))"));
     assert.match(method, /hitTarget\.setAttribute\('pointer-events', 'all'\)/);
     assert.match(method, /group\.setAttribute\('role', 'button'\)/);
     assert.match(method, /group\.setAttribute\('tabindex', '0'\)/);
