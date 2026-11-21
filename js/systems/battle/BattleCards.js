@@ -98,15 +98,16 @@ class BattleCards {
 
         const buildingCount = battle.buildings?.getBuildingCount?.() || 0;
         let baseDamage = Number(card.damage) || 0;
+        let directBonus = 0;
         if (card.id === 'kamikazeDrone') {
             const target = battle.buildings?.buildings?.slice()
                 .sort((a, b) => b.hp - a.hp)[0];
             baseDamage = target ? Math.min(15, Math.max(0, target.hp)) : 0;
-            if (target && battle.hasPower('systemOverload')) baseDamage += 3;
+            if (target && battle.hasPower('systemOverload')) directBonus += 3;
         }
         if (card.id === 'massOverload') {
             baseDamage = buildingCount * 6;
-            if (battle.hasPower('systemOverload')) baseDamage += buildingCount * 3;
+            if (battle.hasPower('systemOverload')) directBonus += buildingCount * 3;
         }
 
         if (baseDamage > 0) {
@@ -138,7 +139,7 @@ class BattleCards {
             if (battle.statusEffects.player.weak > 0) damage = Math.floor(damage * 0.75);
             
             if (card.hits) damage *= card.hits;
-            preview.damage = damage;
+            preview.damage = damage + directBonus;
         }
         
         if (card.block) {
