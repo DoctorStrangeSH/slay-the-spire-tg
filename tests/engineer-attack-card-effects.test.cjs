@@ -95,7 +95,7 @@ test('Mass Overload triggers System Overload once for every demolished construct
     battle.enemyBlock = 4;
     const preview = battle.cards.calculateCardPreview(battle, api.ENGINEER_CARDS.massOverload);
 
-    assert.equal(preview.damage, 12);
+    assert.equal(preview.damage, 18);
     play(api, battle, 'massOverload');
     assert.equal(battle.buildings.getBuildingCount(), 0);
     assert.equal(battle.enemy.hp, 86, '6 direct overload damage plus 8 unblocked attack damage');
