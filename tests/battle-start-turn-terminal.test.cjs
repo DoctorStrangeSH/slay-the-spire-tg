@@ -86,6 +86,38 @@ test('mental immortality rescues lethal start-turn self-damage exactly once', ()
     assert.equal(battle.enemyIntent, 'attack');
 });
 
+test('endTurn reports defeat when next-turn effects kill the player during startTurn', () => {
+    const state = {
+        player: { hp: 10, relics: [] },
+        enemy: { hp: 20, damage: 0 },
+        enemyIntent: 'defend',
+        turn: 1,
+        hand: [],
+        discardPile: [],
+        block: 0,
+        enemyBlock: 0,
+        statusEffects: {
+            player: { poison: 0, vulnerable: 0, weak: 0, thorns: 0 },
+            enemy: { paralysis: 0, poison: 0, fire: 0, bleed: 0, weak: 0, strength: 0 }
+        },
+        hasPower() { return false; },
+        isEnemyParalyzed() { return false; },
+        startTurn() {
+            this.player.hp = 0;
+            this.battleEnded = true;
+            this.enemyIntent = null;
+        },
+        takeDamage(amount) { this.player.hp = Math.max(0, this.player.hp - amount); },
+        triggerAdrenalineRush() { throw new Error('defeat must not trigger victory rewards'); }
+    };
+
+    const result = new BattleTurn().endTurn(state, { decreaseStatusEffects() {} });
+
+    assert.equal(result.battleEnded, true);
+    assert.equal(result.victory, false);
+    assert.equal(state.battleEnded, true);
+});
+
 test('lethal start-turn effects stop the rest of the turn setup', () => {
     const source = readFileSync(join(root, 'js/systems/BattleSystem.js'), 'utf8');
     const BattleSystem = vm.runInNewContext(`
