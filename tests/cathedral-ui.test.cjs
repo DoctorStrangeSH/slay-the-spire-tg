@@ -103,7 +103,9 @@ test('target mobile viewport profiles keep battle controls touch-accessible', ()
 
     assert.match(main, /height <= 520 \? 'short' : height <= 640 \? 'compact' : 'normal'/);
     assert.match(css, /html\[data-game-viewport-height="compact"\] #action-buttons \.play-btn,[\s\S]*?min-height: 44px/);
-    assert.match(css, /html\[data-game-viewport-height="compact"\] #action-buttons \.relic-btn,[\s\S]*?min-height: 36px/);
+    assert.match(css, /html\[data-game-viewport-height="compact"\] #action-buttons \.relic-btn,[\s\S]*?min-height: 44px/);
+    assert.match(css, /#action-buttons \.relic-btn, #action-buttons \.deck-btn,[\s\S]*?#action-buttons \.discard-btn \{[^}]*min-height: 44px/);
+    assert.match(css, /#action-buttons \.relic-btn, #action-buttons \.deck-btn,[\s\S]*?#action-buttons \.discard-btn \{ min-height: 44px; \}/);
     assert.match(css, /#hand-area \{[^}]*overflow-x: auto/);
     assert.match(css, /#map-screen #map-nodes \{[^}]*max-height: min/);
     assert.match(css, /env\(safe-area-inset-bottom\)/);
