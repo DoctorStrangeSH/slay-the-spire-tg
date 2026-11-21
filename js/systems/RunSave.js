@@ -207,7 +207,7 @@ class RunSave {
         game.mapGenerator = map;
         game.currentBattle = null;
         game.currentEvent = null;
-        game.offeredCards = restoredOfferedCards;
+        game.offeredCards = JSON.parse(JSON.stringify(restoredOfferedCards));
         return true;
     }
 
