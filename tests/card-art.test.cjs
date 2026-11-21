@@ -168,12 +168,12 @@ test('unlocked cosmetic selection is applied to the active battle and the next b
     const styles = fs.readFileSync(path.join(root, 'css/cathedral.css'), 'utf8');
 
     const showBattle = game.slice(game.indexOf('    showBattle() {'), game.indexOf('    showMenu() {'));
-    assert.match(showBattle, /battleScreen\\.dataset\\.cardSkin = this\\.runHistory\\?\\.rewardForHero\\(this\\.player\\?\\.heroId\\)\\?\\.skin \\|\\| ''/);
+    assert.ok(showBattle.includes("battleScreen.dataset.cardSkin = this.runHistory?.rewardForHero(this.player?.heroId)?.skin || '';"));
 
     const equipHandler = game.slice(game.indexOf("rewardSelect.addEventListener('change'"), game.indexOf('row.appendChild(rewardSelect)'));
-    assert.match(equipHandler, /this\\.runHistory\\.equipReward\\(id, rewardSelect\\.value\\)/);
-    assert.match(equipHandler, /this\\.runHistory\\.rewardForHero\\(id\\)/);
-    assert.match(equipHandler, /battle-screen'\\)\\.dataset\\.cardSkin = equipped\\?\\.skin \\|\\| ''/);
+    assert.ok(equipHandler.includes('this.runHistory.equipReward(id, rewardSelect.value)'));
+    assert.ok(equipHandler.includes('this.runHistory.rewardForHero(id)'));
+    assert.ok(equipHandler.includes("document.getElementById('battle-screen').dataset.cardSkin = equipped?.skin || '';"));
 
     for (const skin of ['berserk', 'engineer', 'psyker', 'flawless']) {
         assert.ok(history.includes("skin: '" + skin + "'"), 'missing ' + skin + ' cosmetic skin');
