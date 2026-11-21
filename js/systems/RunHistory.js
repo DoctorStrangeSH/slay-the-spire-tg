@@ -17,18 +17,71 @@ class RunHistory {
         try {
             const data = JSON.parse(this.storage.getItem(RunHistory.KEY));
             if (!data || data.version !== 1 || !Array.isArray(data.recent)) return this.empty();
-            return { ...this.empty(), ...data,
-                heroes: data.heroes && typeof data.heroes === 'object' && !Array.isArray(data.heroes) ? data.heroes : {},
-                heroVictories: data.heroVictories && typeof data.heroVictories === 'object' && !Array.isArray(data.heroVictories) ? data.heroVictories : {},
-                challenges: data.challenges && typeof data.challenges === 'object' && !Array.isArray(data.challenges) ? data.challenges : {},
-                selectedRewards: data.selectedRewards && typeof data.selectedRewards === 'object' && !Array.isArray(data.selectedRewards) ? data.selectedRewards : {},
-                // Older profiles only remember the last 20 IDs; preserve those while
-                // tracking every new completed run independently of the visible history.
-                recordedRunIds: [...new Set([
-                    ...(Array.isArray(data.recordedRunIds) ? data.recordedRunIds.filter(id => typeof id === 'string') : []),
-                    ...data.recent.filter(item => item && typeof item.id === 'string').map(item => item.id)
-                ])],
-                recent: data.recent.slice(-RunHistory.MAX_RECENT) };
+            const counter = value => Number.isFinite(Number(value)) && Number(value) >= 0
+                ? Math.floor(Number(value)) : 0;
+            const countMap = value => {
+                if (!value || typeof value !== 'object' || Array.isArray(value)) return {};
+                return Object.fromEntries(Object.entries(value)
+                    .filter(([key]) => typeof key === 'string')
+                    .map(([key, count]) => [key, counter(count)]));
+            };
+            const allowedChallenges = [
+                'berserk_last_breath', 'engineer_iron_line',
+                'psyker_mind_chain', 'flawless_elite'
+            ];
+            const challenges = {};
+            if (data.challenges && typeof data.challenges === 'object' && !Array.isArray(data.challenges)) {
+                for (const id of allowedChallenges) {
+                    if (data.challenges[id] === true) challenges[id] = true;
+                }
+            }
+            const selectedRewards = {};
+            if (data.selectedRewards && typeof data.selectedRewards === 'object' && !Array.isArray(data.selectedRewards)) {
+                for (const heroId of ['berserk', 'engineer', 'psyker']) {
+                    const rewardId = data.selectedRewards[heroId];
+                    if (typeof rewardId === 'string' && allowedChallenges.includes(rewardId)) {
+                        selectedRewards[heroId] = rewardId;
+                    }
+                }
+            }
+            const recent = data.recent
+                .filter(item => item && typeof item === 'object' && !Array.isArray(item)
+                    && typeof item.id === 'string' && item.id.length > 0)
+                .slice(-RunHistory.MAX_RECENT)
+                .map(item => ({
+                    id: item.id.slice(0, 160),
+                    victory: item.victory === true,
+                    hero: typeof item.hero === 'string' ? item.hero.slice(0, 80) : 'Герой',
+                    heroId: typeof item.heroId === 'string' ? item.heroId.slice(0, 40) : 'unknown',
+                    act: Math.max(1, counter(item.act)),
+                    floor: Math.max(1, counter(item.floor)),
+                    score: counter(item.score),
+                    wins: counter(item.wins),
+                    completedAt: typeof item.completedAt === 'string' ? item.completedAt.slice(0, 40) : ''
+                }));
+            // Older profiles only remember the last 20 IDs; preserve those while
+            // tracking every new completed run independently of the visible history.
+            const recordedRunIds = [...new Set([
+                ...(Array.isArray(data.recordedRunIds)
+                    ? data.recordedRunIds.filter(id => typeof id === 'string' && id.length > 0).map(id => id.slice(0, 160))
+                    : []),
+                ...recent.map(item => item.id)
+            ])];
+            return {
+                ...this.empty(),
+                runs: counter(data.runs),
+                victories: counter(data.victories),
+                defeats: counter(data.defeats),
+                bestScore: counter(data.bestScore),
+                bestAct: counter(data.bestAct),
+                totalBattles: counter(data.totalBattles),
+                heroes: countMap(data.heroes),
+                heroVictories: countMap(data.heroVictories),
+                challenges,
+                selectedRewards,
+                recordedRunIds,
+                recent
+            };
         } catch (_) {
             return this.empty();
         }
