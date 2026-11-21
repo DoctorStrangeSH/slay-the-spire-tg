@@ -17,7 +17,7 @@ function state(card, overrides = {}) {
         player: { hp: 15, maxHp: 40, relics: [] },
         enemy: { hp: 20, maxHp: 100 },
         statusEffects: {
-            player: { strength: 0, weak: 0 },
+            player: { strength: 0, weak: 0, dexterity: 0 },
             enemy: { vulnerable: 0, bleed: 0, paralysis: 0 }
         },
         buildings: null,
@@ -94,5 +94,55 @@ test('conditional Berserker cards preview base damage when their condition is no
     for (const [card, overrides] of scenarios) {
         const battle = state(card, overrides);
         assert.equal(new BattleCards().calculateCardPreview(battle, card).damage, card.damage, card.id);
+    }
+});
+
+
+test('conditional Berserker block previews match health thresholds and upgrades', () => {
+    const scenarios = [
+        {
+            id: 'berserkStance', hp: 15, maxHp: 40, block: 12,
+            upgraded: true, expected: 25, // 20 + upgrade 3 + dexterity 2
+        },
+        {
+            id: 'berserkStance', hp: 20, maxHp: 40, block: 12,
+            upgraded: false, expected: 14, // exact half-health boundary is not wounded
+        },
+        {
+            id: 'spiritFortification', hp: 15, maxHp: 40, block: 7,
+            upgraded: true, expected: 19,
+        },
+        {
+            id: 'lastStand', hp: 24, maxHp: 100, block: 18,
+            upgraded: true, expected: 35,
+        },
+        {
+            id: 'lastStand', hp: 25, maxHp: 100, block: 18,
+            upgraded: false, expected: 20, // exact 25% boundary does not activate
+        },
+        {
+            id: 'finalBattle', hp: 19, maxHp: 100, block: 23,
+            upgraded: true, expected: 40,
+        },
+        {
+            id: 'finalBattle', hp: 20, maxHp: 100, block: 23,
+            upgraded: false, expected: 25, // exact 20% boundary does not activate
+        }
+    ];
+
+    for (const scenario of scenarios) {
+        const card = {
+            id: scenario.id, type: 'skill', block: scenario.block,
+            upgraded: scenario.upgraded
+        };
+        const battle = state(card, {
+            player: { hp: scenario.hp, maxHp: scenario.maxHp, relics: [] },
+            statusEffects: {
+                player: { strength: 0, weak: 0, dexterity: 2 },
+                enemy: { vulnerable: 0, bleed: 0, paralysis: 0 }
+            }
+        });
+        const preview = new BattleCards().calculateCardPreview(battle, card);
+        assert.equal(preview.block, scenario.expected, scenario.id + ' at ' + scenario.hp + '/' + scenario.maxHp + ' HP');
     }
 });
