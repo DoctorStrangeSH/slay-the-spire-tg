@@ -2099,7 +2099,7 @@ button:disabled { opacity: .42; filter: grayscale(.5); }
   }
   #action-buttons .play-btn, #action-buttons .end-btn { min-height: 44px; }
   #action-buttons .relic-btn, #action-buttons .deck-btn,
-  #action-buttons .discard-btn { min-height: 36px; }
+  #action-buttons .discard-btn { min-height: 44px; }
 }
 
 
