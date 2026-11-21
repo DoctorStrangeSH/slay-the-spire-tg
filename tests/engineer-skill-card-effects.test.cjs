@@ -161,7 +161,8 @@ test('Blueprints uses the played card slot when drawing from a full hand', () =>
     assert.equal(battle.playCard(0).success, true);
     assert.equal(battle.hand.length, 10);
     assert.ok(battle.hand.some(card => card.id === 'generator'));
-    assert.ok(battle.hand.every(card => card.type !== api.CARD_TYPES.BUILDING || card.cost === 0));
+    assert.equal(battle.hand.find(card => card.id === 'generator').cost, 1);
+    assert.ok(battle.hand.filter(card => card.type === api.CARD_TYPES.BUILDING && card.id.startsWith('turret_')).every(card => card.cost === 0));
 });
 
 test('Quick Assembly draws and discounts a construction when the hand was full', () => {
@@ -174,6 +175,29 @@ test('Quick Assembly draws and discounts a construction when the hand was full',
     assert.equal(battle.playCard(0).success, true);
     assert.equal(battle.hand.length, 10);
     assert.equal(battle.hand.find(card => card.id === 'generator').cost, 0);
+});
+
+test('Engineering Genius draws into the slot freed by the played card', () => {
+    const { api, battle } = setup();
+    battle.hand = [
+        { ...api.ENGINEER_CARDS.engineeringGenius },
+        ...Array.from({ length: 9 }, (_, index) => ({ id: 'held_' + index, type: api.CARD_TYPES.SKILL, cost: 0 }))
+    ];
+    battle.drawPile = [{ ...api.ENGINEER_CARDS.generator }];
+    assert.equal(battle.playCard(0).success, true);
+    assert.equal(battle.hand.length, 10);
+    assert.equal(battle.hand.find(card => card.id === 'generator').cost, 0);
+});
+
+test('Reserve adds its turret into the slot freed by the played power', () => {
+    const { api, battle } = setup();
+    battle.hand = [
+        { ...api.ENGINEER_CARDS.reserve },
+        ...Array.from({ length: 9 }, (_, index) => ({ id: 'held_' + index, type: api.CARD_TYPES.SKILL, cost: 0 }))
+    ];
+    assert.equal(battle.playCard(0).success, true);
+    assert.equal(battle.hand.length, 10);
+    assert.equal(battle.hand.filter(card => card.id === 'smallTurret').length, 1);
 });
 
 test('Factory Reset draws up to the available post-play hand capacity', () => {
