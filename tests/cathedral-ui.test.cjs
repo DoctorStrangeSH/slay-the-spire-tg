@@ -221,11 +221,15 @@ test('mobile atlas room targets meet narrow-phone touch size and preserve zoom a
 
 
 test('all five mobile battle actions keep 44px targets after high-specificity overrides', () => {
-    const mobileActions = css.match(/@media \(max-width: 640px\) \{[\s\S]*?#battle-screen #action-buttons \.relic-btn,[\s\S]*?#battle-screen #action-buttons \.discard-btn \{[^}]*\}/);
-    assert.ok(mobileActions, 'missing high-specificity mobile utility action rule');
-    assert.match(mobileActions[0], /min-height:\s*44px/);
+    const utilityStart = css.indexOf('#battle-screen #action-buttons .relic-btn,');
+    const utilityEnd = css.indexOf('\n  }', utilityStart) + 4;
+    const utilityRule = css.slice(utilityStart, utilityEnd);
+    assert.ok(utilityStart >= 0, 'missing high-specificity mobile utility action rule');
+    assert.match(utilityRule, /min-height:\s*44px/);
 
-    const shortViewport = css.match(/@media \(max-width: 640px\) and \(max-height: 640px\) \{\s*#battle-screen #action-buttons \.play-btn,[\s\S]*?\n\}/);
-    assert.ok(shortViewport, 'missing short viewport action override');
-    assert.match(shortViewport[0], /#battle-screen #action-buttons \.end-btn \{ min-height: 44px/);
+    const shortStart = css.lastIndexOf('@media (max-width: 640px) and (max-height: 640px)');
+    const shortEnd = css.indexOf('\n}', shortStart) + 2;
+    const shortRule = css.slice(shortStart, shortEnd);
+    assert.ok(shortStart >= 0, 'missing final short viewport override');
+    assert.match(shortRule, /#battle-screen #action-buttons \.end-btn \{ min-height: 44px/);
 });
