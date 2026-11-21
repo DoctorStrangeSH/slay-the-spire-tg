@@ -1162,9 +1162,8 @@ function simulateRouteCampaign(heroId, seed, policy = 'heal-when-useful', routeP
                     }
                 }
             }
-            // Shop/event choices are intentionally not fabricated. Their rooms
-            // remain on the route, but their economic effects are outside this
-            // first route-aware combat model.
+            // Shops and events are simulated above with value-ranked purchases
+            // and isolated trial execution of the real event option actions.
         }
 
         stats.hpAfterAct = player.hp;
