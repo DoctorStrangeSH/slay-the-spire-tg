@@ -71,6 +71,7 @@ class BattleCards {
     calculateTotalPreview(battle) {
         const total = {
             damage: 0, block: 0, heal: 0, selfDamage: 0,
+            buildingRepair: 0, buildingBlock: 0,
             bleed: 0, vulnerable: 0, weak: 0, draw: 0, fire: 0,
             strength: 0, paralysis: 0, echo: 0, description: ''
         };
@@ -84,6 +85,8 @@ class BattleCards {
             total.block += preview.block;
             total.heal += preview.heal;
             total.selfDamage += preview.selfDamage;
+            total.buildingRepair += preview.buildingRepair;
+            total.buildingBlock += preview.buildingBlock;
             total.bleed += preview.bleed;
             total.vulnerable += preview.vulnerable;
             total.weak += preview.weak;
@@ -104,6 +107,8 @@ class BattleCards {
         if (total.block > 0) parts.push(`🛡️ Блок: ${total.block}`);
         if (total.heal > 0) parts.push(`💚 Лечение: ${total.heal}`);
         if (total.selfDamage > 0) parts.push(`💔 Самоурон: ${total.selfDamage}`);
+        if (total.buildingRepair > 0) parts.push(`🔧 Ремонт конструкций: ${total.buildingRepair} HP`);
+        if (total.buildingBlock > 0) parts.push(`🏗️ Блок конструкций: +${total.buildingBlock}`);
         if (total.bleed > 0) parts.push(`🩸 Кровотечение: ${total.bleed}`);
         if (total.vulnerable > 0) parts.push(`🎯 Уязвимость: ${total.vulnerable}`);
         if (total.weak > 0) parts.push(`📉 Слабость: ${total.weak}`);
@@ -119,6 +124,7 @@ class BattleCards {
     calculateCardPreview(battle, card) {
         const preview = {
             damage: 0, block: 0, heal: 0, selfDamage: 0,
+            buildingRepair: 0, buildingBlock: 0,
             bleed: 0, vulnerable: 0, weak: 0, draw: 0,
             strength: 0, paralysis: 0, echo: 0, fire: 0
         };
@@ -219,6 +225,25 @@ class BattleCards {
         
         if (card.heal) preview.heal = card.heal;
         if (card.selfDamage) preview.selfDamage = card.selfDamage;
+
+        // Show the actual capped construction recovery/support in the same
+        // selected-card preview used for player block and damage.
+        const activeBuildings = battle.buildings?.buildings || [];
+        const mostDamaged = activeBuildings.slice().sort((a, b) =>
+            (a.hp / Math.max(1, a.maxHp)) - (b.hp / Math.max(1, b.maxHp))
+        )[0];
+        if (card.id === 'repair' && mostDamaged) {
+            preview.buildingRepair = Math.min(3, Math.max(0, mostDamaged.maxHp - mostDamaged.hp));
+        }
+        if (card.id === 'repairDrone' || card.id === 'nanobots') {
+            const repairAmount = card.id === 'repairDrone' ? 5 : 2;
+            preview.buildingRepair = activeBuildings.reduce((sum, building) =>
+                sum + Math.min(repairAmount, Math.max(0, building.maxHp - building.hp)), 0
+            );
+        }
+        if (card.id === 'reinforcement' && mostDamaged) {
+            preview.buildingBlock = 4;
+        }
         if (card.bleed) {
             preview.bleed = card.id === 'freshWound' && battle.isBerserkWounded()
                 ? 8
