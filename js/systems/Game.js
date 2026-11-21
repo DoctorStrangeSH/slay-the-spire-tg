@@ -2546,7 +2546,7 @@ class Game {
             .map(id => cards.find(card => card.id === id))
             .filter(Boolean);
         if (!Array.isArray(visit.purchased)) visit.purchased = [];
-        const previousModal = document.getElementById('merchant-modal');
+        const previousModal = document.getElementById?.('merchant-modal');
         previousModal?.__gameModalCleanup?.(false);
         previousModal?.remove();
         const returnFocus = document.activeElement;
@@ -2974,7 +2974,7 @@ class Game {
 
     rest() {
         if (!this.player) return false;
-        const previous = document.querySelector('.campfire-modal');
+        const previous = document.querySelector?.('.campfire-modal');
         previous?.__gameModalCleanup?.(false);
         previous?.remove();
         const returnFocus = document.activeElement;
