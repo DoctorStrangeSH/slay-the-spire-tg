@@ -1171,7 +1171,8 @@ function simulateRouteCampaign(heroId, seed, policy = 'heal-when-useful', routeP
         if (!alive) break;
     }
     return {
-        heroId, seed, policy, routePolicy, acts: report, finalHp: player.hp, finalGold: player.gold,
+        heroId, seed, policy, routePolicy, acts: report,
+        finalHp: player.hp, finalMaxHp: player.maxHp, finalGold: player.gold,
         deckSize: player.deck.length, relicCount: player.relics.length,
         completed: report.length === 3 && report[2].bossWon
     };
@@ -1281,7 +1282,8 @@ test('route-aware boss benchmark compares campfire policies while carrying route
                 const campaign = simulateRouteCampaign(heroId, seed * 104729, policy, routePolicy);
                 campaigns.push(campaign);
                 assert.ok(campaign.acts.length >= 1 && campaign.acts.length <= 3);
-                assert.ok(campaign.finalHp >= 0 && campaign.finalHp <= apiMaxHp(heroId));
+                assert.ok(campaign.finalHp >= 0 && campaign.finalHp <= campaign.finalMaxHp);
+                assert.ok(campaign.finalMaxHp >= apiMaxHp(heroId));
                 assert.ok(campaign.finalGold >= 0);
                 for (const act of campaign.acts) {
                     assert.ok(act.plannedRests >= 1,
