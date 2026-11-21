@@ -38,9 +38,9 @@ function battle({ hp = 50, maxHp = 100, enemyHp = 100, enemyMaxHp = 100, bleed =
     return instance;
 }
 
-function play(instance, cardId) {
+function play(instance, cardId, overrides = {}) {
     const { BERSERK_CARDS } = api();
-    instance.hand = [{ ...BERSERK_CARDS[cardId] }];
+    instance.hand = [{ ...BERSERK_CARDS[cardId], ...overrides }];
     instance.energy = 10;
     return instance.playCard(0);
 }
@@ -119,6 +119,20 @@ test('Fresh Wound doubles bleed below half health', () => {
     const healthy = battle({ hp: 50 });
     play(healthy, 'freshWound');
     assert.equal(healthy.statusEffects.enemy.bleed, 4);
+});
+
+test('upgraded Berserker cards retain their upgrade bonus in conditional branches', () => {
+    const attack = battle({ hp: 49 });
+    play(attack, 'retaliationStrike', { upgraded: true, damage: 9 });
+    assert.equal(attack.enemy.hp, 85, 'upgraded low-health damage is 15');
+
+    const bleedAttack = battle({ bleed: 1 });
+    play(bleedAttack, 'cutWound', { upgraded: true, damage: 6 });
+    assert.equal(bleedAttack.enemy.hp, 89, 'upgraded bleed condition deals 11');
+
+    const defense = battle({ hp: 24 });
+    play(defense, 'lastStand', { upgraded: true, block: 18 });
+    assert.equal(defense.block, 33, 'upgraded low-health block is 33');
 });
 
 test('Blood Smell costs one less while another attack is in hand', () => {
