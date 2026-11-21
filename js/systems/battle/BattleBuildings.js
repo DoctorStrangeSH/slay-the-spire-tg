@@ -64,7 +64,7 @@ class BattleBuildings {
         
         if (battle.hasPower('modularConstruction')) {
             this.buildings.forEach(b => {
-                b.hp = Math.min(b.maxHp, b.hp + 2);
+                b.block += 2;
             });
         }
         
@@ -115,6 +115,9 @@ class BattleBuildings {
     demolishAll(battle) {
         const count = this.buildings.length;
         this.buildings = [];
+        if (count > 0 && battle.hasPower('systemOverload')) {
+            battle.enemy.hp = Math.max(0, battle.enemy.hp - (count * 3));
+        }
         return count;
     }
     
@@ -172,6 +175,7 @@ class BattleBuildings {
     triggerEndOfTurn(battle) {
         const hasNexus = this.buildings.some(b => b.cardId === 'nexus');
         const doubleTrigger = battle.hasPower('totalAutomation');
+        const lubricantActive = Boolean(battle.engineerLubricantActiveThisTurn);
         
         // Сначала статусы на конструкциях
         this.triggerStatusEffects(battle);
@@ -185,6 +189,7 @@ class BattleBuildings {
             if (battle.hasPower('engineeringNetwork')) triggers += 1;
             if (doubleTrigger) triggers += 1;
             if (hasNexus) triggers += 1;
+            if (lubricantActive) triggers += 1;
 
             for (let i = 0; i < triggers; i++) {
                 this.triggerBuildingEnd(battle, building);
@@ -206,9 +211,16 @@ class BattleBuildings {
                 damage: 2
             });
         }
+
+        if (lubricantActive) battle.engineerLubricantActiveThisTurn = false;
     }
     
     triggerStartOfTurn(battle) {
+        if (battle.engineerLubricantNextTurn) {
+            battle.engineerLubricantNextTurn = false;
+            battle.engineerLubricantActiveThisTurn = true;
+        }
+        const lubricantActive = Boolean(battle.engineerLubricantActiveThisTurn);
         const hasNexus = this.buildings.some(b => b.cardId === 'nexus');
         const automationTarget = battle.hasPower('automation') && this.buildings.length > 0
             ? this.buildings[Math.floor(Math.random() * this.buildings.length)]
@@ -222,6 +234,7 @@ class BattleBuildings {
             if (battle.hasPower('totalAutomation')) triggers += 1;
             if (hasNexus) triggers += 1;
             if (automationTarget === building) triggers += 1;
+            if (lubricantActive) triggers += 1;
             
             for (let i = 0; i < triggers; i++) {
                 this.triggerBuildingStart(battle, building);
@@ -234,20 +247,20 @@ class BattleBuildings {
         }
         
         const workshop = this.buildings.find(b => b.cardId === 'workshop');
-        if (workshop && Math.random() < 0.5) {
+        if (workshop && battle.hand.length < GAME_CONFIG.maxHandSize && Math.random() < 0.5) {
             const buildingCards = Object.values(ENGINEER_CARDS).filter(c => c.type === CARD_TYPES.BUILDING);
             const randomBuilding = buildingCards[Math.floor(Math.random() * buildingCards.length)];
-            battle.hand.push({ ...randomBuilding });
+            if (randomBuilding) battle.hand.push({ ...randomBuilding });
         }
         
-        if (battle.hasPower('weaponsFactory')) {
+        if (battle.hasPower('weaponsFactory') && battle.hand.length < GAME_CONFIG.maxHandSize) {
             battle.hand.push({ ...ENGINEER_CARDS.smallTurret });
         }
         
         if (battle.hasPower('indestructibleFortress')) {
             battle.block += 3;
             this.buildings.forEach(b => {
-                b.hp = Math.min(b.maxHp, b.hp + 3);
+                b.block += 3;
             });
         }
     }
