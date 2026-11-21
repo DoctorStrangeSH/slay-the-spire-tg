@@ -515,15 +515,15 @@ test('checkpoint rejects malformed or mismatched pending event without mutating 
     memory.setItem(RunSave.KEY, JSON.stringify(mismatchedRoom));
     assert.equal(persistence.restore(target), false);
 
-    const noEventRoom = structuredClone(baseline);
-    const battle = original.mapGenerator.allNodes.find(node =>
-        node.type === 'battle' && node.floor > original.floor);
-    assert.ok(battle);
-    noEventRoom.currentNodeId = battle.id;
-    noEventRoom.floor = battle.floor;
-    noEventRoom.player.pendingEvent.nodeId = battle.id;
-    noEventRoom.map.visited.push(battle.id);
-    memory.setItem(RunSave.KEY, JSON.stringify(noEventRoom));
+    const battleRun = game();
+    moveGameToRoom(battleRun, 'battle');
+    battleRun.player.pendingEvent = {
+        id: 'event-run:1:' + (battleRun.floor + 1) + ':event',
+        name: 'Испытание памяти',
+        rare: false,
+        nodeId: battleRun.currentNodeId
+    };
+    assert.equal(persistence.save(battleRun), true);
     assert.equal(persistence.restore(target), false);
 
     assert.equal(target.player, null);
