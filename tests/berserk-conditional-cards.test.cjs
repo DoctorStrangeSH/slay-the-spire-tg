@@ -121,6 +121,17 @@ test('Fresh Wound doubles bleed below half health', () => {
     assert.equal(healthy.statusEffects.enemy.bleed, 4);
 });
 
+test('Blood Smell costs one less while another attack is in hand', () => {
+    const instance = battle();
+    const { BERSERK_CARDS } = api();
+    const bloodSmell = { ...BERSERK_CARDS.bloodSmell };
+    instance.hand = [bloodSmell, { id: 'held_attack', type: 'attack', cost: 1 }];
+
+    assert.equal(instance.cards.calculateCardCost(instance, bloodSmell, 1), 0);
+    instance.hand.pop();
+    assert.equal(instance.cards.calculateCardCost(instance, bloodSmell, 1), 1);
+});
+
 test('Mad Dash discounts attacks by one energy on the next turn only', () => {
     const instance = battle();
     play(instance, 'madDash');
