@@ -33,6 +33,24 @@ class BattleCards {
         return cost;
     }
 
+    drawCardsForPlayedCard(battle, card, count) {
+        const cardIndex = battle.hand.indexOf(card);
+        if (cardIndex === -1) {
+            const before = battle.hand.length;
+            battle.drawCards(count);
+            return battle.hand.slice(before);
+        }
+
+        // Resolve the hand-cap check as if the played card had already left
+        // the hand, then restore it at its original index for playCard cleanup.
+        const [playedCard] = battle.hand.splice(cardIndex, 1);
+        const before = battle.hand.length;
+        battle.drawCards(count);
+        const drawn = battle.hand.slice(before);
+        battle.hand.splice(cardIndex, 0, playedCard);
+        return drawn;
+    }
+
     calculateSelectedCost(battle, indices) {
         // playSelectedCards разыгрывает индексы по убыванию, чтобы splice
         // не сдвигал ещё не разыгранные позиции.
@@ -398,7 +416,7 @@ class BattleCards {
         if (card.weak) battle.statusEffects.enemy.weak = (battle.statusEffects.enemy.weak || 0) + card.weak;
         if (card.selfDamage) battle.takeSelfDamage(card.selfDamage);
         if (card.heal) battle.player.hp = Math.min(battle.player.maxHp, Math.floor(battle.player.hp + card.heal));
-        if (card.draw) battle.drawCards(card.draw);
+        if (card.draw) this.drawCardsForPlayedCard(battle, card, card.draw);
     }
     
     applySkill(battle, card) {
@@ -426,15 +444,13 @@ class BattleCards {
             if (target) target.block += 4;
         }
         if (card.id === 'blueprints') {
-            battle.drawCards(2);
+            this.drawCardsForPlayedCard(battle, card, 2);
             for (const held of battle.hand) {
                 if (held.type === CARD_TYPES.BUILDING) held.cost = Math.max(0, (Number(held.cost) || 0) - 1);
             }
         }
         if (card.id === 'quickAssembly') {
-            const previousHandSize = battle.hand.length;
-            battle.drawCards(1);
-            const drawn = battle.hand.slice(previousHandSize);
+            const drawn = this.drawCardsForPlayedCard(battle, card, 1);
             for (const held of drawn) {
                 if (held.type === CARD_TYPES.BUILDING) held.cost = 0;
             }
@@ -471,12 +487,11 @@ class BattleCards {
             const demolished = buildings.demolishAll(battle);
             if (battle.enemy.hp <= 0) return;
             battle.energy += demolished;
-            battle.drawCards(demolished);
+            this.drawCardsForPlayedCard(battle, card, demolished);
         }
         if (card.id === 'engineeringGenius') {
-            const previousHandSize = battle.hand.length;
-            battle.drawCards(3);
-            for (const held of battle.hand.slice(0, previousHandSize + 3)) {
+            this.drawCardsForPlayedCard(battle, card, 3);
+            for (const held of battle.hand) {
                 if (held.type === CARD_TYPES.BUILDING) held.cost = 0;
             }
         }
@@ -488,7 +503,7 @@ class BattleCards {
 
         if (card.heal) battle.player.hp = Math.min(battle.player.maxHp, Math.floor(battle.player.hp + card.heal));
         if (card.draw && !['quickAssembly', 'engineeringGenius', 'blueprints'].includes(card.id)) {
-            battle.drawCards(card.draw);
+            this.drawCardsForPlayedCard(battle, card, card.draw);
         }
         if (card.bleed) battle.statusEffects.enemy.bleed = (battle.statusEffects.enemy.bleed || 0) + card.bleed;
         if (card.selfDamage) battle.takeSelfDamage(card.selfDamage);
@@ -498,7 +513,7 @@ class BattleCards {
     
     applyPower(battle, card) {
         if (card.id === 'reserve' && typeof ENGINEER_CARDS !== 'undefined' &&
-            ENGINEER_CARDS.smallTurret && battle.hand.length < GAME_CONFIG.maxHandSize) {
+            ENGINEER_CARDS.smallTurret && battle.hand.length <= GAME_CONFIG.maxHandSize) {
             battle.hand.push({ ...ENGINEER_CARDS.smallTurret });
         }
         if (card.id === 'jetpack') battle.energy += 1;
