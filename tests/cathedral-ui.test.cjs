@@ -125,3 +125,13 @@ test('mobile event and reward dialogs respect safe viewport and touch targets', 
     assert.match(baseCss, /#map-nodes\s*\{[^}]*overflow-y:\s*auto/);
     assert.match(css, /\.spire-next-card\s*\{[^}]*min-height:\s*77px/);
 });
+
+
+test('reduced-motion disables infinite loops and smooth scrolling globally', () => {
+    const reduced = css.match(/@media \\(prefers-reduced-motion: reduce\\) \\{[\\s\\S]*?\\n\\}/);
+    assert.ok(reduced, 'missing global reduced-motion contract');
+    assert.match(reduced[0], /animation-duration:\s*\.01ms\s*!important/);
+    assert.match(reduced[0], /animation-iteration-count:\s*1\s*!important/);
+    assert.match(reduced[0], /transition-duration:\s*\.01ms\s*!important/);
+    assert.match(reduced[0], /scroll-behavior:\s*auto\s*!important/);
+});
