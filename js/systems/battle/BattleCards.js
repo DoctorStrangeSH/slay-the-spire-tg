@@ -93,14 +93,26 @@ class BattleCards {
         const preview = {
             damage: 0, block: 0, heal: 0, selfDamage: 0,
             bleed: 0, vulnerable: 0, weak: 0, draw: 0,
-            strength: 0, paralysis: 0, echo: 0
+            strength: 0, paralysis: 0, echo: 0, fire: 0
         };
-        
-        if (card.damage) {
-            let damage = card.damage + (battle.statusEffects.player.strength || 0);
+
+        const buildingCount = battle.buildings?.getBuildingCount?.() || 0;
+        let baseDamage = Number(card.damage) || 0;
+        if (card.id === 'kamikazeDrone') {
+            const target = battle.buildings?.buildings?.slice()
+                .sort((a, b) => b.hp - a.hp)[0];
+            baseDamage = target ? Math.min(15, Math.max(0, target.hp)) : 0;
+            if (target && battle.hasPower('systemOverload')) baseDamage += 3;
+        }
+        if (card.id === 'massOverload') {
+            baseDamage = buildingCount * 6;
+            if (battle.hasPower('systemOverload')) baseDamage += buildingCount * 3;
+        }
+
+        if (baseDamage > 0) {
+            let damage = baseDamage + (battle.statusEffects.player.strength || 0);
 
             // Engineer attacks scale with the number of active constructions.
-            const buildingCount = battle.buildings?.getBuildingCount?.() || 0;
             if ((card.id === 'wrench' || card.id === 'bolt') && buildingCount > 0) damage += 3;
             if (card.id === 'overload') damage += buildingCount * 2;
 
@@ -141,6 +153,7 @@ class BattleCards {
         if (card.bleed) preview.bleed = card.bleed;
         if (card.vulnerable) preview.vulnerable = card.vulnerable;
         if (card.weak) preview.weak = card.weak;
+        if (card.fire) preview.fire = card.fire;
         if (card.draw) preview.draw = card.draw;
         if (card.strength) preview.strength = card.strength;
         if (card.paralysis) preview.paralysis = card.paralysis;
@@ -291,10 +304,30 @@ class BattleCards {
     }
     
     dealDamage(battle, card) {
-        let damage = Math.floor(card.damage + (battle.statusEffects.player.strength || 0));
+        const buildingCount = battle.buildings?.getBuildingCount?.() || 0;
+        let baseDamage = Number(card.damage) || 0;
+
+        if (card.id === 'kamikazeDrone' && buildingCount > 0) {
+            const target = battle.buildings.buildings.slice().sort((a, b) => b.hp - a.hp)[0];
+            baseDamage = Math.min(15, Math.max(0, Number(target.hp) || 0));
+            battle.buildings.demolishBuilding(battle, target.id);
+        } else if (card.id === 'massOverload' && buildingCount > 0) {
+            const destroyed = battle.buildings.demolishAll(battle);
+            baseDamage = destroyed * 6;
+            if (battle.hasPower('systemOverload')) {
+                battle.enemy.hp = Math.max(0, battle.enemy.hp - destroyed * 3);
+            }
+        }
+
+        // Destroyer strips the enemy's entire block before dealing its hit.
+        if (card.id === 'destroyer') battle.enemyBlock = 0;
+
+        // A construction's overload can end the encounter before the attack resolves.
+        if (battle.enemy.hp <= 0) return;
+
+        let damage = Math.floor(baseDamage + (battle.statusEffects.player.strength || 0));
 
         // Keep runtime damage identical to the card preview for Engineer synergies.
-        const buildingCount = battle.buildings?.getBuildingCount?.() || 0;
         if ((card.id === 'wrench' || card.id === 'bolt') && buildingCount > 0) damage += 3;
         if (card.id === 'overload') damage += buildingCount * 2;
 
@@ -353,6 +386,9 @@ class BattleCards {
         }
         
         if (card.bleed) battle.statusEffects.enemy.bleed = (battle.statusEffects.enemy.bleed || 0) + card.bleed;
+        if (card.fire && battle.enemy.hp > 0) {
+            battle.statusEffects.enemy.fire = (battle.statusEffects.enemy.fire || 0) + card.fire;
+        }
         if (card.vulnerable) battle.statusEffects.enemy.vulnerable = (battle.statusEffects.enemy.vulnerable || 0) + card.vulnerable;
         if (card.weak) battle.statusEffects.enemy.weak = (battle.statusEffects.enemy.weak || 0) + card.weak;
         if (card.selfDamage) battle.takeSelfDamage(card.selfDamage);
