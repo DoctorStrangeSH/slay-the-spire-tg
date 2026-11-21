@@ -218,3 +218,14 @@ test('mobile atlas room targets meet narrow-phone touch size and preserve zoom a
     assert.match(viewport, /name="viewport" content="width=device-width, initial-scale=1\.0, viewport-fit=cover"/);
     assert.doesNotMatch(viewport, /user-scalable=no|maximum-scale=1/);
 });
+
+
+test('all five mobile battle actions keep 44px targets after high-specificity overrides', () => {
+    const mobileActions = css.match(/@media \(max-width: 640px\) \{[\s\S]*?#battle-screen #action-buttons \.relic-btn,[\s\S]*?#battle-screen #action-buttons \.discard-btn \{[^}]*\}/);
+    assert.ok(mobileActions, 'missing high-specificity mobile utility action rule');
+    assert.match(mobileActions[0], /min-height:\s*44px/);
+
+    const shortViewport = css.match(/@media \(max-width: 640px\) and \(max-height: 640px\) \{\s*#battle-screen #action-buttons \.play-btn,[\s\S]*?\n\}/);
+    assert.ok(shortViewport, 'missing short viewport action override');
+    assert.match(shortViewport[0], /#battle-screen #action-buttons \.end-btn \{ min-height: 44px/);
+});
