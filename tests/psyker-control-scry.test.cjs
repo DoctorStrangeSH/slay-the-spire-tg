@@ -103,6 +103,35 @@ test('Closing Predictor scry preserves the top card and clears the pending choic
     assert.equal(battle.pendingScryCards, null);
 });
 
+test('lethal Psy Resonance does not trigger delayed echo, scry or steal effects', () => {
+    const { CARD_TYPES } = api();
+    const battle = createBattle(['psyResonance']);
+    battle.enemy.hp = 1;
+    battle.drawPile = [
+        { id: 'top', name: 'Верхняя', cost: 1 },
+        { id: 'bottom', name: 'Нижняя', cost: 1 }
+    ];
+    battle.hand = [{
+        id: 'resonant_skill',
+        type: CARD_TYPES.SKILL,
+        cost: 0,
+        echo: 1,
+        scry: 2,
+        steal: 1
+    }];
+    battle.energy = 3;
+
+    const result = battle.playCard(0);
+
+    assert.equal(result.success, true);
+    assert.equal(battle.enemy.hp, 0, 'Psy Resonance deals the lethal point of damage');
+    assert.equal(result.scryedCards, null, 'scry must not open after the lethal resonance');
+    assert.equal(battle.scryedThisTurn, false);
+    assert.equal(battle.echoStacks, 0, 'the dead enemy cannot receive a delayed follow-up');
+    assert.equal(battle.hand.length, 0, 'the steal effect must not add an enemy card');
+    assert.equal(battle.discardPile.length, 1);
+});
+
 test('Game does not show an enemy attack animation on an Absolute Control skip turn', () => {
     let bossAttackFeedback = 0;
     const { Game } = api({
