@@ -137,7 +137,13 @@ class BattleCore {
     }
     
     // Кража карты врага
-    stealEnemyCard() {
+    stealEnemyCard(playedCard = null) {
+        // A card being played is about to leave the hand; reserve that slot so
+        // stealing at a full hand does not reject a legal replacement card.
+        const reservedSlot = playedCard && this.hand.includes(playedCard) ? 1 : 0;
+        if (this.hand.length - reservedSlot >= GAME_CONFIG.maxHandSize) {
+            return { success: false, message: 'Рука полна' };
+        }
         // У нас один враг, крадём его "намерение"
         const intent = this.getEnemyIntentInfo();
         
