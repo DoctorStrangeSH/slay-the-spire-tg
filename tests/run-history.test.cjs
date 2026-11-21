@@ -287,3 +287,58 @@ test('cosmetic gallery marks the selected class reward as equipped', () => {
     assert.equal(gallery.find(item => item.id === 'flawless_elite').equipped, true);
     assert.equal(gallery.find(item => item.id === 'psyker_mind_chain').unlocked, false);
 });
+
+
+test('malformed persisted counters and profile maps are normalized before recording', () => {
+    const storage = memory();
+    storage.setItem(RunHistory.KEY, JSON.stringify({
+        version: 1,
+        runs: 'not-a-number',
+        victories: '7',
+        defeats: -4,
+        bestScore: null,
+        bestAct: {},
+        totalBattles: '12',
+        heroes: { berserk: '3', engineer: 'broken' },
+        heroVictories: { berserk: true, engineer: 2 },
+        challenges: { berserk_last_breath: 'yes', unknown_challenge: true },
+        selectedRewards: { berserk: 'not-a-reward', engineer: 'engineer_iron_line', unknown: 'flawless_elite' },
+        recent: [null, 'bad-entry', { id: 'legacy-run', victory: 1, hero: 42, score: 'bad' }]
+    }));
+    const history = new RunHistory(storage);
+    const before = history.read();
+    assert.equal(before.runs, 0);
+    assert.equal(before.victories, 7);
+    assert.equal(before.defeats, 0);
+    assert.equal(before.bestScore, 0);
+    assert.equal(before.totalBattles, 12);
+    assert.equal(before.heroes.berserk, 3);
+    assert.equal(before.heroes.engineer, 0);
+    assert.equal(before.heroVictories.berserk, 1);
+    assert.equal(before.challenges.berserk_last_breath, undefined);
+    assert.equal(before.challenges.unknown_challenge, undefined);
+    assert.equal(before.selectedRewards.berserk, undefined);
+    assert.equal(before.selectedRewards.engineer, 'engineer_iron_line');
+    assert.equal(before.recent.length, 1);
+    assert.equal(before.recent[0].victory, false);
+    assert.equal(before.recent[0].hero, 'Герой');
+
+    assert.equal(history.record(summary(false, 100), 'berserk', 'after-corruption'), true);
+    const after = history.read();
+    assert.equal(after.runs, 1);
+    assert.equal(after.victories, 7);
+    assert.equal(after.defeats, 1);
+    assert.equal(after.totalBattles, 20);
+});
+
+test('history, challenge and cosmetic writes fail safely when storage becomes unavailable', () => {
+    const denied = {
+        getItem() { return null; },
+        setItem() { throw new Error('quota exceeded'); }
+    };
+    const history = new RunHistory(denied);
+    assert.equal(history.record(summary(true), 'berserk', 'cannot-save'), false);
+    assert.equal(history.unlockChallenge('berserk_last_breath'), false);
+    assert.equal(history.equipReward('berserk', 'berserk_last_breath'), false);
+    assert.equal(history.read().runs, 0);
+});
