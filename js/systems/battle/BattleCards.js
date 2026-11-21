@@ -333,6 +333,14 @@ class BattleCards {
         const buildingCount = battle.buildings?.getBuildingCount?.() || 0;
         let baseDamage = Number(card.damage) || 0;
 
+        // Berserker conditional attacks use the exact same live state as their
+        // card text: health thresholds and current enemy bleed/health.
+        if (card.id === 'retaliationStrike' && battle.isBerserkWounded()) baseDamage = 12;
+        if (card.id === 'cutWound' && (battle.statusEffects.enemy.bleed || 0) > 0) baseDamage = 8;
+        if (card.id === 'mercyStrike' && (battle.statusEffects.enemy.bleed || 0) >= 10) baseDamage = 14;
+        if (card.id === 'execution' &&
+            battle.enemy.hp < battle.enemy.maxHp * 0.30) baseDamage = 30;
+
         if (card.id === 'kamikazeDrone' && buildingCount > 0) {
             const target = battle.buildings.buildings.slice().sort((a, b) => b.hp - a.hp)[0];
             baseDamage = Math.min(15, Math.max(0, Number(target.hp) || 0));
@@ -388,9 +396,14 @@ class BattleCards {
         }
         
         totalDamage = Math.max(0, Math.floor(totalDamage));
-        const actualDamage = Math.min(Math.max(0, battle.enemy.hp), totalDamage);
+        const enemyHpBefore = Math.max(0, Number(battle.enemy.hp) || 0);
+        const actualDamage = Math.min(enemyHpBefore, totalDamage);
         battle.enemy.hp -= totalDamage;
         battle.enemy.hp = Math.max(0, Math.floor(battle.enemy.hp));
+
+        if (card.id === 'beheading' && enemyHpBefore > 0 && battle.enemy.hp <= 0) {
+            battle.player.hp = Math.min(battle.player.maxHp, battle.player.hp + 8);
+        }
 
         if (actualDamage > 0 && battle.hasPower('vampirism') &&
             battle.vampirismTriggersThisTurn < 3) {
@@ -421,7 +434,12 @@ class BattleCards {
     
     applySkill(battle, card) {
         if (card.block) {
-            let blockAmount = card.block + (battle.statusEffects.player.dexterity || 0);
+            let baseBlock = Number(card.block) || 0;
+            if (card.id === 'berserkStance' && battle.isBerserkWounded()) baseBlock = 20;
+            if (card.id === 'spiritFortification' && battle.isBerserkWounded()) baseBlock = 14;
+            if (card.id === 'lastStand' && battle.player.hp < battle.player.maxHp * 0.25) baseBlock = 30;
+            if (card.id === 'finalBattle' && battle.player.hp < battle.player.maxHp * 0.20) baseBlock = 35;
+            let blockAmount = baseBlock + (battle.statusEffects.player.dexterity || 0);
             if (card.id === 'energyShield' && battle.buildings?.getBuildingCount() > 0) {
                 blockAmount += 4;
             }
@@ -505,8 +523,16 @@ class BattleCards {
         if (card.draw && !['quickAssembly', 'engineeringGenius', 'blueprints'].includes(card.id)) {
             this.drawCardsForPlayedCard(battle, card, card.draw);
         }
-        if (card.bleed) battle.statusEffects.enemy.bleed = (battle.statusEffects.enemy.bleed || 0) + card.bleed;
+        if (card.bleed) {
+            const bleedAmount = card.id === 'freshWound' && battle.isBerserkWounded()
+                ? 8
+                : card.bleed;
+            battle.statusEffects.enemy.bleed = (battle.statusEffects.enemy.bleed || 0) + bleedAmount;
+        }
         if (card.selfDamage) battle.takeSelfDamage(card.selfDamage);
+        if (card.id === 'bloodSacrifice' && battle.player.hp > 0) {
+            battle.statusEffects.player.strength = (battle.statusEffects.player.strength || 0) * 2;
+        }
         if (card.weak) battle.statusEffects.enemy.weak = (battle.statusEffects.enemy.weak || 0) + card.weak;
         if (card.vulnerable) battle.statusEffects.enemy.vulnerable = (battle.statusEffects.enemy.vulnerable || 0) + card.vulnerable;
     }
