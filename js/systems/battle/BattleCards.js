@@ -46,7 +46,7 @@ class BattleCards {
     calculateTotalPreview(battle) {
         const total = {
             damage: 0, block: 0, heal: 0, selfDamage: 0,
-            bleed: 0, vulnerable: 0, weak: 0, draw: 0,
+            bleed: 0, vulnerable: 0, weak: 0, draw: 0, fire: 0,
             strength: 0, paralysis: 0, echo: 0, description: ''
         };
         
@@ -63,6 +63,7 @@ class BattleCards {
             total.vulnerable += preview.vulnerable;
             total.weak += preview.weak;
             total.draw += preview.draw;
+            total.fire += preview.fire;
             total.strength += preview.strength;
             total.paralysis += preview.paralysis;
             total.echo += preview.echo;
@@ -82,6 +83,7 @@ class BattleCards {
         if (total.vulnerable > 0) parts.push(`🎯 Уязвимость: ${total.vulnerable}`);
         if (total.weak > 0) parts.push(`📉 Слабость: ${total.weak}`);
         if (total.draw > 0) parts.push(`🃏 Добор: ${total.draw}`);
+        if (total.fire > 0) parts.push(`🔥 Огонь: ${total.fire}`);
         if (total.paralysis > 0) parts.push(`🔒 Паралич: ${total.paralysis}`);
         if (total.echo > 0) parts.push(`🔁 Эхо: ${total.echo}`);
         
