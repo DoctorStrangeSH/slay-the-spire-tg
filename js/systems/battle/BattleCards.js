@@ -112,6 +112,9 @@ class BattleCards {
             if (battle.hasPower('systemOverload')) directBonus += buildingCount * 3;
         }
 
+        if (directBonus >= Math.max(0, Number(battle.enemy?.hp) || 0)) {
+            baseDamage = 0;
+        }
         if (baseDamage > 0) {
             let damage = baseDamage + (battle.statusEffects.player.strength || 0);
 
@@ -142,6 +145,8 @@ class BattleCards {
             
             if (card.hits) damage *= card.hits;
             preview.damage = damage + directBonus;
+        } else if (directBonus > 0) {
+            preview.damage = directBonus;
         }
         
         if (card.block) {
