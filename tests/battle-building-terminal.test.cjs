@@ -46,6 +46,18 @@ test('end-of-turn building triggers stop after the first lethal structure attack
     assert.equal(state.statusEffects.enemy.weak, 0, 'later buildings do not apply debuffs after lethal damage');
 });
 
+test('a lethal building hit does not apply its own poison or weakness afterward', () => {
+    const system = new BattleBuildings();
+    const lethal = building(1, { damage: 5, poison: 3, weak: 2 });
+    const state = battle(4);
+
+    system.triggerBuildingEnd(state, lethal);
+
+    assert.equal(state.enemy.hp, 0);
+    assert.equal(state.statusEffects.enemy.poison, 0);
+    assert.equal(state.statusEffects.enemy.weak, 0);
+});
+
 test('building status ticks stop after System Overload defeats the enemy', () => {
     const system = new BattleBuildings();
     const earlier = building(1, { hp: 1 });
