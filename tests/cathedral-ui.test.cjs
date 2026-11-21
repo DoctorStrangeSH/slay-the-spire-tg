@@ -145,7 +145,7 @@ test('relic, condition and event dialogs provide keyboard focus management', () 
     assert.match(game, /event\.key === 'Escape'/);
     assert.match(game, /event\.key !== 'Tab'/);
     assert.match(game, /event\.shiftKey && \(document\.activeElement === first/);
-    assert.match(game, /document\\.removeEventListener\\?\\.\\('keydown', onKeyDown\\)/);
+    assert.ok(game.includes("document.removeEventListener?.('keydown', onKeyDown)"));
     assert.match(game, /label: 'Коллекция реликвий', returnFocus/);
     assert.match(game, /label: 'Состояния героя', returnFocus/);
     assert.match(game, /label: `Событие: \$\{event\.name\}`, returnFocus, initialFocus: firstChoice/);
