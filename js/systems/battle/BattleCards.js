@@ -30,6 +30,9 @@ class BattleCards {
         if (battle.hasPower('titanRage') && card.type === CARD_TYPES.ATTACK) {
             cost = Math.max(0, cost - 1);
         }
+        if (battle.berserkAttackDiscountActive && card.type === CARD_TYPES.ATTACK) {
+            cost = Math.max(0, cost - 1);
+        }
         return cost;
     }
 
@@ -433,6 +436,7 @@ class BattleCards {
     }
     
     applySkill(battle, card) {
+        if (card.id === 'madDash') battle.berserkAttackDiscountNextTurn = true;
         if (card.block) {
             let baseBlock = Number(card.block) || 0;
             if (card.id === 'berserkStance' && battle.isBerserkWounded()) baseBlock = 20;
