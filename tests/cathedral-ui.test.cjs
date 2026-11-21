@@ -187,3 +187,16 @@ test('building, scry and battle card detail dialogs manage keyboard focus', () =
     assert.ok(battleUI.includes("onEscape: () => closeButton?.click()"));
     assert.ok(battleUI.includes("modal.__gameModalCleanup?.(false)"));
 });
+
+
+test('treasure reward choice is an accessible mandatory dialog', () => {
+    const game = fs.readFileSync(path.join(root, 'js/systems/Game.js'), 'utf8');
+    const start = game.indexOf('    openTreasure() {');
+    const end = game.indexOf('    getShopPrice(card)', start);
+    const method = game.slice(start, end);
+    assert.ok(method.includes("modal.id = 'treasure-modal'"));
+    assert.ok(method.includes("modal.setAttribute?.('aria-modal', 'true')"));
+    assert.ok(method.includes("label: 'Древняя сокровищница', returnFocus"));
+    assert.ok(method.includes("modal.__gameModalCleanup?.(false)"));
+    assert.doesNotMatch(method, /onEscape:/);
+});
