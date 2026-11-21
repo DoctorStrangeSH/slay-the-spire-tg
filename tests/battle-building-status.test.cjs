@@ -62,3 +62,25 @@ test('building status tick is safe with an empty field', () => {
     assert.doesNotThrow(() => system.triggerStatusEffects(battle(true)));
     assert.equal(system.buildings.length, 0);
 });
+
+
+test('construction field never exceeds four slots and rejected placement does not allocate an id', () => {
+    const system = new BattleBuildings();
+    const state = battle();
+    for (let index = 0; index < 4; index++) {
+        const result = system.placeBuilding(state, {
+            id: 'building_' + index, name: 'Тест', hp: 5, damage: 0
+        });
+        assert.equal(result.success, true);
+    }
+
+    const rejected = system.placeBuilding(state, {
+        id: 'overflow', name: 'Лишняя постройка', hp: 5, damage: 0
+    });
+
+    assert.equal(rejected.success, false);
+    assert.equal(rejected.message, 'Нет свободных слотов!');
+    assert.equal(system.getBuildingCount(), 4);
+    assert.equal(system.getFreeSlots(), 0);
+    assert.equal(system.nextId, 5);
+});
