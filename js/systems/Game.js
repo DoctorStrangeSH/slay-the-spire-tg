@@ -36,6 +36,7 @@ function bindGameModalAccessibility(modal, options = {}) {
         document.removeEventListener('keydown', onKeyDown);
         if (restoreFocus && returnFocus?.isConnected) returnFocus.focus({ preventScroll: true });
     };
+    modal.__gameModalCleanup = cleanup;
     const initial = options.initialFocus || focusable()[0];
     initial?.focus?.();
     return { cleanup };
@@ -657,7 +658,9 @@ class Game {
 
     showRelics() {
         if (!this.player) return;
-        document.getElementById('relics-modal')?.remove();
+        const existingModal = document.getElementById('relics-modal');
+        existingModal?.__gameModalCleanup?.(false);
+        existingModal?.remove();
 
         const returnFocus = document.activeElement;
         const modal = document.createElement('div');
@@ -757,7 +760,9 @@ class Game {
     }
 
     showConditions() {
-        document.getElementById('conditions-modal')?.remove();
+        const existingModal = document.getElementById('conditions-modal');
+        existingModal?.__gameModalCleanup?.(false);
+        existingModal?.remove();
         const returnFocus = document.activeElement;
         const modal = document.createElement('div');
         modal.id = 'conditions-modal';
@@ -2242,9 +2247,13 @@ class Game {
             };
             this.runSave?.save?.(this);
         }
+        const existingModal = document.getElementById('cathedral-event-modal');
+        existingModal?.__gameModalCleanup?.(false);
+        existingModal?.remove();
         const scene = this.getEventPresentation(event.name);
         const returnFocus = document.activeElement;
         const modal = document.createElement('div');
+        modal.id = 'cathedral-event-modal';
         modal.className = 'modal cathedral-event-modal';
         modal.dataset.eventScene = scene.style;
         if (event.rare) modal.classList.add('cathedral-event--rare');
