@@ -131,8 +131,8 @@ test('Engineer start and end trigger multipliers stack only in their intended ph
     battle.buildings.triggerStartOfTurn(battle);
     battle.buildings.triggerEndOfTurn(battle);
 
-    assert.equal(starts.length, 5, 'base + Network + Total Automation + Nexus + Automation + Lubricant');
-    assert.deepEqual(Array.from(starts), Array(5).fill('generator'));
+    assert.equal(starts.length, 6, 'base + Network + Total Automation + Nexus + Automation + Lubricant');
+    assert.deepEqual(Array.from(starts), Array(6).fill('generator'));
     assert.equal(ends.length, 3, 'base + Engineering Network + Lubricant; start-only powers do not apply');
     assert.deepEqual(Array.from(ends), Array(3).fill('generator'));
     assert.equal(battle.engineerLubricantActiveThisTurn, false);
