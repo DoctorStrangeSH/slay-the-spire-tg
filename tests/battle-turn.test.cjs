@@ -39,6 +39,35 @@ test('defeated enemy does not attack after lethal card/building effects', () => 
     assert.equal(state.started, undefined);
 });
 
+test('System Overload victory from a destroyed building stops enemy DOT but still resolves player poison', () => {
+    const state = battle({
+        player: { hp: 20, relics: ['systemOverload'] },
+        enemy: { hp: 2, damage: 5 },
+        statusEffects: {
+            player: { poison: 1, vulnerable: 0, thorns: 0 },
+            enemy: { paralysis: 0, poison: 2, fire: 2, bleed: 2, weak: 0, strength: 0 }
+        }
+    });
+    const target = { id: 7, hp: 1 };
+    state.buildings = {
+        buildings: [target],
+        getBuildingCount() { return this.buildings.length; },
+        getRandomBuilding() { return target; }
+    };
+    const turn = new BattleTurn();
+    turn.chooseTarget = () => ({ type: 'building', building: target });
+
+    const outcome = turn.endTurn(state, effects);
+
+    assert.equal(outcome.battleEnded, true);
+    assert.equal(outcome.victory, true);
+    assert.equal(state.enemy.hp, 0);
+    assert.equal(state.statusEffects.enemy.poison, 2);
+    assert.equal(state.statusEffects.enemy.fire, 2);
+    assert.equal(state.statusEffects.enemy.bleed, 2);
+    assert.equal(state.player.hp, 19, 'player poison still resolves before the final outcome');
+});
+
 test('reflection kills attacker before damage is inflicted', () => {
     const state = battle({ enemy: { hp: 3 }, player: { relics: ['psyReflection'] } });
     const outcome = new BattleTurn().endTurn(state, effects);
