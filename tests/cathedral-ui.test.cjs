@@ -128,7 +128,7 @@ test('mobile event and reward dialogs respect safe viewport and touch targets', 
 
 
 test('reduced-motion disables infinite loops and smooth scrolling globally', () => {
-    const reduced = css.match(/@media \\(prefers-reduced-motion: reduce\\) \\{[\\s\\S]*?\\n\\}/);
+    const reduced = css.match(/@media \(prefers-reduced-motion: reduce\) \{[\s\S]*?\n\}/);
     assert.ok(reduced, 'missing global reduced-motion contract');
     assert.match(reduced[0], /animation-duration:\s*\.01ms\s*!important/);
     assert.match(reduced[0], /animation-iteration-count:\s*1\s*!important/);
