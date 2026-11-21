@@ -2712,3 +2712,63 @@ button:disabled { opacity: .42; filter: grayscale(.5); }
   html[data-game-viewport-height="short"] #action-buttons .deck-btn,
   html[data-game-viewport-height="short"] #action-buttons .discard-btn { min-height: 44px; }
 }
+
+
+/* Mobile dialog ergonomics: keep event choices and card rewards inside Telegram's safe viewport. */
+@media (max-width: 640px) {
+  .cathedral-event-modal,
+  #reward-modal {
+    box-sizing: border-box;
+    padding: max(8px, env(safe-area-inset-top)) 8px max(8px, env(safe-area-inset-bottom));
+    overflow-y: auto;
+    overscroll-behavior: contain;
+  }
+  .cathedral-event-modal {
+    align-items: center;
+  }
+  .cathedral-event-modal .cathedral-event-content {
+    box-sizing: border-box;
+    width: min(100%, 490px);
+    max-height: calc(var(--game-viewport-height, 100dvh) - env(safe-area-inset-top) - env(safe-area-inset-bottom) - 16px);
+    padding: clamp(12px, 3.5vw, 18px);
+    overscroll-behavior: contain;
+  }
+  .cathedral-event-art {
+    height: clamp(76px, 19dvh, 110px);
+    margin: 5px auto 8px;
+  }
+  .cathedral-event-halo { width: 88px; height: 88px; }
+  .cathedral-event-sigil { font-size: 66px; }
+  .cathedral-event-story { font-size: 13px; line-height: 1.45; }
+  .cathedral-event-hint { margin: 7px 0 12px; }
+  .cathedral-event-choices { gap: 7px; }
+  .cathedral-event-modal .cathedral-event-choice {
+    min-height: 48px;
+    padding: 10px 11px;
+    gap: 10px;
+  }
+  #reward-modal .modal-content {
+    box-sizing: border-box;
+    width: min(100%, 420px);
+    max-height: calc(var(--game-viewport-height, 100dvh) - env(safe-area-inset-top) - env(safe-area-inset-bottom) - 16px);
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    padding: 16px;
+  }
+  #reward-modal .reward-card {
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  #reward-modal .reward-card-name {
+    min-width: 90px;
+    overflow-wrap: anywhere;
+  }
+  #reward-modal .reward-card button {
+    min-height: 44px;
+  }
+}
+@media (max-width: 360px) {
+  #reward-modal .modal-content { padding: 12px; }
+  #reward-modal .reward-card-art { width: 56px; height: 52px; }
+  #reward-modal .reward-card-name { font-size: 12px; }
+}
