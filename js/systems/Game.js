@@ -2412,8 +2412,16 @@ class Game {
     }
 
     openTreasure() {
+        const previous = document.getElementById?.('treasure-modal');
+        previous?.__gameModalCleanup?.(false);
+        previous?.remove();
+        const returnFocus = document.activeElement;
         const modal = document.createElement('div');
+        modal.id = 'treasure-modal';
         modal.className = 'modal';
+        modal.setAttribute('role', 'dialog');
+        modal.setAttribute('aria-modal', 'true');
+        modal.setAttribute('aria-label', 'Древняя сокровищница');
         modal.innerHTML = `<div class="modal-content">
             <h3>🎁 Древняя сокровищница</h3>
             <p>Магические печати позволяют забрать только одну награду.</p>
@@ -2445,12 +2453,16 @@ class Game {
                     !this.applyTreasureReward(choice.type)) return;
                 claimed = true;
                 this.player.claimedTreasureNodes = [...resolved, nodeId].filter(Boolean);
+                modal.__gameModalCleanup?.(false);
                 modal.remove();
                 this.continueJourney();
             };
             modal.querySelector('.modal-content').appendChild(button);
         });
         document.body.appendChild(modal);
+        bindGameModalAccessibility(modal, {
+            label: 'Древняя сокровищница', returnFocus
+        });
     }
 
     getShopPrice(card) {
