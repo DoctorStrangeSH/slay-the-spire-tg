@@ -21,6 +21,8 @@ class BattleSystem extends BattleCore {
     }
     
     startTurn() {
+        this.berserkAttackDiscountActive = Boolean(this.berserkAttackDiscountNextTurn);
+        this.berserkAttackDiscountNextTurn = false;
         this.energy = this.maxEnergy;
         this.block = (this.hasPower('stoneguard') ? 4 : 0)
             + (this.player.heroId === 'engineer' && this.hasPower('ironCog') ? 2 : 0)
