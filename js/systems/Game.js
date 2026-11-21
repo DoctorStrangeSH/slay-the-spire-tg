@@ -1,3 +1,46 @@
+// Общая клавиатурная модель для игровых диалогов: удерживает фокус внутри окна
+// и возвращает его к открывшему элементу после закрытия.
+function bindGameModalAccessibility(modal, options = {}) {
+    const returnFocus = options.returnFocus || document.activeElement;
+    const focusable = () => [...modal.querySelectorAll(
+        'button:not([disabled]), a[href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
+    )].filter(element => !element.hidden && element.getAttribute('aria-hidden') !== 'true');
+    const onKeyDown = event => {
+        if (event.key === 'Escape' && typeof options.onEscape === 'function') {
+            event.preventDefault();
+            options.onEscape();
+            return;
+        }
+        if (event.key !== 'Tab') return;
+        const items = focusable();
+        if (!items.length) {
+            event.preventDefault();
+            modal.focus?.();
+            return;
+        }
+        const first = items[0];
+        const last = items[items.length - 1];
+        if (event.shiftKey && (document.activeElement === first || !modal.contains(document.activeElement))) {
+            event.preventDefault();
+            last.focus();
+        } else if (!event.shiftKey && (document.activeElement === last || !modal.contains(document.activeElement))) {
+            event.preventDefault();
+            first.focus();
+        }
+    };
+    modal.setAttribute('role', 'dialog');
+    modal.setAttribute('aria-modal', 'true');
+    if (options.label) modal.setAttribute('aria-label', options.label);
+    document.addEventListener('keydown', onKeyDown);
+    const cleanup = (restoreFocus = true) => {
+        document.removeEventListener('keydown', onKeyDown);
+        if (restoreFocus && returnFocus?.isConnected) returnFocus.focus({ preventScroll: true });
+    };
+    const initial = options.initialFocus || focusable()[0];
+    initial?.focus?.();
+    return { cleanup };
+}
+
 // Основная игровая логика
 class Game {
     constructor() {
@@ -616,6 +659,7 @@ class Game {
         if (!this.player) return;
         document.getElementById('relics-modal')?.remove();
 
+        const returnFocus = document.activeElement;
         const modal = document.createElement('div');
         modal.className = 'modal';
         modal.id = 'relics-modal';
@@ -649,11 +693,20 @@ class Game {
         }
 
         const close = document.createElement('button');
+        close.type = 'button';
         close.textContent = 'Закрыть';
-        close.onclick = () => modal.remove();
+        const accessibility = bindGameModalAccessibility(modal, {
+            label: 'Коллекция реликвий', returnFocus,
+            onEscape: () => { accessibility.cleanup(); modal.remove(); }
+        });
+        close.onclick = () => { accessibility.cleanup(); modal.remove(); };
         content.appendChild(close);
         modal.appendChild(content);
         document.body.appendChild(modal);
+        close.focus();
+        modal.addEventListener('click', event => {
+            if (event.target === modal) { accessibility.cleanup(); modal.remove(); }
+        });
     }
 
     grantTemporaryBlessing(key, battles) {
@@ -705,6 +758,7 @@ class Game {
 
     showConditions() {
         document.getElementById('conditions-modal')?.remove();
+        const returnFocus = document.activeElement;
         const modal = document.createElement('div');
         modal.id = 'conditions-modal';
         modal.className = 'modal';
@@ -737,12 +791,20 @@ class Game {
             content.appendChild(entry);
         }
         const close = document.createElement('button');
+        close.type = 'button';
         close.textContent = 'Закрыть';
-        close.onclick = () => modal.remove();
+        const accessibility = bindGameModalAccessibility(modal, {
+            label: 'Состояния героя', returnFocus,
+            onEscape: () => { accessibility.cleanup(); modal.remove(); }
+        });
+        close.onclick = () => { accessibility.cleanup(); modal.remove(); };
         content.appendChild(close);
         modal.appendChild(content);
         document.body.appendChild(modal);
         close.focus();
+        modal.addEventListener('click', event => {
+            if (event.target === modal) { accessibility.cleanup(); modal.remove(); }
+        });
     }
 
     startBattle(isElite = false) {
@@ -2181,6 +2243,7 @@ class Game {
             this.runSave?.save?.(this);
         }
         const scene = this.getEventPresentation(event.name);
+        const returnFocus = document.activeElement;
         const modal = document.createElement('div');
         modal.className = 'modal cathedral-event-modal';
         modal.dataset.eventScene = scene.style;
@@ -2200,6 +2263,7 @@ class Game {
         `;
 
         let resolved = false;
+        let accessibility = null;
         event.options.forEach((option, index) => {
             const button = document.createElement('button');
             button.className = 'cathedral-event-choice';
@@ -2219,12 +2283,14 @@ class Game {
                     resolved = true;
                     if (this.player?.pendingEvent?.id === eventId) this.player.pendingEvent = null;
                     this.runSave?.save?.(this);
+                    accessibility?.cleanup(false);
                     modal.remove();
                     return;
                 }
                 const result = this.commitEventDecision(event, option, eventId);
                 if (result === false) return;
                 resolved = true;
+                accessibility?.cleanup(false);
                 modal.remove();
                 if (result !== 'deferred') this.continueJourney();
             };
@@ -2232,6 +2298,10 @@ class Game {
         });
 
         document.body.appendChild(modal);
+        const firstChoice = modal.querySelector('.cathedral-event-choice');
+        accessibility = bindGameModalAccessibility(modal, {
+            label: `Событие: ${event.name}`, returnFocus, initialFocus: firstChoice
+        });
         this.currentEvent = event;
     }
 
