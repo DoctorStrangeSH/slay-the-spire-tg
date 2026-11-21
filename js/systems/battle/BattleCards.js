@@ -98,7 +98,12 @@ class BattleCards {
         
         if (card.damage) {
             let damage = card.damage + (battle.statusEffects.player.strength || 0);
-            
+
+            // Engineer attacks scale with the number of active constructions.
+            const buildingCount = battle.buildings?.getBuildingCount?.() || 0;
+            if ((card.id === 'wrench' || card.id === 'bolt') && buildingCount > 0) damage += 3;
+            if (card.id === 'overload') damage += buildingCount * 2;
+
             // Усиление разума
             if (battle.hasPower('mindAmplification')) damage += 3;
             
@@ -284,7 +289,12 @@ class BattleCards {
     
     dealDamage(battle, card) {
         let damage = Math.floor(card.damage + (battle.statusEffects.player.strength || 0));
-        
+
+        // Keep runtime damage identical to the card preview for Engineer synergies.
+        const buildingCount = battle.buildings?.getBuildingCount?.() || 0;
+        if ((card.id === 'wrench' || card.id === 'bolt') && buildingCount > 0) damage += 3;
+        if (card.id === 'overload') damage += buildingCount * 2;
+
         // Усиление разума
         if (battle.hasPower('mindAmplification')) damage += 3;
         
