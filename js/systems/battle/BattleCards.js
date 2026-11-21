@@ -467,6 +467,7 @@ class BattleCards {
         }
         if (card.id === 'factoryReset' && buildings) {
             const demolished = buildings.demolishAll(battle);
+            if (battle.enemy.hp <= 0) return;
             battle.energy += demolished;
             battle.drawCards(demolished);
         }
