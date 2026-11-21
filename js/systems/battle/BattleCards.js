@@ -290,6 +290,14 @@ class BattleCards {
         const card = battle.hand[cardIndex];
         if (!card) return { success: false, message: 'Карта не найдена' };
 
+        // Do not charge or consume a construction card when the field is full.
+        // Repeated effects (Echo) may still resolve up to the remaining capacity
+        // once at least one slot is available.
+        if (card.type === CARD_TYPES.BUILDING &&
+            !battle.buildings?.hasFreeSlots?.()) {
+            return { success: false, message: 'Нет свободных слотов!' };
+        }
+
         const cardCost = this.calculateCardCost(battle, card, battle.cardsPlayedThisTurn + 1);
 
         if (cardCost > battle.energy) {
