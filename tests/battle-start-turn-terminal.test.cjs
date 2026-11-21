@@ -8,7 +8,7 @@ const vm = require('node:vm');
 const root = join(__dirname, '..');
 const effectsSource = readFileSync(join(root, 'js/systems/battle/BattleEffects.js'), 'utf8');
 const turnSource = readFileSync(join(root, 'js/systems/battle/BattleTurn.js'), 'utf8');
-const BattleTurn = vm.runInNewContext(turnSource + '\\nBattleTurn;', {});
+const BattleTurn = vm.runInNewContext(turnSource + '\nBattleTurn;', {});
 const BattleEffects = vm.runInNewContext(effectsSource + '\nBattleEffects;', {
     CARD_TYPES: { SKILL: 'skill', ATTACK: 'attack', POWER: 'power' }
 });
