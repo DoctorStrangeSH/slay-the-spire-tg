@@ -11,7 +11,7 @@
 
 Проверка актуального `main` после завершения очередного пакета исправлений боевой системы:
 
-- **JavaScript regression tests:** 481/481 PASS, 0 FAIL (Actions run `44907031812`, commit `dfff dab` без пробела: `dfffdaba`).
+- **JavaScript regression tests:** 481/481 PASS, 0 FAIL (Actions run `44907031812`, commit `dfffdaba`).
 - **GitHub Pages:** build/deployment SUCCESS (Actions run `44907031390`, commit `dfffdaba`).
 - **Опубликованная версия ресурсов:** `2026.11.21.9`; все 29 локальных JS/CSS ссылок в `index.html` синхронизированы.
 - **Инженер — карты атак:** Камикадзе, Массовая перегрузка, Разрушитель и Огнемёт проверены; прогноз прямого урона синхронизирован с фактическим разрешением.
