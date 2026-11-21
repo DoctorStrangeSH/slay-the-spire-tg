@@ -115,6 +115,15 @@ class RunSave {
         const visitedIds = data.map.visited;
         if (data.player.pendingRest !== undefined && typeof data.player.pendingRest !== 'boolean') return false;
         if (data.player.pendingRest === true && current?.type !== NODE_TYPES.REST) return false;
+        const pendingEvent = data.player.pendingEvent;
+        if (pendingEvent !== undefined && pendingEvent !== null) {
+            if (!pendingEvent || typeof pendingEvent !== 'object' || Array.isArray(pendingEvent) ||
+                typeof pendingEvent.id !== 'string' || !pendingEvent.id ||
+                typeof pendingEvent.name !== 'string' || !pendingEvent.name ||
+                typeof pendingEvent.rare !== 'boolean' ||
+                typeof pendingEvent.nodeId !== 'string' ||
+                pendingEvent.nodeId !== data.currentNodeId || current?.type !== NODE_TYPES.EVENT) return false;
+        }
         if (!current || current.floor !== data.floor ||
             !Array.isArray(visitedIds) || visitedIds.length === 0 ||
             visitedIds.length > map.allNodes.length ||
