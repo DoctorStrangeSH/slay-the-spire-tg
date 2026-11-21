@@ -8,6 +8,7 @@ const vm = require('node:vm');
 const root = join(__dirname, '..');
 const source = [
     'js/config/constants.js',
+    'js/data/cards/psyker.js',
     'js/systems/battle/BattleCore.js',
     'js/systems/battle/BattleEffects.js',
     'js/systems/battle/BattleCards.js',
@@ -16,9 +17,9 @@ const source = [
     'js/systems/Game.js'
 ].map(file => readFileSync(join(root, file), 'utf8')).join('\n');
 
-function api(overrides = {}) {
+function api(overrides = {}, randomValue = 0.99) {
     const math = Object.create(Math);
-    math.random = () => 0.99;
+    math.random = () => randomValue;
     const context = {
         Math: math,
         BattleUI: { update() {} },
@@ -28,8 +29,8 @@ function api(overrides = {}) {
     return vm.runInNewContext(source + '\n({ BattleSystem, CARD_TYPES, Game })', context);
 }
 
-function createBattle(powers = [], hp = 20, deck = []) {
-    const { BattleSystem } = api();
+function createBattle(powers = [], hp = 20, deck = [], randomValue = 0.99) {
+    const { BattleSystem } = api({}, randomValue);
     return new BattleSystem(
         { heroId: 'psyker', hp, maxHp: 40, deck: deck.map(card => ({ ...card })), relics: [...powers] },
         { id: 'training_dummy', name: 'Тренировочный манекен', hp: 100, maxHp: 100,
@@ -155,3 +156,76 @@ test('Game does not show an enemy attack animation on an Absolute Control skip t
 
     assert.equal(bossAttackFeedback, 0);
 });
+
+test('Mental Blockade applies paralysis only on its 50 percent roll', () => {
+    const triggered = createBattle(['mentalBlockade'], 20, [], 0.1);
+    triggered.enemyIntent = 'defend';
+    triggered.endTurn();
+    assert.equal(triggered.statusEffects.enemy.paralysis, 1);
+
+    const missed = createBattle(['mentalBlockade'], 20, [], 0.9);
+    missed.enemyIntent = 'defend';
+    missed.endTurn();
+    assert.equal(missed.statusEffects.enemy.paralysis, 0);
+});
+
+test('Mental Storm can finish an enemy after its announced action', () => {
+    const battle = createBattle(['mentalStorm']);
+    battle.enemy.hp = 3;
+    battle.enemyIntent = 'defend';
+
+    const result = battle.endTurn();
+
+    assert.equal(result.battleEnded, true);
+    assert.equal(result.victory, true);
+    assert.equal(battle.enemy.hp, 0);
+});
+
+test('Psy Reflection kills the attacker before its hit can reach the hero', () => {
+    const battle = createBattle(['psyReflection'], 20);
+    battle.enemy.hp = 3;
+    battle.enemyIntent = 'attack';
+
+    const result = battle.endTurn();
+
+    assert.equal(result.battleEnded, true);
+    assert.equal(result.victory, true);
+    assert.equal(battle.player.hp, 20);
+    assert.equal(battle.enemy.hp, 0);
+});
+
+test('Psy Vampirism heals at the start of a turn while the enemy is paralyzed', () => {
+    const battle = createBattle(['psyVampirism'], 10);
+    battle.statusEffects.enemy.paralysis = 1;
+
+    battle.startTurn();
+
+    assert.equal(battle.player.hp, 12);
+});
+
+test('Mental Capture can replace its own slot in a full hand without exceeding the cap', () => {
+    const { CARD_TYPES, PSYKER_CARDS } = api();
+    const battle = createBattle();
+    battle.hand = Array.from({ length: 10 }, (_, index) => ({
+        id: `held_${index}`, name: `Карта ${index}`, type: CARD_TYPES.SKILL, cost: 0
+    }));
+    battle.hand[0] = { ...PSYKER_CARDS.mentalCapture };
+    battle.energy = 3;
+
+    const result = battle.playCard(0);
+
+    assert.equal(result.success, true);
+    assert.equal(battle.hand.length, 10);
+    assert.equal(battle.hand.some(card => card.id === 'stolen_attack' || card.id === 'stolen_defend'), true);
+});
+
+test('direct enemy-card theft is rejected when the hand is already full', () => {
+    const battle = createBattle();
+    battle.hand = Array.from({ length: 10 }, (_, index) => ({ id: `held_${index}` }));
+
+    const result = battle.stealEnemyCard();
+
+    assert.equal(result.success, false);
+    assert.equal(battle.hand.length, 10);
+});
+
