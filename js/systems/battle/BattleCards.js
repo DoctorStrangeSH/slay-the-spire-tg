@@ -381,6 +381,7 @@ class BattleCards {
             if (target) target.block += 4;
         }
         if (card.id === 'blueprints') {
+            battle.drawCards(2);
             for (const held of battle.hand) {
                 if (held.type === CARD_TYPES.BUILDING) held.cost = Math.max(0, (Number(held.cost) || 0) - 1);
             }
