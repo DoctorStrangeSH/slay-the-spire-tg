@@ -1514,7 +1514,7 @@ button:disabled { opacity: .42; filter: grayscale(.5); }
   #enemy-area { min-height: 75px; }
   #enemy-sprite { max-height: var(--game-viewport-18, 18dvh); font-size: 34px; }
   #hand-area { height: 115px; }
-  #action-buttons .action-btn { min-height: 29px; padding: 5px 3px; }
+  #action-buttons .action-btn { min-height: 44px; padding: 5px 3px; }
   #battle-preview { bottom: 185px; }
 }
 
@@ -1728,7 +1728,7 @@ button:disabled { opacity: .42; filter: grayscale(.5); }
   #action-buttons .relic-btn, #action-buttons .deck-btn,
   #action-buttons .discard-btn {
     grid-column: span 2;
-    min-height: 32px;
+    min-height: 44px;
     padding: 6px 2px;
     font-size: clamp(10px, 2.7vw, 12px);
     opacity: .88;
@@ -1768,9 +1768,9 @@ button:disabled { opacity: .42; filter: grayscale(.5); }
   #enemy-area { min-height: 65px; }
   #player-info { padding: 4px 7px; }
   #hand-area { height: 107px; }
-  #action-buttons .play-btn, #action-buttons .end-btn { min-height: 35px; }
+  #action-buttons .play-btn, #action-buttons .end-btn { min-height: 44px; }
   #action-buttons .relic-btn, #action-buttons .deck-btn,
-  #action-buttons .discard-btn { min-height: 27px; padding: 4px 2px; }
+  #action-buttons .discard-btn { min-height: 44px; padding: 4px 2px; }
   #battle-preview { bottom: calc(107px + 78px + env(safe-area-inset-bottom)); }
 }
 
@@ -2656,7 +2656,7 @@ button:disabled { opacity: .42; filter: grayscale(.5); }
   html[data-game-viewport-height="short"] #action-buttons .relic-btn,
   html[data-game-viewport-height="short"] #action-buttons .deck-btn,
   html[data-game-viewport-height="short"] #action-buttons .discard-btn {
-    min-height: 36px;
+    min-height: 44px;
     padding: 4px 2px;
   }
   html[data-game-viewport-height="compact"] #battle-preview,
@@ -2710,5 +2710,5 @@ button:disabled { opacity: .42; filter: grayscale(.5); }
   html[data-game-viewport-height="short"] #action-buttons .end-btn { min-height: 44px; }
   html[data-game-viewport-height="short"] #action-buttons .relic-btn,
   html[data-game-viewport-height="short"] #action-buttons .deck-btn,
-  html[data-game-viewport-height="short"] #action-buttons .discard-btn { min-height: 36px; }
+  html[data-game-viewport-height="short"] #action-buttons .discard-btn { min-height: 44px; }
 }
