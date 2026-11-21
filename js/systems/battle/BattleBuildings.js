@@ -235,10 +235,9 @@ class BattleBuildings {
         }
         
         if (battle.hasPower('indestructibleFortress')) {
-            battle.block += 3;
-            this.buildings.forEach(b => {
-                b.block += 3;
-            });
+            // Temporary block: 3 for the hero and 3 contributed by each
+            // active construction. Do not permanently inflate building stats.
+            battle.block += 3 + (this.buildings.length * 3);
         }
     }
     
