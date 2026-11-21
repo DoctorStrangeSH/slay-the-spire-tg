@@ -110,3 +110,17 @@ test('target mobile viewport profiles keep battle controls touch-accessible', ()
     assert.match(css, /#map-screen #map-nodes \{[^}]*max-height: min/);
     assert.match(css, /env\(safe-area-inset-bottom\)/);
 });
+
+
+test('mobile event and reward dialogs respect safe viewport and touch targets', () => {
+    const mainMobile = css.slice(css.lastIndexOf('/* Mobile dialog ergonomics:'));
+    assert.match(mainMobile, /\.cathedral-event-modal,[\s\S]*?#reward-modal\s*\{[^}]*env\(safe-area-inset-top\)[^}]*env\(safe-area-inset-bottom\)/);
+    assert.match(mainMobile, /\.cathedral-event-modal \.cathedral-event-content\s*\{[^}]*box-sizing:\s*border-box/);
+    assert.match(mainMobile, /\.cathedral-event-modal \.cathedral-event-content\s*\{[^}]*max-height:\s*calc\(var\(--game-viewport-height/);
+    assert.match(mainMobile, /\.cathedral-event-modal \.cathedral-event-choice\s*\{[^}]*min-height:\s*48px/);
+    assert.match(mainMobile, /#reward-modal \.modal-content\s*\{[^}]*box-sizing:\s*border-box/);
+    assert.match(mainMobile, /#reward-modal \.modal-content\s*\{[^}]*overflow-y:\s*auto/);
+    assert.match(mainMobile, /#reward-modal \.reward-card button\s*\{\s*min-height:\s*44px/);
+    assert.match(css, /#map-nodes\s*\{[^}]*overflow-y:\s*auto/);
+    assert.match(css, /\.spire-next-card\s*\{[^}]*min-height:\s*77px/);
+});
