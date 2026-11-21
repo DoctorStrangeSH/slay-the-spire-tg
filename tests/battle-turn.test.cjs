@@ -127,6 +127,51 @@ test('second life resolves before a victory after mutual lethal damage', () => {
 });
 
 
+test('enemy block expires before its next action instead of stacking across turns', () => {
+    const attacking = battle({
+        enemy: { damage: 8 },
+        enemyBlock: 12
+    });
+    attacking.enemyIntent = 'attack';
+
+    new BattleTurn().endTurn(attacking, effects);
+
+    assert.equal(attacking.enemyBlock, 0);
+    assert.equal(attacking.player.hp, 12, 'the enemy attacks after its previous block expires');
+
+    const defending = battle({ enemyBlock: 12 });
+    defending.enemyIntent = 'defend';
+
+    new BattleTurn().endTurn(defending, effects);
+
+    assert.equal(defending.enemyBlock, 10,
+        'a new defend action replaces the expired block instead of stacking on it');
+});
+
+test('secret boss phase transition keeps its newly granted block after old block expires', () => {
+    const state = battle({
+        enemyBlock: 9,
+        enemy: {
+            hp: 30,
+            maxHp: 100,
+            isSecretBoss: true,
+            phase: 1,
+            damage: 8,
+            baseDamage: 8,
+            phaseDamageBonus: 2,
+            pattern: ['attack', 'defend'],
+            patternIndex: 0
+        }
+    });
+    state.enemyIntent = 'attack';
+
+    new BattleTurn().endTurn(state, effects);
+
+    assert.equal(state.enemy.phase, 3);
+    assert.equal(state.enemyBlock, 18,
+        'phase-three opening block is retained without adding the previous phase block');
+});
+
 test('enemy attack forecast matches weakness, vulnerability and invulnerability', () => {
     const coreSource = readFileSync(join(__dirname, '../js/systems/battle/BattleCore.js'), 'utf8');
     const BattleCore = vm.runInNewContext(coreSource + '\nBattleCore;', { Math });
