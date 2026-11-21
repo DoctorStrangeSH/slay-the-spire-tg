@@ -342,11 +342,12 @@ class BattleCards {
 
         // Berserker conditional attacks use the exact same live state as their
         // card text: health thresholds and current enemy bleed/health.
-        if (card.id === 'retaliationStrike' && battle.isBerserkWounded()) baseDamage = 12;
-        if (card.id === 'cutWound' && (battle.statusEffects.enemy.bleed || 0) > 0) baseDamage = 8;
-        if (card.id === 'mercyStrike' && (battle.statusEffects.enemy.bleed || 0) >= 10) baseDamage = 14;
+        const upgradeBonus = card.upgraded ? 3 : 0;
+        if (card.id === 'retaliationStrike' && battle.isBerserkWounded()) baseDamage = 12 + upgradeBonus;
+        if (card.id === 'cutWound' && (battle.statusEffects.enemy.bleed || 0) > 0) baseDamage = 8 + upgradeBonus;
+        if (card.id === 'mercyStrike' && (battle.statusEffects.enemy.bleed || 0) >= 10) baseDamage = 14 + upgradeBonus;
         if (card.id === 'execution' &&
-            battle.enemy.hp < battle.enemy.maxHp * 0.30) baseDamage = 30;
+            battle.enemy.hp < battle.enemy.maxHp * 0.30) baseDamage = 30 + upgradeBonus;
 
         if (card.id === 'kamikazeDrone' && buildingCount > 0) {
             const target = battle.buildings.buildings.slice().sort((a, b) => b.hp - a.hp)[0];
@@ -443,10 +444,11 @@ class BattleCards {
         if (card.id === 'madDash') battle.berserkAttackDiscountNextTurn = true;
         if (card.block) {
             let baseBlock = Number(card.block) || 0;
-            if (card.id === 'berserkStance' && battle.isBerserkWounded()) baseBlock = 20;
-            if (card.id === 'spiritFortification' && battle.isBerserkWounded()) baseBlock = 14;
-            if (card.id === 'lastStand' && battle.player.hp < battle.player.maxHp * 0.25) baseBlock = 30;
-            if (card.id === 'finalBattle' && battle.player.hp < battle.player.maxHp * 0.20) baseBlock = 35;
+            const upgradeBonus = card.upgraded ? 3 : 0;
+            if (card.id === 'berserkStance' && battle.isBerserkWounded()) baseBlock = 20 + upgradeBonus;
+            if (card.id === 'spiritFortification' && battle.isBerserkWounded()) baseBlock = 14 + upgradeBonus;
+            if (card.id === 'lastStand' && battle.player.hp < battle.player.maxHp * 0.25) baseBlock = 30 + upgradeBonus;
+            if (card.id === 'finalBattle' && battle.player.hp < battle.player.maxHp * 0.20) baseBlock = 35 + upgradeBonus;
             let blockAmount = baseBlock + (battle.statusEffects.player.dexterity || 0);
             if (card.id === 'energyShield' && battle.buildings?.getBuildingCount() > 0) {
                 blockAmount += 4;
