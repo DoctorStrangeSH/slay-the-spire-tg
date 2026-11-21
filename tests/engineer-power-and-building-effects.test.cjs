@@ -88,6 +88,11 @@ test('Indestructible Fortress grants 3 player block and 3 construction block wit
     assert.equal(battle.block, 6, '3 block for the hero plus 3 contributed by the active construction');
     assert.equal(damaged.hp, 2);
     assert.equal(damaged.block, 0, 'the temporary bonus does not permanently alter the construction');
+
+    battle.block = 0;
+    battle.buildings.triggerStartOfTurn(battle);
+    assert.equal(battle.block, 6, 'the same temporary amount is granted on the next turn, not accumulated');
+    assert.equal(damaged.block, 0);
 });
 
 test('System Overload triggers for every construction removed by Factory Reset', () => {
@@ -136,6 +141,41 @@ test('Lubricant doubles both construction trigger phases on the following turn o
     battle.buildings.triggerEndOfTurn(battle);
     assert.equal(starts.length, 6, 'the following turn returns to normal start triggers');
     assert.equal(ends.length, 8, 'the following turn returns to normal end triggers');
+});
+
+test('Total Automation doubles start triggers but does not double end triggers', () => {
+    const { api, battle } = setup();
+    battle.player.relics.push('totalAutomation');
+    const turret = addBuilding(api, battle, 'smallTurret');
+    const barrier = addBuilding(api, battle, 'barrier');
+    const starts = [];
+    const ends = [];
+    battle.buildings.triggerBuildingStart = (_battle, building) => starts.push(building.cardId);
+    battle.buildings.triggerBuildingEnd = (_battle, building) => ends.push(building.cardId);
+
+    battle.buildings.triggerStartOfTurn(battle);
+    battle.buildings.triggerEndOfTurn(battle);
+
+    assert.deepEqual(Array.from(starts), ['smallTurret', 'smallTurret', 'barrier', 'barrier']);
+    assert.deepEqual(Array.from(ends), ['smallTurret', 'barrier']);
+    assert.ok(battle.buildings.buildings.includes(turret));
+    assert.ok(battle.buildings.buildings.includes(barrier));
+});
+
+test('Nexus doubles other constructions at turn start but not at turn end', () => {
+    const { api, battle } = setup();
+    addBuilding(api, battle, 'nexus');
+    addBuilding(api, battle, 'smallTurret');
+    const starts = [];
+    const ends = [];
+    battle.buildings.triggerBuildingStart = (_battle, building) => starts.push(building.cardId);
+    battle.buildings.triggerBuildingEnd = (_battle, building) => ends.push(building.cardId);
+
+    battle.buildings.triggerStartOfTurn(battle);
+    battle.buildings.triggerEndOfTurn(battle);
+
+    assert.deepEqual(Array.from(starts), ['smallTurret', 'smallTurret']);
+    assert.deepEqual(Array.from(ends), ['smallTurret']);
 });
 
 test('Engineering Network doubles Energy Core energy generation', () => {
