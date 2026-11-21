@@ -60,7 +60,7 @@ test('invalid and inactive statuses do not render', () => {
 
 test('both combatants use the unified status renderer and CSS has motion fallback', () => {
     assert.equal(source.split('this.renderStatusBadges(effectsEl, effects)').length - 1, 2);
-    assert.match(source, /document.getElementById\('status-modal'\)\?\.remove\(\)/);
+    assert.match(source, /document.getElementById\('status-modal'\)\?\.__closeStatusModal\?\.\(\)/);
     for (const id of ['strength', 'weak', 'vulnerable', 'bleed', 'poison', 'paralysis', 'echo', 'thorns']) {
         assert.match(source, new RegExp("key: '" + id + "'"));
     }
