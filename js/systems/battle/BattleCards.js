@@ -230,15 +230,17 @@ class BattleCards {
             if (battle.player.hp <= 0 || battle.enemy.hp <= 0) break;
         }
 
-        const battleStillActive = battle.player.hp > 0 && battle.enemy.hp > 0;
+        let battleStillActive = battle.player.hp > 0 && battle.enemy.hp > 0;
+        // Пси-резонанс - навык наносит урон. Этот урон тоже может завершить бой.
+        if (battleStillActive && card.type === CARD_TYPES.SKILL && battle.hasPower('psyResonance')) {
+            battle.enemy.hp -= 1;
+            battle.enemy.hp = Math.max(0, battle.enemy.hp);
+        }
+        battleStillActive = battle.player.hp > 0 && battle.enemy.hp > 0;
+
         let scryedCards = null;
         // Дополнительные эффекты карты не должны менять состояние после исхода боя.
         if (battleStillActive) {
-            // Пси-резонанс - навык наносит урон
-            if (card.type === CARD_TYPES.SKILL && battle.hasPower('psyResonance')) {
-                battle.enemy.hp -= 1;
-                battle.enemy.hp = Math.max(0, battle.enemy.hp);
-            }
 
             // Устанавливаем эхо от карты
             if (card.echo) {
