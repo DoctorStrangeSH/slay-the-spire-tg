@@ -59,7 +59,11 @@ class BattleBuildings {
         this.buildings.push(building);
         
         if (battle.hasPower('overproduction')) {
-            battle.drawCards(1);
+            if (battle.cards?.drawCardsForPlayedCard) {
+                battle.cards.drawCardsForPlayedCard(battle, card, 1);
+            } else {
+                battle.drawCards(1);
+            }
         }
         
         if (battle.hasPower('modularConstruction')) {
