@@ -301,3 +301,54 @@ test('simultaneous lethal enemy poison and player poison resolves as defeat', ()
     assert.equal(state.player.hp, 0);
     assert.equal(state.enemy.hp, 0);
 });
+
+
+test('enemy attack is actually redirected to a construction and destroys it exactly once', () => {
+    const state = battle({
+        enemy: { hp: 20, damage: 6 },
+        player: { hp: 20, relics: [] }
+    });
+    const target = { id: 12, hp: 5 };
+    state.buildings = {
+        buildings: [target],
+        getBuildingCount() { return this.buildings.length; },
+        getRandomBuilding() { return target; }
+    };
+    const turn = new BattleTurn();
+    const originalRandom = Math.random;
+    try {
+        Math.random = () => 0.1; // Below the 45% redirection chance for one construction.
+        turn.enemyAttack(state);
+    } finally {
+        Math.random = originalRandom;
+    }
+
+    assert.equal(state.player.hp, 20, 'the hero is not damaged when the construction is selected');
+    assert.equal(target.hp, -1);
+    assert.equal(state.buildings.buildings.length, 0, 'the destroyed construction is removed once');
+});
+
+test('destroying a redirected construction triggers System Overload once', () => {
+    const state = battle({
+        player: { hp: 20, relics: ['systemOverload'] },
+        enemy: { hp: 10, damage: 6 }
+    });
+    const target = { id: 13, hp: 5 };
+    state.buildings = {
+        buildings: [target],
+        getBuildingCount() { return this.buildings.length; },
+        getRandomBuilding() { return target; }
+    };
+    const turn = new BattleTurn();
+    const originalRandom = Math.random;
+    try {
+        Math.random = () => 0.1;
+        turn.enemyAttack(state);
+    } finally {
+        Math.random = originalRandom;
+    }
+
+    assert.equal(state.player.hp, 20);
+    assert.equal(state.enemy.hp, 7);
+    assert.equal(state.buildings.buildings.length, 0);
+});
