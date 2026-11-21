@@ -157,7 +157,7 @@ test('Blueprints uses the played card slot when drawing from a full hand', () =>
         { ...api.ENGINEER_CARDS.blueprints },
         ...Array.from({ length: 9 }, (_, index) => ({ ...api.ENGINEER_CARDS.smallTurret, id: 'turret_' + index }))
     ];
-    battle.drawPile = [{ ...api.ENGINEER_CARDS.generator }, { ...api.ENGINEER_CARDS.barrier }];
+    battle.drawPile = [{ ...api.ENGINEER_CARDS.barrier }, { ...api.ENGINEER_CARDS.generator }];
     assert.equal(battle.playCard(0).success, true);
     assert.equal(battle.hand.length, 10);
     assert.ok(battle.hand.some(card => card.id === 'generator'));
