@@ -205,29 +205,63 @@ const BattleUI = {
         });
     },
 
-    showStatusModal(effect) {
-        document.getElementById('status-modal')?.remove();
+    showStatusModal(effect, returnFocus = document.activeElement) {
+        document.getElementById('status-modal')?.__closeStatusModal?.();
         const modal = document.createElement('div');
         modal.className = 'modal';
         modal.id = 'status-modal';
-        
-        modal.innerHTML = `
-            <div class="modal-content status-modal-content">
-                <div class="status-modal-header">
-                    <span class="status-modal-icon">${effect.icon}</span>
-                    <h3>${effect.name}</h3>
-                </div>
-                <div class="status-modal-value">
-                    Текущее значение: <strong>${effect.value}</strong>
-                </div>
-                <div class="status-modal-description">
-                    ${effect.description}
-                </div>
-                <button onclick="document.getElementById('status-modal').remove()">Закрыть</button>
-            </div>
-        `;
-        
+        modal.setAttribute('role', 'dialog');
+        modal.setAttribute('aria-modal', 'true');
+        modal.setAttribute('aria-label', `Состояние: ${effect.name}`);
+
+        const panel = document.createElement('div');
+        panel.className = 'modal-content status-modal-content';
+        const header = document.createElement('div');
+        header.className = 'status-modal-header';
+        const icon = document.createElement('span');
+        icon.className = 'status-modal-icon';
+        icon.setAttribute('aria-hidden', 'true');
+        icon.textContent = effect.icon;
+        const heading = document.createElement('h3');
+        heading.textContent = effect.name;
+        header.append(icon, heading);
+
+        const value = document.createElement('div');
+        value.className = 'status-modal-value';
+        value.textContent = 'Текущее значение: ';
+        const strong = document.createElement('strong');
+        strong.textContent = String(effect.value);
+        value.appendChild(strong);
+
+        const description = document.createElement('div');
+        description.className = 'status-modal-description';
+        description.textContent = effect.description;
+
+        const closeButton = document.createElement('button');
+        closeButton.type = 'button';
+        closeButton.textContent = 'Закрыть';
+        const close = () => {
+            document.removeEventListener('keydown', onKeyDown);
+            modal.remove();
+            if (returnFocus?.isConnected) returnFocus.focus({ preventScroll: true });
+        };
+        const onKeyDown = event => {
+            if (event.key === 'Escape') {
+                event.preventDefault();
+                close();
+            }
+        };
+        modal.__closeStatusModal = close;
+        closeButton.addEventListener('click', close);
+        modal.addEventListener('click', event => {
+            if (event.target === modal) close();
+        });
+        document.addEventListener('keydown', onKeyDown);
+
+        panel.append(header, value, description, closeButton);
+        modal.appendChild(panel);
         document.body.appendChild(modal);
+        closeButton.focus();
     },
     
     renderHand(game, battle) {
