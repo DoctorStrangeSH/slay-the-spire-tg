@@ -126,6 +126,24 @@ class BattleCards {
         const buildingCount = battle.buildings?.getBuildingCount?.() || 0;
         let baseDamage = Number(card.damage) || 0;
         let directBonus = 0;
+
+        // Berserker conditional attacks must preview the same live-state branch
+        // and upgrade bonus that dealDamage() will use when the card resolves.
+        const upgradeBonus = card.upgraded ? 3 : 0;
+        if (card.id === 'retaliationStrike' && battle.isBerserkWounded()) {
+            baseDamage = 12 + upgradeBonus;
+        }
+        if (card.id === 'cutWound' && (battle.statusEffects.enemy.bleed || 0) > 0) {
+            baseDamage = 8 + upgradeBonus;
+        }
+        if (card.id === 'mercyStrike' && (battle.statusEffects.enemy.bleed || 0) >= 10) {
+            baseDamage = 14 + upgradeBonus;
+        }
+        if (card.id === 'execution' &&
+            battle.enemy.hp < battle.enemy.maxHp * 0.30) {
+            baseDamage = 30 + upgradeBonus;
+        }
+
         if (card.id === 'kamikazeDrone') {
             const target = battle.buildings?.buildings?.slice()
                 .sort((a, b) => b.hp - a.hp)[0];
