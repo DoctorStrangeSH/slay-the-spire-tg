@@ -1,11 +1,15 @@
 // Общая клавиатурная модель для игровых диалогов: удерживает фокус внутри окна
-// и возвращает его к открывшему элементу после закрытия.
+// и возвращает его к открывшему элементу после закрытия. Вложенные окна
+// временно приостанавливают обработчик родительского диалога.
+const gameModalAccessibilityStack = [];
 function bindGameModalAccessibility(modal, options = {}) {
     const returnFocus = options.returnFocus || document.activeElement;
+    const entry = { modal, onKeyDown: null };
     const focusable = () => [...(modal.querySelectorAll?.(
         'button:not([disabled]), a[href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
     ) || [])].filter(element => !element.hidden && element.getAttribute?.('aria-hidden') !== 'true');
     const onKeyDown = event => {
+        if (gameModalAccessibilityStack[gameModalAccessibilityStack.length - 1] !== entry) return;
         if (event.key === 'Escape' && typeof options.onEscape === 'function') {
             event.preventDefault();
             options.onEscape();
@@ -31,9 +35,13 @@ function bindGameModalAccessibility(modal, options = {}) {
     modal.setAttribute?.('role', 'dialog');
     modal.setAttribute?.('aria-modal', 'true');
     if (options.label) modal.setAttribute?.('aria-label', options.label);
+    entry.onKeyDown = onKeyDown;
+    gameModalAccessibilityStack.push(entry);
     document.addEventListener?.('keydown', onKeyDown);
     const cleanup = (restoreFocus = true) => {
         document.removeEventListener?.('keydown', onKeyDown);
+        const index = gameModalAccessibilityStack.indexOf(entry);
+        if (index >= 0) gameModalAccessibilityStack.splice(index, 1);
         if (restoreFocus && returnFocus?.isConnected) returnFocus.focus({ preventScroll: true });
     };
     modal.__gameModalCleanup = cleanup;
