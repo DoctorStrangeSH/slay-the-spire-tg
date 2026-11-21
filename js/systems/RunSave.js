@@ -13,6 +13,45 @@ class RunSave {
         ]));
     }
 
+    restoreCard(card, availableCards) {
+        if (!card || typeof card !== 'object' || Array.isArray(card) ||
+            typeof card.id !== 'string' ||
+            !Object.prototype.hasOwnProperty.call(availableCards, card.id)) return null;
+
+        const expected = { ...availableCards[card.id] };
+        if (card.upgraded === true) {
+            const upgrades = [
+                ['damage', 3, 'Урон'],
+                ['block', 3, 'Блок'],
+                ['heal', 2, 'Лечение']
+            ];
+            let change = null;
+            if (!['telekinesis', 'mindStrike', 'telepathicStrike'].includes(card.id)) {
+                for (const [stat, bonus, label] of upgrades) {
+                    const current = Number(expected[stat]);
+                    if (Number.isFinite(current) && current > 0) {
+                        change = { stat, bonus, label, next: current + bonus };
+                        break;
+                    }
+                }
+            }
+            if (!change) return null;
+            expected[change.stat] = change.next;
+            expected.upgraded = true;
+            expected.name = `${expected.name || expected.id || 'Карта'}+`;
+            expected.description = `${expected.description || ''} · ✦ ${change.label}: ${change.next}`.trim();
+        }
+
+        const actualKeys = Object.keys(card).sort();
+        const expectedKeys = Object.keys(expected).sort();
+        if (actualKeys.length !== expectedKeys.length ||
+            actualKeys.some((key, index) => key !== expectedKeys[index]) ||
+            expectedKeys.some(key => JSON.stringify(card[key]) !== JSON.stringify(expected[key]))) {
+            return null;
+        }
+        return expected;
+    }
+
     createSnapshot(game) {
         if (!game.player || !game.mapGenerator || game.gameState !== 'map') return null;
         return {
@@ -72,12 +111,12 @@ class RunSave {
             !HEROES[data.player.heroId] || HEROES[data.player.heroId].unlocked !== true) return false;
         if (!Array.isArray(data.player.deck) || !Array.isArray(data.player.relics)) return false;
         const availableCards = getCardsForHero(data.player.heroId);
-        if (data.player.deck.some(card => !card || typeof card !== 'object' ||
-            typeof card.id !== 'string' || !Object.prototype.hasOwnProperty.call(availableCards, card.id))) return false;
+        const restoredDeck = data.player.deck.map(card => this.restoreCard(card, availableCards));
+        if (restoredDeck.some(card => card === null)) return false;
         const offeredCards = data.offeredCards === undefined ? [] : data.offeredCards;
-        if (!Array.isArray(offeredCards) || offeredCards.length > 3 ||
-            offeredCards.some(card => !card || typeof card !== 'object' ||
-                typeof card.id !== 'string' || !Object.prototype.hasOwnProperty.call(availableCards, card.id))) return false;
+        if (!Array.isArray(offeredCards) || offeredCards.length > 3) return false;
+        const restoredOfferedCards = offeredCards.map(card => this.restoreCard(card, availableCards));
+        if (restoredOfferedCards.some(card => card === null)) return false;
         if (data.player.relics.some(id => typeof id !== 'string' ||
             !Object.prototype.hasOwnProperty.call(RELIC_CATALOG, id)) ||
             new Set(data.player.relics).size !== data.player.relics.length) return false;
@@ -161,13 +200,14 @@ class RunSave {
 
         // Применять восстановление только после всех проверок.
         game.player = JSON.parse(JSON.stringify(data.player));
+        game.player.deck = restoredDeck;
         game.act = data.act;
         game.floor = data.floor;
         game.currentNodeId = data.currentNodeId;
         game.mapGenerator = map;
         game.currentBattle = null;
         game.currentEvent = null;
-        game.offeredCards = JSON.parse(JSON.stringify(offeredCards));
+        game.offeredCards = restoredOfferedCards;
         return true;
     }
 
