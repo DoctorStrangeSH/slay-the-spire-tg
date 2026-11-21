@@ -32,6 +32,8 @@ class BattleCore {
         this.beastSkinBlockNextTurn = 0;
         this.vampirismTriggersThisTurn = 0;
         this.adrenalineRushTriggered = false;
+        this.berserkAttackDiscountNextTurn = false;
+        this.berserkAttackDiscountActive = false;
         this.engineerLubricantNextTurn = false;
         this.engineerLubricantActiveThisTurn = false;
         
