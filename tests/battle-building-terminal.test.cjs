@@ -6,7 +6,7 @@ const { join } = require('node:path');
 const vm = require('node:vm');
 
 const source = readFileSync(join(__dirname, '../js/systems/battle/BattleBuildings.js'), 'utf8');
-const BattleBuildings = vm.runInNewContext(source + '\\nBattleBuildings;', { Math });
+const BattleBuildings = vm.runInNewContext(source + '\nBattleBuildings;', { Math });
 
 function battle(enemyHp, powers = []) {
     return {
