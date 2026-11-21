@@ -120,7 +120,19 @@ class BattleTurn {
 
         battle.turn++;
         battle.startTurn();
-        
+
+        // Start-of-turn effects (for example, Berserker self-damage relics)
+        // can end the encounter immediately. Propagate that terminal state to
+        // Game.endTurn so rewards/defeat are resolved instead of leaving a dead
+        // hero in an apparently active battle.
+        if (battle.battleEnded || battle.player.hp <= 0) {
+            return { battleEnded: true, victory: false };
+        }
+        if (battle.enemy.hp <= 0) {
+            battle.triggerAdrenalineRush?.();
+            return { battleEnded: true, victory: true };
+        }
+
         return { battleEnded: false };
     }
     
