@@ -152,3 +152,16 @@ test('relic, condition and event dialogs provide keyboard focus management', () 
     assert.match(game, /accessibility\?\.cleanup\(false\)/);
     assert.match(game, /existingModal\?\.__gameModalCleanup\?\.\(false\)/);
 });
+
+
+test('journal, reward, card detail and pile dialogs preserve keyboard focus', () => {
+    const game = fs.readFileSync(path.join(root, 'js/systems/Game.js'), 'utf8');
+    assert.ok(game.includes("label: 'История восхождений', returnFocus"));
+    assert.ok(game.includes("label: 'Журнал текущего забега', returnFocus"));
+    assert.ok(game.includes("label: 'Выбор награды', returnFocus"));
+    assert.ok(game.includes("label: isDraw ? 'Колода' : 'Сброс', returnFocus"));
+    assert.ok(game.includes("onEscape: () => this.closeCardModal()"));
+    assert.ok(game.includes("modal?.__gameModalCleanup?.(restoreFocus)"));
+    assert.ok(game.includes("role: 'button' tabindex='0' aria-label=\"Посмотреть карту:"));
+    assert.ok(game.includes("modal?.__gameModalCleanup?.(false)"));
+});
