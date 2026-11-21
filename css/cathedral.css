@@ -412,7 +412,12 @@ button:disabled { opacity: .42; filter: grayscale(.5); }
   .modal-content { padding: 17px; }
 }
 @media (prefers-reduced-motion: reduce) {
-  *, *::before, *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; }
+  *, *::before, *::after {
+    animation-duration: .01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: .01ms !important;
+    scroll-behavior: auto !important;
+  }
 }
 
 /* Иллюстрации карт — единый формат для боя, наград и инспектора. */
