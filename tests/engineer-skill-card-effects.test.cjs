@@ -151,6 +151,48 @@ test('Factory Reset demolishes all constructions and grants one energy and card 
     assert.equal(battle.hand.length, 2);
 });
 
+test('Blueprints uses the played card slot when drawing from a full hand', () => {
+    const { api, battle } = setup();
+    battle.hand = [
+        { ...api.ENGINEER_CARDS.blueprints },
+        ...Array.from({ length: 9 }, (_, index) => ({ ...api.ENGINEER_CARDS.smallTurret, id: 'turret_' + index }))
+    ];
+    battle.drawPile = [{ ...api.ENGINEER_CARDS.generator }, { ...api.ENGINEER_CARDS.barrier }];
+    assert.equal(battle.playCard(0).success, true);
+    assert.equal(battle.hand.length, 10);
+    assert.ok(battle.hand.some(card => card.id === 'generator'));
+    assert.ok(battle.hand.every(card => card.type !== api.CARD_TYPES.BUILDING || card.cost === 0));
+});
+
+test('Quick Assembly draws and discounts a construction when the hand was full', () => {
+    const { api, battle } = setup();
+    battle.hand = [
+        { ...api.ENGINEER_CARDS.quickAssembly },
+        ...Array.from({ length: 9 }, (_, index) => ({ ...api.ENGINEER_CARDS.smallTurret, id: 'turret_' + index }))
+    ];
+    battle.drawPile = [{ ...api.ENGINEER_CARDS.generator }];
+    assert.equal(battle.playCard(0).success, true);
+    assert.equal(battle.hand.length, 10);
+    assert.equal(battle.hand.find(card => card.id === 'generator').cost, 0);
+});
+
+test('Factory Reset draws up to the available post-play hand capacity', () => {
+    const { api, battle } = setup();
+    addBuilding(api, battle, 'smallTurret');
+    addBuilding(api, battle, 'barrier');
+    battle.hand = [
+        { ...api.ENGINEER_CARDS.factoryReset },
+        ...Array.from({ length: 9 }, (_, index) => ({ id: 'held_' + index, type: api.CARD_TYPES.SKILL, cost: 0 }))
+    ];
+    battle.drawPile = [
+        { ...api.ENGINEER_CARDS.generator },
+        { ...api.ENGINEER_CARDS.scoutDrone }
+    ];
+    assert.equal(battle.playCard(0).success, true);
+    assert.equal(battle.hand.length, 10);
+    assert.equal(battle.hand.filter(card => card.type === api.CARD_TYPES.BUILDING).length, 1);
+});
+
 test('Engineering Genius draws three and makes all constructions currently in hand free', () => {
     const { api, battle } = setup();
     battle.hand = [{ ...api.ENGINEER_CARDS.engineeringGenius }, { ...api.ENGINEER_CARDS.smallTurret }];
