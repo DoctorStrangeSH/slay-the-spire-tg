@@ -85,9 +85,9 @@ test('Indestructible Fortress grants 3 player block and 3 construction block wit
 
     battle.buildings.triggerStartOfTurn(battle);
 
-    assert.equal(battle.block, 3);
+    assert.equal(battle.block, 6, '3 block for the hero plus 3 contributed by the active construction');
     assert.equal(damaged.hp, 2);
-    assert.equal(damaged.block, 3);
+    assert.equal(damaged.block, 0, 'the temporary bonus does not permanently alter the construction');
 });
 
 test('System Overload triggers for every construction removed by Factory Reset', () => {
