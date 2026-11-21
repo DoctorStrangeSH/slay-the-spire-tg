@@ -36,7 +36,7 @@ class BattleCore {
         this.statusEffects = {
             player: { 
                 strength: 0, dexterity: 0, vulnerable: 0, weak: 0,
-                poison: 0, thorns: 0, bleed: 0,
+                poison: 0, thorns: 0, bleed: 0, fire: 0,
                 paralysis: 0 // Паралич на игроке (если враг наложит)
             },
             enemy: { 
