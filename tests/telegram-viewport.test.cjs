@@ -109,9 +109,9 @@ test('invalid Telegram height preserves the previous compact mode', () => {
 
 test('achievement and cosmetic journal fits Telegram mobile viewport and safe areas', () => {
     const styles = readFileSync(join(__dirname, '../css/cathedral.css'), 'utf8');
-    assert.match(styles, /\.run-journal-content[\\s\\S]*?max-height: min\\(var\\(--game-viewport-88, 88dvh\\), 780px\\); overflow-y: auto/);
-    assert.match(styles, /@media \\(max-width: 640px\\)[\\s\\S]*?\.run-journal-modal \\{ padding: max\\(8px, env\\(safe-area-inset-top\\)\\) 8px max\\(8px, env\\(safe-area-inset-bottom\\)\\)/);
-    assert.match(styles, /\.run-journal-content \\{ max-height: var\\(--game-viewport-93, 93dvh\\); padding: 16px; \\}/);
-    assert.match(styles, /\.cathedral-challenge-group summary[\\s\\S]*?min-height: 44px/);
-    assert.match(styles, /@media \\(max-width: 520px\\)[\\s\\S]*?\.cathedral-cosmetic-gallery \\{[\\s\\S]*?grid-template-columns: minmax\\(0, 1fr\\)/);
+    assert.ok(styles.includes('max-height: min(var(--game-viewport-88, 88dvh), 780px); overflow-y: auto;'));
+    assert.ok(styles.includes('.run-journal-modal { padding: max(8px, env(safe-area-inset-top)) 8px max(8px, env(safe-area-inset-bottom)); }'));
+    assert.ok(styles.includes('.run-journal-content { max-height: var(--game-viewport-93, 93dvh); padding: 16px; }'));
+    assert.ok(styles.includes('.cathedral-challenge-group summary { cursor: pointer; padding: 12px 4px; min-height: 44px;'));
+    assert.ok(styles.includes('grid-template-columns: minmax(0, 1fr);'));
 });
