@@ -702,26 +702,82 @@ function scoreRouteCard(card) {
         (card.cost || 0) * 1.5;
 }
 
-function scoreRouteEventOption(option, player) {
-    const label = String(option?.text || '');
-    const hpGain = Number(label.match(/\+\s*(\d+)\s*HP/i)?.[1] || 0);
-    const hpLoss = Number(label.match(/[−-]\s*(\d+)\s*HP/i)?.[1] || 0);
-    const goldGain = Number(label.match(/\+\s*(\d+)\s*золота/i)?.[1] || 0);
-    const goldCost = Number(label.match(/[−-]\s*(\d+)\s*золота/i)?.[1] || 0);
-    const maxHpGain = Number(label.match(/\+\s*(\d+)\s*(?:к максимуму HP|максимальных HP|к макс\. HP)/i)?.[1] || 0);
-    if (hpLoss && player.hp <= hpLoss) return -Infinity;
-    if (goldCost && player.gold < goldCost) return -Infinity;
-    let score = Math.min(hpGain, player.maxHp - player.hp) * 1.35;
-    score += goldGain * 0.28;
-    score += maxHpGain * 2.5;
-    score -= hpLoss * 1.7;
-    score -= goldCost * 0.28;
-    if (/реликви/i.test(label)) score += 32;
-    if (/карт/i.test(label)) score += 18;
-    if (/улучшить|закалить|перековать/i.test(label)) score += 17;
-    if (/проклятие|долг|усилится|метка|истощения|заберёт часть твоих сил/i.test(label)) score -= 18;
-    if (/уйти|отказаться|отвернуться|оставить|не трогать|пройти мимо|покинуть/i.test(label)) score = Math.max(score, 0);
+function scoreRouteEventOutcome(before, after, result, deferredCard = null) {
+    const maxHp = Math.max(1, Number(before.maxHp) || 1);
+    const hpRatio = Math.max(0, Math.min(1, Number(before.hp) / maxHp));
+    const hpDelta = Number(after.hp) - Number(before.hp);
+    const maxHpDelta = Number(after.maxHp) - Number(before.maxHp);
+    const goldDelta = Number(after.gold) - Number(before.gold);
+    const deckBefore = Array.isArray(before.deck) ? before.deck : [];
+    const deckAfter = Array.isArray(after.deck) ? after.deck : [];
+    const relicBefore = Array.isArray(before.relics) ? before.relics : [];
+    const relicAfter = Array.isArray(after.relics) ? after.relics : [];
+    const hpWeight = hpDelta >= 0 && hpRatio < 0.55 ? 1.25 : 0.72;
+    let score = hpDelta * hpWeight + maxHpDelta * 2.6 + goldDelta * 0.22;
+    const addedCards = deckAfter.filter(card => !deckBefore.some(item => item.id === card.id));
+    const removedCards = deckBefore.filter(card => !deckAfter.some(item => item.id === card.id));
+    score += addedCards.reduce((sum, card) => sum + Math.max(0, scoreRouteCard(card)) * 0.32, 0);
+    score -= removedCards.reduce((sum, card) => sum + Math.max(0, scoreRouteCard(card)) * 0.18, 0);
+    score += relicAfter.filter(id => !relicBefore.includes(id)).length * 24;
+    score -= relicBefore.filter(id => !relicAfter.includes(id)).length * 24;
+    if (deferredCard) score += Math.max(0, scoreRouteCard(deferredCard)) * 0.32;
+
+    const conditions = [
+        ['blessingBattles', 4], ['ashBattles', 5], ['oathBattles', 4],
+        ['curseBattles', -7], ['exhaustionBattles', -7], ['bloodMarkBattles', -6]
+    ];
+    for (const [key, weight] of conditions) {
+        score += ((Number(after[key]) || 0) - (Number(before[key]) || 0)) * weight;
+    }
+    const debtKeys = [
+        'veiledMerchantDebt', 'classEventDebt', 'archiveDebt', 'obeliskDebt'
+    ];
+    for (const key of debtKeys) {
+        if (!before[key] && after[key]) score -= 12;
+        else if (before[key] && !after[key]) score += 12;
+    }
+    if (result === 'deferred' && !deferredCard) score -= 8;
     return score;
+}
+
+function evaluateRouteEventOption(api, player, act, floor, seed, event, optionIndex) {
+    const trialPlayer = JSON.parse(JSON.stringify(player));
+    const trialGame = Object.create(api.Game.prototype);
+    trialGame.player = trialPlayer;
+    trialGame.act = act;
+    trialGame.floor = floor;
+    trialGame.runId = `benchmark:${player.heroId}:${act}:${floor}`;
+    trialGame.currentNodeId = trialGame.runId;
+    trialGame.offeredCards = [];
+    trialGame.runSave = { save: () => true };
+    trialGame.offerCard = () => {
+        trialGame.offeredCards = api.getRandomRewardCards(
+            player.heroId, 3, createRunRandom(seed ^ 0x6d2b79f5)
+        );
+    };
+    const eventPool = event.rare
+        ? trialGame.getEligibleRareEvents()
+        : trialGame.getEventsForAct();
+    const trialEvent = eventPool.find(candidate => candidate.name === event.name);
+    const option = trialEvent?.options?.[optionIndex];
+    if (!option) return null;
+    const eventId = trialGame.getPendingEventDecisionId(trialEvent);
+    trialPlayer.pendingEvent = {
+        id: eventId, name: trialEvent.name,
+        rare: Boolean(trialEvent.rare), nodeId: trialGame.currentNodeId
+    };
+    const before = JSON.parse(JSON.stringify(trialPlayer));
+    const result = trialGame.commitEventDecision(trialEvent, option, eventId);
+    if (result === false) return null;
+    const deferredCard = result === 'deferred' && trialGame.offeredCards.length
+        ? trialGame.offeredCards.reduce((best, card) =>
+            scoreRouteCard(card) > scoreRouteCard(best) ? card : best)
+        : null;
+    return {
+        score: scoreRouteEventOutcome(before, trialGame.player, result, deferredCard),
+        result,
+        deferredCard: deferredCard ? { ...deferredCard } : null
+    };
 }
 
 function simulateRouteEvent(api, player, act, floor, seed, stats) {
@@ -764,31 +820,20 @@ function simulateRouteEvent(api, player, act, floor, seed, stats) {
         hp: player.hp, maxHp: player.maxHp, gold: player.gold,
         cards: player.deck.length, relics: player.relics.length
     };
-    const options = [...event.options].sort((a, b) =>
-        scoreRouteEventOption(b, player) - scoreRouteEventOption(a, player));
-    let committed = false;
-    let selectedResult = false;
-    for (const option of options) {
-        if (scoreRouteEventOption(option, player) === -Infinity) continue;
-        const result = game.commitEventDecision(event, option, eventId);
-        if (result !== false) {
-            committed = true;
-            selectedResult = result;
-            stats.eventDecisions++;
-            break;
-        }
-        // commitEventDecision restores the player's snapshot by replacing the
-        // reference; keep subsequent room processing on that committed state.
-        player = game.player;
-    }
-    if (!committed) return player;
-    if (selectedResult === 'deferred' && game.offeredCards.length) {
-        const card = game.offeredCards.reduce((best, candidate) =>
-            scoreRouteCard(candidate) > scoreRouteCard(best) ? candidate : best);
-        if (card) {
-            player.deck.push({ ...card });
-            stats.eventCardRewards++;
-        }
+    const evaluations = event.options.map((option, index) => ({
+        option,
+        index,
+        evaluation: evaluateRouteEventOption(api, player, act, floor, seed, event, index)
+    })).filter(item => item.evaluation);
+    evaluations.sort((a, b) => b.evaluation.score - a.evaluation.score);
+    const selected = evaluations[0];
+    if (!selected) return player;
+    const selectedResult = game.commitEventDecision(event, selected.option, eventId);
+    if (selectedResult === false) return game.player;
+    stats.eventDecisions++;
+    if (selectedResult === 'deferred' && selected.evaluation.deferredCard) {
+        player.deck.push({ ...selected.evaluation.deferredCard });
+        stats.eventCardRewards++;
     }
     stats.eventGoldDelta += player.gold - before.gold;
     stats.eventHpDelta += player.hp - before.hp;
@@ -1080,6 +1125,27 @@ function simulateRouteCampaign(heroId, seed, policy = 'heal-when-useful', routeP
         completed: report.length === 3 && report[2].bossWon
     };
 }
+
+test('event option evaluator executes real event actions and values healing at low HP', () => {
+    const api = createRouteApi(createRunRandom(1907));
+    const player = {
+        heroId: 'berserk', hp: 35, maxHp: 80, gold: 0,
+        deck: api.getStarterDeckForHero('berserk').map(card => ({ ...card })),
+        relics: [], journalLog: [], eventHistory: [],
+        pendingEvent: null, storyFlags: {}
+    };
+    const game = Object.create(api.Game.prototype);
+    game.player = player;
+    game.act = 1;
+    const fountain = game.getEventsForAct().find(event => event.name === 'Загадочный фонтан');
+    assert.ok(fountain);
+    const heal = evaluateRouteEventOption(api, player, 1, 3, 1907, fountain, 0);
+    const leave = evaluateRouteEventOption(api, player, 1, 3, 1907, fountain, 1);
+    assert.ok(heal && leave);
+    assert.ok(heal.score > leave.score);
+    assert.equal(heal.result, undefined);
+    assert.equal(player.hp, 35, 'trial evaluation must not mutate the live player');
+});
 
 test('risk-aware route selection chooses elite at high HP and rest at critical HP', () => {
     const map = {
