@@ -135,3 +135,20 @@ test('reduced-motion disables infinite loops and smooth scrolling globally', () 
     assert.match(reduced[0], /transition-duration:\s*\.01ms\s*!important/);
     assert.match(reduced[0], /scroll-behavior:\s*auto\s*!important/);
 });
+
+
+test('relic, condition and event dialogs provide keyboard focus management', () => {
+    const game = fs.readFileSync(path.join(root, 'js/systems/Game.js'), 'utf8');
+    assert.match(game, /function bindGameModalAccessibility\(modal, options = \{\}\)/);
+    assert.match(game, /modal\.setAttribute\('role', 'dialog'\)/);
+    assert.match(game, /modal\.setAttribute\('aria-modal', 'true'\)/);
+    assert.match(game, /event\.key === 'Escape'/);
+    assert.match(game, /event\.key !== 'Tab'/);
+    assert.match(game, /event\.shiftKey && \(document\.activeElement === first/);
+    assert.match(game, /document\.removeEventListener\('keydown', onKeyDown\)/);
+    assert.match(game, /label: 'Коллекция реликвий', returnFocus/);
+    assert.match(game, /label: 'Состояния героя', returnFocus/);
+    assert.match(game, /label: `Событие: \$\{event\.name\}`, returnFocus, initialFocus: firstChoice/);
+    assert.match(game, /accessibility\?\.cleanup\(false\)/);
+    assert.match(game, /existingModal\?\.__gameModalCleanup\?\.\(false\)/);
+});
