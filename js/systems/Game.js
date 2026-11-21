@@ -2419,9 +2419,9 @@ class Game {
         const modal = document.createElement('div');
         modal.id = 'treasure-modal';
         modal.className = 'modal';
-        modal.setAttribute('role', 'dialog');
-        modal.setAttribute('aria-modal', 'true');
-        modal.setAttribute('aria-label', 'Древняя сокровищница');
+        modal.setAttribute?.('role', 'dialog');
+        modal.setAttribute?.('aria-modal', 'true');
+        modal.setAttribute?.('aria-label', 'Древняя сокровищница');
         modal.innerHTML = `<div class="modal-content">
             <h3>🎁 Древняя сокровищница</h3>
             <p>Магические печати позволяют забрать только одну награду.</p>
