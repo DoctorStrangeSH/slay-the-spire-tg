@@ -122,6 +122,6 @@ test('mobile event and reward dialogs respect safe viewport and touch targets', 
     assert.match(mainMobile, /#reward-modal \.modal-content\s*\{[^}]*box-sizing:\s*border-box/);
     assert.match(mainMobile, /#reward-modal \.modal-content\s*\{[^}]*overflow-y:\s*auto/);
     assert.match(mainMobile, /#reward-modal \.reward-card button\s*\{\s*min-height:\s*44px/);
-    assert.match(css, /#map-nodes\s*\{[^}]*overflow-y:\s*auto/);
+    assert.match(baseCss, /#map-nodes\s*\{[^}]*overflow-y:\s*auto/);
     assert.match(css, /\.spire-next-card\s*\{[^}]*min-height:\s*77px/);
 });
