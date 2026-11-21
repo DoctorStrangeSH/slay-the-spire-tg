@@ -162,6 +162,6 @@ test('journal, reward, card detail and pile dialogs preserve keyboard focus', ()
     assert.ok(game.includes("label: isDraw ? 'Колода' : 'Сброс', returnFocus"));
     assert.ok(game.includes("onEscape: () => this.closeCardModal()"));
     assert.ok(game.includes("modal?.__gameModalCleanup?.(restoreFocus)"));
-    assert.ok(game.includes('role="button" tabindex="0" aria-label="Посмотреть карту:'));
+    assert.ok(game.includes('role="group" tabindex="0" aria-label="Посмотреть карту:'));
     assert.ok(game.includes("modal?.__gameModalCleanup?.(false)"));
 });
