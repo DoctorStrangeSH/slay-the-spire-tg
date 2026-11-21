@@ -292,14 +292,15 @@ class BattleBuildings {
             battle.statusEffects.enemy.weak = (battle.statusEffects.enemy.weak || 0) + building.weak;
         }
         
-        if (building.vulnerable > 0) {
-            battle.statusEffects.enemy.vulnerable = (battle.statusEffects.enemy.vulnerable || 0) + building.vulnerable;
-        }
     }
     
     triggerBuildingStart(battle, building) {
         if (building.block > 0) {
             battle.block += building.block;
+        }
+        if (building.vulnerable > 0) {
+            battle.statusEffects.enemy.vulnerable =
+                (battle.statusEffects.enemy.vulnerable || 0) + building.vulnerable;
         }
         
         if (building.draw > 0) {
