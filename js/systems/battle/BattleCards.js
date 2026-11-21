@@ -321,7 +321,7 @@ class BattleCards {
 
             // Кража
             if (card.steal) {
-                battle.stealEnemyCard();
+                battle.stealEnemyCard(card);
             }
         }
         
