@@ -68,6 +68,28 @@ test('System Overload victory from a destroyed building stops enemy DOT but stil
     assert.equal(state.player.hp, 19, 'player poison still resolves before the final outcome');
 });
 
+test('negative enemy attack damage cannot heal a construction or increase player block', () => {
+    const state = battle({
+        enemy: { damage: 2 },
+        statusEffects: {
+            player: { poison: 0, vulnerable: 0, thorns: 0 },
+            enemy: { paralysis: 0, poison: 0, bleed: 0, weak: 0, strength: -5 }
+        }
+    });
+    state.block = 3;
+    const target = { id: 1, hp: 4 };
+    const turn = new BattleTurn();
+
+    turn.chooseTarget = () => ({ type: 'building', building: target });
+    turn.enemyAttack(state);
+    assert.equal(target.hp, 4, 'a negative attack cannot restore construction HP');
+
+    turn.chooseTarget = () => ({ type: 'player' });
+    turn.enemyAttack(state);
+    assert.equal(state.block, 3, 'a negative attack cannot create extra block');
+    assert.equal(state.player.hp, 20);
+});
+
 test('reflection kills attacker before damage is inflicted', () => {
     const state = battle({ enemy: { hp: 3 }, player: { relics: ['psyReflection'] } });
     const outcome = new BattleTurn().endTurn(state, effects);
