@@ -215,6 +215,32 @@ test('Mental Blockade applies paralysis only on its 50 percent roll', () => {
     assert.equal(missed.statusEffects.enemy.paralysis, 0);
 });
 
+test('post-action Psyker powers do not trigger when paralysis skips the enemy turn', () => {
+    const blockade = createBattle(['mentalBlockade'], 20, [], 0.1);
+    blockade.statusEffects.enemy.paralysis = 1;
+    blockade.enemyIntent = 'defend';
+    blockade.endTurn();
+    assert.equal(blockade.statusEffects.enemy.paralysis, 0,
+        'the consumed paralysis must not be immediately reapplied by Mental Blockade');
+
+    const storm = createBattle(['mentalStorm']);
+    storm.statusEffects.enemy.paralysis = 1;
+    storm.enemyIntent = 'defend';
+    storm.endTurn();
+    assert.equal(storm.enemy.hp, 100, 'Mental Storm waits for an actual enemy action');
+});
+
+test('post-action Psyker powers do not trigger on an Absolute Control skip turn', () => {
+    const battle = createBattle(['absoluteControl', 'mentalBlockade', 'mentalStorm'], 20, [], 0.1);
+    battle.turn = 2;
+    battle.enemyIntent = 'defend';
+
+    battle.endTurn();
+
+    assert.equal(battle.enemy.hp, 100);
+    assert.equal(battle.statusEffects.enemy.paralysis, 0);
+});
+
 test('Mental Storm can finish an enemy after its announced action', () => {
     const battle = createBattle(['mentalStorm']);
     battle.enemy.hp = 3;
