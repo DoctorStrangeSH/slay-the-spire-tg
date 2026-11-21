@@ -18,6 +18,10 @@ class BattleTurn {
             }
         }
 
+        // Enemy block lasts through the player's next turn, then expires
+        // before the enemy acts again. Clear it before phase transitions so
+        // a newly entered secret-boss phase can still grant its opening block.
+        battle.enemyBlock = 0;
         this.advanceSecretBossPhase(battle);
         battle.isResolvingEnemyTurn = true;
 
