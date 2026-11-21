@@ -409,6 +409,7 @@ class BattleCards {
         }
 
         const buildings = battle.buildings;
+        if (card.id === 'lubricant') battle.engineerLubricantNextTurn = true;
         const mostDamaged = () => buildings?.buildings
             .slice()
             .sort((a, b) => (a.hp / Math.max(1, a.maxHp)) - (b.hp / Math.max(1, b.maxHp)))[0] || null;
