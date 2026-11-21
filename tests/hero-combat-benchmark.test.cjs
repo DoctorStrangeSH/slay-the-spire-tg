@@ -1277,7 +1277,7 @@ test('route-aware boss benchmark compares campfire policies while carrying route
         for (const policy of policies) {
             for (const routePolicy of routePolicies) {
             const campaigns = [];
-            for (let seed = 1; seed <= 18; seed++) {
+            for (let seed = 1; seed <= 50; seed++) {
                 const campaign = simulateRouteCampaign(heroId, seed * 104729, policy, routePolicy);
                 campaigns.push(campaign);
                 assert.ok(campaign.acts.length >= 1 && campaign.acts.length <= 3);
