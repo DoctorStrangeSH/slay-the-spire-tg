@@ -58,6 +58,8 @@ function echoedAttack({ playerHp = 10, enemyHp = 20, cardDamage = 2, selfDamage 
         echoStacks: 2,
         echoSkillStacks: 0,
         enemyBlock: 0,
+        discardPile: [],
+        exhaustPile: [],
         player: { hp: playerHp, maxHp: 20 },
         enemy: { hp: enemyHp },
         statusEffects: { player: { strength: 0, weak: 0 }, enemy: { vulnerable: 0, paralysis: 0, bleed: 0 } },
