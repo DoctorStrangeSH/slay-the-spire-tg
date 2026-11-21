@@ -259,7 +259,8 @@ class BattleBuildings {
                 battle.enemy.hp = Math.max(0, battle.enemy.hp);
             }
         }
-        
+        if (battle.enemy.hp <= 0) return;
+
         if (building.poison > 0) {
             battle.statusEffects.enemy.poison = (battle.statusEffects.enemy.poison || 0) + building.poison;
         }
