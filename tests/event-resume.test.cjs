@@ -48,3 +48,46 @@ test('new run clears any unresolved event decision', () => {
     game.runSave.clear = () => {}; game.generateNewMap = () => {}; game.showMap = () => {};
     game.startNewGame(); assert.equal(game.player.pendingEvent, null);
 });
+
+test('event pool does not repeat any eligible event within the same act until exhausted', () => {
+    const { game } = makeGame();
+    const events = ['Событие A', 'Событие B', 'Событие C', 'Событие D']
+        .map(name => ({ name, rare: false, options: [{ text: 'Уйти', action: () => true }] }));
+    game.getEventsForAct = () => events;
+    game.showEventModal = () => {};
+    const originalRandom = Math.random;
+    Math.random = () => 0;
+    try {
+        for (const expected of ['Событие A', 'Событие B', 'Событие C', 'Событие D']) {
+            game.triggerEvent();
+            assert.equal(game.player.pendingEvent.name, expected);
+            game.player.pendingEvent = null;
+        }
+        assert.deepEqual(Array.from(game.player.eventHistory), events.map(event => event.name));
+        game.triggerEvent();
+        assert.equal(game.player.pendingEvent.name, 'Событие A',
+            'once every eligible event was seen, the pool may repeat rather than softlock');
+    } finally {
+        Math.random = originalRandom;
+    }
+});
+
+test('event history resets automatically when a new act begins', () => {
+    const { game } = makeGame();
+    game.player.eventHistory = ['Событие старого акта', 'Событие A'];
+    game.player.eventHistoryAct = 1;
+    game.act = 2;
+    const event = { name: 'Событие A', rare: false, options: [{ text: 'Уйти', action: () => true }] };
+    game.getEventsForAct = () => [event];
+    game.showEventModal = () => {};
+    const originalRandom = Math.random;
+    Math.random = () => 0;
+    try {
+        game.triggerEvent();
+    } finally {
+        Math.random = originalRandom;
+    }
+    assert.equal(game.player.pendingEvent.name, 'Событие A');
+    assert.equal(game.player.eventHistoryAct, 2);
+    assert.deepEqual(Array.from(game.player.eventHistory), ['Событие A']);
+});
