@@ -25,7 +25,7 @@ function createHarness() {
         listenerCount(name) { return listeners.get(name)?.size || 0; }
     };
     const context = { document };
-    const bind = vm.runInNewContext(helperSource + '\\nbindGameModalAccessibility;', context);
+    const bind = vm.runInNewContext(helperSource + '\nbindGameModalAccessibility;', context);
     function element(name) {
         return {
             name,
