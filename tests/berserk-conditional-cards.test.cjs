@@ -177,7 +177,7 @@ test('every Berserker card that costs HP discloses the exact self-damage in its 
     const expectedCosts = {
         wildLunge: '1 урона',
         sacrificialStrike: '3 HP',
-        bloodWhirlwind: '2 HP',
+        bloodVortex: '2 HP',
         sacrificialBlade: '5 HP',
         bloodRitual: '3 HP',
         bestialInstinct: '1 урона',
