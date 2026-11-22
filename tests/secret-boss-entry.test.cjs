@@ -19,8 +19,19 @@ function loadGame(overrides = {}) {
             id: 'last-debt-collector',
             isBoss: true,
             isSecretBoss: true,
-            consequence: player.veiledMerchantDebt
+            consequence: player.veiledMerchantDebt,
+            openingBlock: player.veiledMerchantDebt === 'settled' ? 8 : 0
         }),
+        BattleSystem: class {
+            constructor(player, enemy) {
+                this.player = player;
+                this.enemy = enemy;
+                this.enemyBlock = 0;
+                this.block = 0;
+                this.energy = 3;
+                this.statusEffects = { player: { strength: 0 } };
+            }
+        },
         results: [],
         ...overrides
     };
@@ -160,4 +171,43 @@ test('merchant default is recorded as a permanent outcome for the secret boss', 
     game.startBossBattle();
     assert.equal(encountered.isSecretBoss, true);
     assert.equal(encountered.consequence, 'defaulted');
+});
+
+
+test('secret boss opening guard is applied only for the settled merchant outcome', () => {
+    const { Game } = loadGame();
+    const cases = [
+        ['owed', 0],
+        ['settled', 8],
+        ['defaulted', 0],
+        ['declined', 0],
+        ['purchased', 0]
+    ];
+
+    for (const [outcome, expectedBlock] of cases) {
+        const game = Object.create(Game.prototype);
+        game.player = {
+            hp: 60,
+            maxHp: 80,
+            deck: [],
+            relics: [],
+            veiledMerchantDebt: outcome,
+            blessingBattles: 0,
+            curseBattles: 0,
+            oathBattles: 0,
+            ashBattles: 0,
+            exhaustionBattles: 0,
+            bloodMarkBattles: 0
+        };
+        game.showBattle = () => {};
+        const enemy = {
+            id: 'last-debt-collector',
+            isBoss: true,
+            isSecretBoss: true,
+            openingBlock: outcome === 'settled' ? 8 : 0
+        };
+
+        game.beginEncounter(enemy);
+        assert.equal(game.currentBattle.enemyBlock, expectedBlock, outcome);
+    }
 });
