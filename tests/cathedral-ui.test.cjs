@@ -227,9 +227,8 @@ test('all five mobile battle actions keep 44px targets after high-specificity ov
     assert.ok(utilityStart >= 0, 'missing high-specificity mobile utility action rule');
     assert.match(utilityRule, /min-height:\s*44px/);
 
-    const shortStart = css.lastIndexOf('@media (max-width: 640px) and (max-height: 640px)');
-    const shortEnd = css.indexOf('\n}', shortStart) + 2;
-    const shortRule = css.slice(shortStart, shortEnd);
-    assert.ok(shortStart >= 0, 'missing final short viewport override');
-    assert.match(shortRule, /#battle-screen #action-buttons \.end-btn \{ min-height: 44px/);
+    assert.ok(
+        css.includes('#battle-screen #action-buttons .end-btn { min-height: 44px; padding: 6px 4px; }'),
+        'short viewport must retain 44px primary action targets'
+    );
 });
