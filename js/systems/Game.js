@@ -1466,8 +1466,10 @@ class Game {
         const rareEvents = this.getEligibleRareEvents();
         const isRare = rareEvents.length > 0 && Math.random() < this.getRareEventChance();
         const events = isRare ? rareEvents : this.getEventsForAct();
-        const historyAct = Number(this.player?.eventHistoryAct);
-        const history = historyAct === this.act && Array.isArray(this.player?.eventHistory)
+        const historyAct = this.player?.eventHistoryAct;
+        // Legacy saves have no act marker; retain their recent-event history once.
+        const history = (historyAct === undefined || Number(historyAct) === this.act) &&
+            Array.isArray(this.player?.eventHistory)
             ? this.player.eventHistory.filter(name => typeof name === 'string')
             : [];
         const freshEvents = events.filter(event => !history.includes(event.name));
