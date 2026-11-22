@@ -383,7 +383,7 @@ const PSYKER_CARDS = {
         cost: 2,
         echo: 2,
         exhaust: true,
-        description: 'Следующие 2 карты срабатывают дважды. Убирается',
+        description: 'Следующая карта срабатывает трижды. Убирается',
         emoji: '👻'
     },
     
