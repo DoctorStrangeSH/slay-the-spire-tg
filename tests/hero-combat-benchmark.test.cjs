@@ -1047,14 +1047,16 @@ function simulateRouteCampaign(heroId, seed, policy = 'heal-when-useful', routeP
             plannedElites: route.filter(node => node.type === 'elite').length,
             plannedShops: route.filter(node => node.type === 'shop').length,
             plannedEvents: route.filter(node => node.type === 'event').length,
-            battles: 0, elites: 0, rests: 0, restHeals: 0, restUpgrades: 0, cardRewards: 0,
+            battles: 0, elites: 0, combatAttempts: 0, combatWins: 0,
+            regularAttempts: 0, regularWins: 0, eliteAttempts: 0, eliteWins: 0,
+            rests: 0, restHeals: 0, restUpgrades: 0, cardRewards: 0,
             relicRewards: 0, goldEarned: 0, shopVisits: 0, shopPurchases: 0,
             shopCards: 0, shopHeals: 0, shopUpgrades: 0, shopRemovals: 0, shopGoldSpent: 0,
             eventRooms: 0, eventDecisions: 0, eventGoldDelta: 0, eventHpDelta: 0,
             eventMaxHpDelta: 0, eventCardRewards: 0, eventRelicRewards: 0,
-            bossReached: false, bossWon: false,
+            bossReached: false, bossWon: false, bossAttempts: 0,
             hpBeforeBoss: null, hpAfterAct: null, deckSizeBeforeBoss: null,
-            relicCountBeforeBoss: null
+            relicCountBeforeBoss: null, firstFailedEncounter: null
         };
 
         for (const node of route.slice(1)) {
@@ -1064,12 +1066,19 @@ function simulateRouteCampaign(heroId, seed, policy = 'heal-when-useful', routeP
                 const enemyId = isBoss
                     ? ACT_BOSS_IDS[act - 1]
                     : regularEnemies[Math.floor(combatRandom() * regularEnemies.length)];
+                stats.combatAttempts++;
                 if (isBoss) {
                     stats.bossReached = true;
+                    stats.bossAttempts++;
                     stats.hpBeforeBoss = player.hp;
                     stats.deckSizeBeforeBoss = player.deck.length;
                     stats.relicCountBeforeBoss = player.relics.length;
+                } else if (isElite) {
+                    stats.eliteAttempts++;
+                } else {
+                    stats.regularAttempts++;
                 }
+                const encounterHpBefore = player.hp;
                 const combatSeed = Math.floor(combatRandom() * 0xffffffff) >>> 0;
                 const merchantTouched = (Number(player.veiledMerchantDeals) || 0) > 0 ||
                     ['owed', 'settled', 'defaulted', 'declined', 'purchased'].includes(player.veiledMerchantDebt);
@@ -1093,6 +1102,25 @@ function simulateRouteCampaign(heroId, seed, policy = 'heal-when-useful', routeP
                 player.hp = result.hpRemaining;
                 if (result.conditions) Object.assign(player, result.conditions);
                 if (result.outcome === 'win') {
+                    stats.combatWins++;
+                    if (isBoss) stats.bossWon = true;
+                    else if (isElite) stats.eliteWins++;
+                    else stats.regularWins++;
+                } else if (!stats.firstFailedEncounter) {
+                    stats.firstFailedEncounter = {
+                        type: isBoss ? 'boss' : isElite ? 'elite' : 'battle',
+                        enemyId,
+                        floor: node.floor ?? node.y ?? null,
+                        outcome: result.outcome,
+                        turns: result.turns,
+                        hpBefore: encounterHpBefore,
+                        hpAfter: result.hpRemaining,
+                        enemyHpRemaining: result.enemyHpRemaining,
+                        deckSize: player.deck.length,
+                        relicCount: player.relics.length
+                    };
+                }
+                if (result.outcome === 'win') {
                     const relicAvailable = isElite
                         ? api.chooseRelic(player.relics, rewardRandom, heroId)
                         : null;
@@ -1107,7 +1135,6 @@ function simulateRouteCampaign(heroId, seed, policy = 'heal-when-useful', routeP
                     stats.goldEarned += goldReward;
                 }
                 if (isBoss) {
-                    stats.bossWon = result.outcome === 'win';
                     if (stats.bossWon && rewardRandom() < cardRewardChance) {
                         const card = chooseBestReward(api, heroId, rewardRandom);
                         if (card) {
@@ -1296,6 +1323,21 @@ test('route-aware boss benchmark compares campfire policies while carrying route
                     assert.equal(act.eventDecisions, act.eventRooms,
                         'every visited event room must commit exactly one decision');
                     assert.ok(act.restHeals + act.restUpgrades <= act.rests);
+                    assert.equal(act.combatAttempts, act.combatWins +
+                        (act.firstFailedEncounter ? 1 : 0),
+                        'each act stops at the first failed combat after counting every completed win');
+                    assert.equal(act.regularAttempts, act.regularWins +
+                        (act.firstFailedEncounter?.type === 'battle' ? 1 : 0));
+                    assert.equal(act.eliteAttempts, act.eliteWins +
+                        (act.firstFailedEncounter?.type === 'elite' ? 1 : 0));
+                    assert.equal(act.bossAttempts, act.bossWon ? 1 :
+                        (act.firstFailedEncounter?.type === 'boss' ? 1 : 0));
+                    if (act.firstFailedEncounter) {
+                        assert.ok(['battle', 'elite', 'boss'].includes(act.firstFailedEncounter.type));
+                        assert.ok(act.firstFailedEncounter.hpBefore > 0);
+                        assert.ok(act.firstFailedEncounter.hpAfter >= 0);
+                        assert.ok(act.firstFailedEncounter.deckSize >= apiStarterDeckSize(heroId));
+                    }
                     if (act.bossReached) {
                         assert.ok(act.hpBeforeBoss > 0);
                         assert.ok(act.deckSizeBeforeBoss >= apiStarterDeckSize(heroId));
@@ -1317,6 +1359,19 @@ test('route-aware boss benchmark compares campfire policies while carrying route
                         act,
                         bossAttempts: bossRows.length,
                         bossWins: bossRows.filter(item => item.bossWon).length,
+                        regularAttempts: rows.reduce((sum, item) => sum + item.regularAttempts, 0),
+                        regularWins: rows.reduce((sum, item) => sum + item.regularWins, 0),
+                        eliteAttempts: rows.reduce((sum, item) => sum + item.eliteAttempts, 0),
+                        eliteWins: rows.reduce((sum, item) => sum + item.eliteWins, 0),
+                        combatAttempts: rows.reduce((sum, item) => sum + item.combatAttempts, 0),
+                        combatWins: rows.reduce((sum, item) => sum + item.combatWins, 0),
+                        firstFailures: rows.filter(item => item.firstFailedEncounter).map(item => ({
+                            type: item.firstFailedEncounter.type,
+                            enemyId: item.firstFailedEncounter.enemyId,
+                            floor: item.firstFailedEncounter.floor,
+                            hpBefore: item.firstFailedEncounter.hpBefore,
+                            enemyHpRemaining: item.firstFailedEncounter.enemyHpRemaining
+                        })),
                         averageRouteScore: Number((rows.reduce((sum, item) => sum + item.routeScore, 0)
                             / Math.max(1, rows.length)).toFixed(2)),
                         averageHpBeforeBoss: bossRows.length
