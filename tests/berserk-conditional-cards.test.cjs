@@ -25,10 +25,10 @@ function api() {
     return vm.runInNewContext(source + '\n({ BattleSystem, BERSERK_CARDS })', { Math: math });
 }
 
-function battle({ hp = 50, maxHp = 100, enemyHp = 100, enemyMaxHp = 100, bleed = 0, strength = 0 } = {}) {
+function battle({ hp = 50, maxHp = 100, enemyHp = 100, enemyMaxHp = 100, bleed = 0, strength = 0, powers = [] } = {}) {
     const { BattleSystem } = api();
     const instance = new BattleSystem(
-        { heroId: 'berserk', hp, maxHp, deck: [], relics: [] },
+        { heroId: 'berserk', hp, maxHp, deck: [], relics: [...powers] },
         { id: 'dummy', name: 'Манекен', hp: enemyHp, maxHp: enemyMaxHp,
             damage: 0, pattern: ['defend'], patternIndex: 0 }
     );
@@ -161,6 +161,32 @@ test('Mad Dash discounts attacks by one energy on the next turn only', () => {
     instance.startTurn();
     assert.equal(instance.berserkAttackDiscountActive, false);
     assert.equal(instance.berserkAttackDiscountNextTurn, false);
+});
+
+test('Berserker self-damage activates HP-loss synergies only for actual HP lost', () => {
+    const instance = battle({
+        hp: 10,
+        maxHp: 40,
+        powers: ['bloodletting', 'battleMadness', 'beastSkin', 'painIsPower']
+    });
+    instance.drawPile = [
+        { id: 'self_damage_draw', type: 'skill', cost: 0 },
+        { id: 'unused_draw', type: 'skill', cost: 0 }
+    ];
+
+    play(instance, 'sacrificialStrike');
+
+    assert.equal(instance.player.hp, 7);
+    assert.equal(instance.enemy.hp, 85);
+    assert.equal(instance.statusEffects.enemy.bleed, 1,
+        'Bloodletting reacts to the actual HP loss from the card');
+    assert.equal(instance.hand.length, 1);
+    assert.equal(instance.hand[0].id, 'self_damage_draw',
+        'Battle Madness draws from self-damage');
+    assert.equal(instance.beastSkinBlockNextTurn, 3,
+        'Beast Skin stores block equal to the actual HP lost');
+    assert.equal(instance.statusEffects.player.strength, 1,
+        'Pain Is Power reacts once to the HP-loss event');
 });
 
 test('Blood Sacrifice doubles existing strength after its self-damage', () => {
