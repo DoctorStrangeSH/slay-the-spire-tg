@@ -5,7 +5,7 @@ const { join } = require('node:path');
 const vm = require('node:vm');
 
 const source = readFileSync(join(__dirname, '../js/systems/Game.js'), 'utf8');
-const Game = vm.runInNewContext(source + '\\nGame;', {
+const Game = vm.runInNewContext(source + '\nGame;', {
     console,
     document: { getElementById() { return null; } }
 });
