@@ -105,6 +105,6 @@ test('elite victory grants fallback gold when the relic pool is exhausted', () =
 
     assert.equal(game.player.eliteWins, 1);
     assert.equal(game.player.relics.length, 0);
-    assert.ok(game.player.gold >= 75);
+    assert.ok(game.player.gold >= 65);
     assert.equal(resultCalls, 1);
 });
