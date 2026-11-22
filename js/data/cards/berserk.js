@@ -199,7 +199,7 @@ const BERSERK_CARDS = {
         bleed: 2,
         aoe: true,
         selfDamage: 2,
-        description: 'Наносит 5 урона ВСЕМ. Накладывает 2 Кровотечения',
+        description: 'Наносит 5 урона ВСЕМ. Накладывает 2 Кровотечения. Теряете 2 HP',
         emoji: '🌀'
     },
     bloodTide: {
@@ -359,7 +359,7 @@ const BERSERK_CARDS = {
         weak: 1,
         vulnerable: 1,
         selfDamage: 2,
-        description: 'Накладывает 1 Слабость и 1 Уязвимость',
+        description: 'Теряете 2 HP. Накладывает 1 Слабость и 1 Уязвимость',
         emoji: '🌫️'
     },
     bloodSmell: {
@@ -403,7 +403,7 @@ const BERSERK_CARDS = {
         cost: 2,
         block: 15,
         selfDamage: 5,
-        description: 'Даёт 15 Блока. Если HP < 25% — 30 Блока',
+        description: 'Теряете 5 HP. Даёт 15 Блока. Если HP < 25% — 30 Блока',
         emoji: '🛡️'
     },
     bloodSacrifice: {
@@ -436,7 +436,7 @@ const BERSERK_CARDS = {
         weak: 2,
         vulnerable: 2,
         selfDamage: 4,
-        description: 'Накладывает 2 Слабости и 2 Уязвимости',
+        description: 'Теряете 4 HP. Накладывает 2 Слабости и 2 Уязвимости',
         emoji: '🌫️'
     },
     finalBattle: {
@@ -448,7 +448,7 @@ const BERSERK_CARDS = {
         block: 20,
         selfDamage: 3,
         exhaust: true,
-        description: 'Даёт 20 Блока. Если HP < 20% — 35 Блока',
+        description: 'Теряете 3 HP. Даёт 20 Блока. Если HP < 20% — 35 Блока',
         emoji: '⚔️'
     },
     
