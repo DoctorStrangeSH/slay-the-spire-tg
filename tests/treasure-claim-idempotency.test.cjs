@@ -54,7 +54,11 @@ test('treasure reward callback grants only one reward on repeated activation', (
     game.continueJourney = () => { continues++; };
     game.runSave = { save(instance) {
         saves++;
-        savedSnapshot = JSON.parse(JSON.stringify(instance.player));
+        savedSnapshot = {
+            gold: instance.player.gold,
+            claimedCount: instance.player.claimedTreasureNodes.length,
+            claimedId: instance.player.claimedTreasureNodes[0]
+        };
         return true;
     } };
     game.applyTreasureReward = type => {
@@ -74,7 +78,8 @@ test('treasure reward callback grants only one reward on repeated activation', (
     assert.equal(continues, 1);
     assert.equal(saves, 1);
     assert.equal(savedSnapshot.gold, 75);
-    assert.deepEqual(savedSnapshot.claimedTreasureNodes, ['floor_2_node_1']);
+    assert.equal(savedSnapshot.claimedCount, 1);
+    assert.equal(savedSnapshot.claimedId, 'floor_2_node_1');
     assert.equal(modal.removed, true);
 });
 
@@ -134,7 +139,7 @@ test('failed treasure checkpoint rolls back the reward and keeps the choice open
 
     assert.equal(saves, 1);
     assert.equal(game.player.gold, 10);
-    assert.deepEqual(game.player.claimedTreasureNodes, []);
+    assert.equal(game.player.claimedTreasureNodes.length, 0);
     assert.equal(continues, 0);
     assert.equal(modal.removed, false);
 });
