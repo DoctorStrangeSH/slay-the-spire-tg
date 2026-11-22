@@ -558,7 +558,7 @@ const mapSource = source + '\n' + readFileSync(join(root, 'js/systems/MapGenerat
 function createRouteApi(random = Math.random) {
     const seededMath = Object.create(Math);
     seededMath.random = random;
-    return vm.runInNewContext(mapSource + '\n({ MapGenerator, HEROES, getStarterDeckForHero, getRandomRewardCards, chooseRelic, getCardsForHero, getAvailableRelics, getVeiledBossForRun, Game })', {
+    return vm.runInNewContext(mapSource + '\n({ MapGenerator, HEROES, ENEMIES, getStarterDeckForHero, getRandomRewardCards, chooseRelic, getCardsForHero, getAvailableRelics, getVeiledBossForRun, Game })', {
         Math: seededMath,
         alert: () => {}
     });
