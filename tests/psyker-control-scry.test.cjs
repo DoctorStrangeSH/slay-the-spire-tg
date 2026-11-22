@@ -190,6 +190,27 @@ test('Psyker conditional attacks use paralysis and scry state at the moment of p
     assert.equal(mentalBomb.enemy.hp, 80);
 });
 
+test('Mental Projection and Multiplier turn paralyzed Telekinesis into four hits', () => {
+    const { PSYKER_CARDS } = api();
+    const battle = createBattle();
+    battle.hand = [{ ...PSYKER_CARDS.multiplier }];
+    battle.energy = 10;
+
+    assert.equal(battle.playCard(0).success, true);
+    battle.hand = [{ ...PSYKER_CARDS.mentalProjection }];
+    assert.equal(battle.playCard(0).success, true);
+    assert.equal(battle.echoStacks, 2);
+    assert.equal(battle.exhaustPile.some(card => card.id === 'mentalProjection'), true);
+
+    battle.statusEffects.enemy.paralysis = 1;
+    battle.hand = [{ ...PSYKER_CARDS.telekinesis }];
+    assert.equal(battle.playCard(0).success, true);
+
+    assert.equal(battle.enemy.hp, 52,
+        'four resolved hits of 12 damage each must be dealt to the paralyzed enemy');
+    assert.equal(battle.echoStacks, 0);
+});
+
 test('Psy Aura ignores exactly two points of enemy block', () => {
     const { PSYKER_CARDS } = api();
     const battle = createBattle(['psyAura']);
