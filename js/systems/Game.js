@@ -85,6 +85,7 @@ class Game {
             deck: getStarterDeckForHero(heroId),
             relics: [],
             eventHistory: [],
+            eventHistoryAct: 1,
             journalLog: [],
             battleWins: 0,
             eliteWins: 0,
@@ -117,6 +118,7 @@ class Game {
         this.player.deck = getStarterDeckForHero(this.player.heroId);
         this.player.relics = [];
         this.player.eventHistory = [];
+        this.player.eventHistoryAct = this.act;
         this.player.journalLog = [];
         this.player.battleWins = 0;
         this.player.eliteWins = 0;
@@ -1464,11 +1466,12 @@ class Game {
         const rareEvents = this.getEligibleRareEvents();
         const isRare = rareEvents.length > 0 && Math.random() < this.getRareEventChance();
         const events = isRare ? rareEvents : this.getEventsForAct();
-        const history = Array.isArray(this.player?.eventHistory)
-            ? this.player.eventHistory.filter(name => typeof name === 'string').slice(-2)
+        const historyAct = Number(this.player?.eventHistoryAct);
+        const history = historyAct === this.act && Array.isArray(this.player?.eventHistory)
+            ? this.player.eventHistory.filter(name => typeof name === 'string')
             : [];
         const freshEvents = events.filter(event => !history.includes(event.name));
-        // Если весь пул уже встречался, событие всё равно должно состояться.
+        // Повторяем событие только после исчерпания подходящего пула текущего акта.
         const availableEvents = freshEvents.length ? freshEvents : events;
         let event = availableEvents[Math.floor(Math.random() * availableEvents.length)];
         // Deferred encounters compete fairly: one old decision cannot hide another.
@@ -1486,8 +1489,8 @@ class Game {
         }
         if (!event) return;
         if (this.player) {
-            const previous = Array.isArray(this.player.eventHistory) ? this.player.eventHistory : [];
-            this.player.eventHistory = [...previous.slice(-19), event.name];
+            this.player.eventHistoryAct = this.act;
+            this.player.eventHistory = [...history, event.name];
             this.player.pendingEvent = {
                 id: this.getPendingEventDecisionId(event),
                 name: event.name,
