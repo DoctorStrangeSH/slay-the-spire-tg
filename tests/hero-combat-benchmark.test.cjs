@@ -1116,6 +1116,10 @@ function simulateRouteCampaign(heroId, seed, policy = 'heal-when-useful', routeP
                         hpBefore: encounterHpBefore,
                         hpAfter: result.hpRemaining,
                         enemyHpRemaining: result.enemyHpRemaining,
+                        enemyMaxHp: Number(api.ENEMIES[enemyId]?.maxHp || api.ENEMIES[enemyId]?.hp) || 0,
+                        damageDealt: result.damageDealt,
+                        damageTaken: result.damageTaken,
+                        combatMetrics: { ...result.combatMetrics },
                         deckSize: player.deck.length,
                         relicCount: player.relics.length
                     };
@@ -1371,14 +1375,26 @@ test('route-aware boss benchmark compares campfire policies while carrying route
                             const key = `${failure.type}:${failure.enemyId}:floor-${failure.floor ?? 'unknown'}`;
                             const entry = summary[key] || {
                                 count: 0, totalHpBefore: 0, totalEnemyHpRemaining: 0,
-                                totalTurns: 0, maxEnemyHpRemaining: 0
+                                totalEnemyMaxHp: 0, totalDamageTaken: 0, totalDamageDealt: 0,
+                                totalTurns: 0, maxEnemyHpRemaining: 0,
+                                metrics: {
+                                    enemyAttacks: 0, enemyDefends: 0, blockAbsorbed: 0,
+                                    directHeroDamage: 0, poisonDamage: 0, selfDamage: 0,
+                                    buildingTargetAttacks: 0, buildingDamage: 0
+                                }
                             };
                             entry.count++;
                             entry.totalHpBefore += failure.hpBefore;
                             entry.totalEnemyHpRemaining += failure.enemyHpRemaining;
+                            entry.totalEnemyMaxHp += failure.enemyMaxHp;
+                            entry.totalDamageTaken += failure.damageTaken;
+                            entry.totalDamageDealt += failure.damageDealt;
                             entry.totalTurns += failure.turns || 0;
                             entry.maxEnemyHpRemaining = Math.max(
                                 entry.maxEnemyHpRemaining, failure.enemyHpRemaining);
+                            for (const metric of Object.keys(entry.metrics)) {
+                                entry.metrics[metric] += Number(failure.combatMetrics?.[metric]) || 0;
+                            }
                             summary[key] = entry;
                             return summary;
                         }, {}),
@@ -1397,7 +1413,9 @@ test('route-aware boss benchmark compares campfire policies while carrying route
                                 enemyId: item.firstFailedEncounter.enemyId,
                                 floor: item.firstFailedEncounter.floor,
                                 hpBefore: item.firstFailedEncounter.hpBefore,
-                                enemyHpRemaining: item.firstFailedEncounter.enemyHpRemaining
+                                enemyHpRemaining: item.firstFailedEncounter.enemyHpRemaining,
+                                damageTaken: item.firstFailedEncounter.damageTaken,
+                                combatMetrics: item.firstFailedEncounter.combatMetrics
                             })),
                         averageRouteScore: Number((rows.reduce((sum, item) => sum + item.routeScore, 0)
                             / Math.max(1, rows.length)).toFixed(2)),
