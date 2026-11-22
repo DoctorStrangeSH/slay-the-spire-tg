@@ -739,7 +739,7 @@ test('merchant contract outcome and collector timing survive a fresh Game restor
 
     const reloaded = Object.create(Game.prototype);
     reloaded.runSave = new RunSave(memory);
-    reloaded.showMap = () => {};
+    reloaded.showMap = () => { reloaded.gameState = 'map'; };
     assert.equal(reloaded.continueSavedGame(), true);
 
     assert.equal(reloaded.runId, 'merchant-contract-reload');
@@ -755,7 +755,7 @@ test('merchant contract outcome and collector timing survive a fresh Game restor
     assert.equal(persistence.save(reloaded), true);
     const secondReload = Object.create(Game.prototype);
     secondReload.runSave = new RunSave(memory);
-    secondReload.showMap = () => {};
+    secondReload.showMap = () => { secondReload.gameState = 'map'; };
     assert.equal(secondReload.continueSavedGame(), true);
     assert.equal(secondReload.player.veiledMerchantDebt, 'defaulted');
     assert.equal(secondReload.canEncounterVeiledMerchantCollector(), false);
