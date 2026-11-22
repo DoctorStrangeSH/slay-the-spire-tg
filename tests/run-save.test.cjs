@@ -724,3 +724,42 @@ test('a fresh Game instance resumes the pending rest decision after a simulated 
     assert.equal(reloaded.runId, 'rest-reload-resume');
     assert.equal(reloaded.player.pendingRest, true);
 });
+
+test('merchant contract outcome and collector timing survive a fresh Game restore', () => {
+    const memory = storage();
+    const persistence = new RunSave(memory);
+    const original = game();
+    const next = original.mapGenerator.getAvailableNodes(original.currentNodeId)[0];
+    assert.ok(next, 'seed must expose a next room');
+    original.mapGenerator.visitNode(next.id);
+    original.currentNodeId = next.id;
+    original.floor = next.floor;
+    original.runId = 'merchant-contract-reload';
+    original.player.veiledMerchantDebt = 'owed';
+    original.player.veiledMerchantAct = 1;
+    original.player.veiledMerchantFloor = 0;
+    original.player.veiledMerchantDeals = 1;
+    assert.equal(persistence.save(original), true);
+
+    const reloaded = Object.create(Game.prototype);
+    reloaded.runSave = new RunSave(memory);
+    assert.equal(reloaded.runSave.restore(reloaded), true);
+
+    assert.equal(reloaded.runId, undefined,
+        'RunSave restores player and map state; Game assigns runId from the snapshot');
+    assert.equal(reloaded.player.veiledMerchantDebt, 'owed');
+    assert.equal(reloaded.player.veiledMerchantAct, 1);
+    assert.equal(reloaded.player.veiledMerchantFloor, 0);
+    assert.equal(reloaded.player.veiledMerchantDeals, 1);
+    assert.equal(reloaded.canEncounterVeiledMerchantCollector(), true);
+    assert.ok(reloaded.getEventsForAct().some(event => event.name === 'Сборщик Долгов'),
+        'the outstanding collector encounter must remain eligible after reload');
+
+    reloaded.player.veiledMerchantDebt = 'defaulted';
+    assert.equal(persistence.save(reloaded), true);
+    const secondReload = Object.create(Game.prototype);
+    secondReload.runSave = new RunSave(memory);
+    assert.equal(secondReload.runSave.restore(secondReload), true);
+    assert.equal(secondReload.player.veiledMerchantDebt, 'defaulted');
+    assert.equal(secondReload.canEncounterVeiledMerchantCollector(), false);
+});
