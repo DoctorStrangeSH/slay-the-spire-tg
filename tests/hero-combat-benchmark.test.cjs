@@ -1477,34 +1477,36 @@ test('route-aware boss benchmark compares campfire policies while carrying route
         }
         report.push({ heroId, policies: policyReports });
     }
-    const bossDamageSummary = report.map(hero => ({
+    // Keep CI diagnostics compact and readable. The previous full JSON dump
+    // exceeded GitHub's job-log retrieval limit and hid later hero results.
+    const balanceSummary = report.map(hero => ({
         heroId: hero.heroId,
-        policies: hero.policies
-            .filter(item => item.policy === 'heal-when-useful' && item.routePolicy === 'risk-aware')
-            .map(item => ({
-                policy: item.policy,
-                routePolicy: item.routePolicy,
-                acts: item.acts.map(act => ({
-                    act: act.act,
-                    bossWins: act.bossWins,
-                    bossAttempts: act.bossAttempts,
-                    failures: Object.entries(act.firstFailureByEncounter)
-                        .filter(([key]) => key.startsWith('boss:'))
-                        .map(([enemy, value]) => ({
-                            enemy,
-                            count: value.count,
-                            avgBossHpRemaining: Number((value.totalEnemyHpRemaining / value.count).toFixed(1)),
-                            avgHeroHpBefore: Number((value.totalHpBefore / value.count).toFixed(1)),
-                            avgDamageTaken: Number((value.totalDamageTaken / value.count).toFixed(1)),
-                            avgDamageDealt: Number((value.totalDamageDealt / value.count).toFixed(1)),
-                            sources: Object.fromEntries(Object.entries(value.metrics)
-                                .map(([key, total]) => [key, Number((total / value.count).toFixed(1))]))
-                        }))
-                }))
+        policies: hero.policies.map(item => ({
+            policy: item.policy,
+            routePolicy: item.routePolicy,
+            campaigns: item.campaigns,
+            fullRunWins: item.fullRunWins,
+            fullRunWinRate: Number((item.fullRunWins / Math.max(1, item.campaigns) * 100).toFixed(1)),
+            acts: item.acts.map(act => ({
+                act: act.act,
+                bossWins: act.bossWins,
+                bossAttempts: act.bossAttempts,
+                bossWinRate: act.bossAttempts
+                    ? Number((act.bossWins / act.bossAttempts * 100).toFixed(1)) : null,
+                regularWinRate: act.regularAttempts
+                    ? Number((act.regularWins / act.regularAttempts * 100).toFixed(1)) : null,
+                eliteWinRate: act.eliteAttempts
+                    ? Number((act.eliteWins / act.eliteAttempts * 100).toFixed(1)) : null,
+                averageHpBeforeBoss: act.averageHpBeforeBoss,
+                firstFailures: Object.entries(act.firstFailureByEncounter).reduce((totals, [key, value]) => {
+                    const type = key.split(':')[0];
+                    totals[type] = (totals[type] || 0) + value.count;
+                    return totals;
+                }, {})
             }))
+        }))
     }));
-    console.log('ROUTE_AWARE_BOSS_DAMAGE_SUMMARY ' + JSON.stringify(bossDamageSummary));
-    console.log('ROUTE_AWARE_BOSS_CAMPAIGN_BENCHMARK ' + JSON.stringify(report));
+    console.log('ROUTE_AWARE_BOSS_BALANCE_SUMMARY ' + JSON.stringify(balanceSummary));
 });
 function apiMaxHp(heroId) {
     const api = vm.runInNewContext(source + String.fromCharCode(10) + '({ HEROES })', { Math });
