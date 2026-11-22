@@ -102,8 +102,12 @@ function simulate(heroId, enemyId, seed, elite = false, maxTurns = 30, build = n
     const combatMetrics = {
         enemyAttacks: 0,
         enemyDefends: 0,
+        enemyTurnsSkipped: 0,
+        paralysisTurnsSkipped: 0,
+        absoluteControlTurnsSkipped: 0,
         heroTargetAttacks: 0,
         buildingTargetAttacks: 0,
+        buildingsDestroyed: 0,
         blockAbsorbed: 0,
         buildingDamage: 0,
         directHeroDamage: 0,
@@ -131,11 +135,23 @@ function simulate(heroId, enemyId, seed, elite = false, maxTurns = 30, build = n
     const turnManager = battle.turnManager;
     const originalEndTurn = turnManager.endTurn.bind(turnManager);
     turnManager.endTurn = (currentBattle, effects) => {
+        const actionsBefore = combatMetrics.enemyAttacks + combatMetrics.enemyDefends;
+        const wasParalyzed = currentBattle.enemy.hp > 0 && currentBattle.isEnemyParalyzed();
+        const wasAbsolutelyControlled = currentBattle.enemy.hp > 0 &&
+            !wasParalyzed && currentBattle.hasPower('absoluteControl') &&
+            currentBattle.turn % 2 === 0;
         resolvingEnemyEndTurn = true;
         try {
             return originalEndTurn(currentBattle, effects);
         } finally {
             resolvingEnemyEndTurn = false;
+            const actionsAfter = combatMetrics.enemyAttacks + combatMetrics.enemyDefends;
+            if (currentBattle.enemy.hp > 0 && currentBattle.player.hp > 0 &&
+                actionsAfter === actionsBefore) {
+                combatMetrics.enemyTurnsSkipped++;
+                if (wasParalyzed) combatMetrics.paralysisTurnsSkipped++;
+                else if (wasAbsolutelyControlled) combatMetrics.absoluteControlTurnsSkipped++;
+            }
         }
     };
     const originalChooseTarget = turnManager.chooseTarget.bind(turnManager);
@@ -169,8 +185,11 @@ function simulate(heroId, enemyId, seed, elite = false, maxTurns = 30, build = n
     const originalAttackBuilding = turnManager.attackBuilding.bind(turnManager);
     turnManager.attackBuilding = (currentBattle, building, damage) => {
         const hpBefore = Math.max(0, Number(building.hp) || 0);
+        const buildingsBefore = currentBattle.buildings?.buildings?.length || 0;
         originalAttackBuilding(currentBattle, building, damage);
         combatMetrics.buildingDamage += Math.min(hpBefore, Math.max(0, damage));
+        const buildingsAfter = currentBattle.buildings?.buildings?.length || 0;
+        combatMetrics.buildingsDestroyed += Math.max(0, buildingsBefore - buildingsAfter);
     };
     let turns = 0;
 
@@ -1378,9 +1397,12 @@ test('route-aware boss benchmark compares campfire policies while carrying route
                                 totalEnemyMaxHp: 0, totalDamageTaken: 0, totalDamageDealt: 0,
                                 totalTurns: 0, maxEnemyHpRemaining: 0,
                                 metrics: {
-                                    enemyAttacks: 0, enemyDefends: 0, blockAbsorbed: 0,
+                                    enemyAttacks: 0, enemyDefends: 0,
+                                    enemyTurnsSkipped: 0, paralysisTurnsSkipped: 0,
+                                    absoluteControlTurnsSkipped: 0, blockAbsorbed: 0,
                                     directHeroDamage: 0, poisonDamage: 0, selfDamage: 0,
-                                    buildingTargetAttacks: 0, buildingDamage: 0
+                                    buildingTargetAttacks: 0, buildingsDestroyed: 0,
+                                    buildingDamage: 0
                                 }
                             };
                             entry.count++;
