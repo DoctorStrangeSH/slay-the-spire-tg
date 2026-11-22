@@ -42,7 +42,7 @@ function setup() {
         Math,
         console
     };
-    const MapUI = vm.runInNewContext(source + '\\nMapUI;', context);
+    const MapUI = vm.runInNewContext(source + '\nMapUI;', context);
     const game = { player: { relics: [] }, selectMapNode: target => selected.push(target.id) };
     const group = MapUI.createNodeElement(node, 2, 'svg', 320, 20, 10, 40, [node], 1, game);
     return { MapUI, node, selected, group };
@@ -78,7 +78,7 @@ test('unavailable map rooms are not exposed as keyboard buttons', () => {
     const { MapUI, node } = setup();
     const document = { createElementNS: (_namespace, tag) => createElement(tag) };
     const context = { NODE_TYPES, document, window: { _currentMapPaths: [[], [], [node]] }, Math, console };
-    const isolated = vm.runInNewContext(source + '\\nMapUI;', context);
+    const isolated = vm.runInNewContext(source + '\nMapUI;', context);
     const game = { player: { relics: [] }, selectMapNode() { assert.fail('unavailable room must not activate'); } };
     const group = isolated.createNodeElement(node, 2, 'svg', 320, 20, 10, 40, [], 1, game);
     assert.equal(group.attributes.role, undefined);
