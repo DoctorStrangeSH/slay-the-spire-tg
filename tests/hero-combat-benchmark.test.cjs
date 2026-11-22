@@ -1369,9 +1369,28 @@ test('route-aware boss benchmark compares campfire policies while carrying route
                             const failure = item.firstFailedEncounter;
                             if (!failure) return summary;
                             const key = `${failure.type}:${failure.enemyId}:floor-${failure.floor ?? 'unknown'}`;
-                            summary[key] = (summary[key] || 0) + 1;
+                            const entry = summary[key] || {
+                                count: 0, totalHpBefore: 0, totalEnemyHpRemaining: 0,
+                                totalTurns: 0, maxEnemyHpRemaining: 0
+                            };
+                            entry.count++;
+                            entry.totalHpBefore += failure.hpBefore;
+                            entry.totalEnemyHpRemaining += failure.enemyHpRemaining;
+                            entry.totalTurns += failure.turns || 0;
+                            entry.maxEnemyHpRemaining = Math.max(
+                                entry.maxEnemyHpRemaining, failure.enemyHpRemaining);
+                            summary[key] = entry;
                             return summary;
                         }, {}),
+                        firstFailureTotals: rows.reduce((summary, item) => {
+                            const failure = item.firstFailedEncounter;
+                            if (!failure) return summary;
+                            summary.count++;
+                            summary.hpBefore += failure.hpBefore;
+                            summary.enemyHpRemaining += failure.enemyHpRemaining;
+                            summary.turns += failure.turns || 0;
+                            return summary;
+                        }, { count: 0, hpBefore: 0, enemyHpRemaining: 0, turns: 0 }),
                         firstFailureSamples: rows.filter(item => item.firstFailedEncounter)
                             .slice(0, 3).map(item => ({
                                 type: item.firstFailedEncounter.type,
