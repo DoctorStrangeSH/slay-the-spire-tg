@@ -113,3 +113,34 @@ test('secret boss phase transitions only once and updates its attack pattern', (
     assert.equal(state.enemyBlock, guardAfterFirstTransition);
     assert.equal(boss.phase, 2);
 });
+
+test('secret boss phase thresholds are inclusive and do not trigger early', () => {
+    const turn = new BattleTurn();
+    const cases = [
+        { hp: 261, expectedPhase: 1, changed: false },
+        { hp: 260, expectedPhase: 2, changed: true },
+        { hp: 131, expectedPhase: 2, changed: true },
+        { hp: 130, expectedPhase: 3, changed: true }
+    ];
+
+    for (const scenario of cases) {
+        const boss = getVeiledBossForRun({ veiledMerchantDebt: 'owed' });
+        boss.hp = scenario.hp;
+        const state = makeBattle(boss);
+        assert.equal(turn.advanceSecretBossPhase(state), scenario.changed, `HP ${scenario.hp}`);
+        assert.equal(boss.phase, scenario.expectedPhase, `HP ${scenario.hp}`);
+    }
+});
+
+test('a single large hit may move the secret boss directly from phase one to phase three', () => {
+    const boss = getVeiledBossForRun({ veiledMerchantDebt: 'settled' });
+    boss.hp = Math.floor(boss.maxHp / 3);
+    const state = makeBattle(boss);
+
+    assert.equal(new BattleTurn().advanceSecretBossPhase(state), true);
+    assert.equal(boss.phase, 3);
+    assert.equal(boss.damage, boss.baseDamage + boss.phaseDamageBonus * 2);
+    assert.equal(state.statusEffects.enemy.strength, 2);
+    assert.equal(state.enemyBlock, 18);
+    assert.equal(state.enemyIntent, 'attack');
+});
