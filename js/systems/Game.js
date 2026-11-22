@@ -2384,7 +2384,7 @@ class Game {
     }
 
     // Каждая сокровищница предлагает осмысленный выбор одного из трёх ресурсов.
-    applyTreasureReward(type) {
+    applyTreasureReward(type, { silent = false } = {}) {
         if (type === 'gold') {
             this.player.gold += 75;
             return true;
@@ -2398,10 +2398,12 @@ class Game {
             const relic = chooseRelic(this.player.relics, Math.random, this.player.heroId);
             if (!relic) return false;
             this.player.relics.push(relic.id);
-            if (typeof BattleFeedback !== 'undefined' && BattleFeedback.relicAcquired) {
-                BattleFeedback.relicAcquired(relic);
-            } else {
-                alert(`${relic.emoji} Получена реликвия «${relic.name}»! ${relic.description}`);
+            if (!silent) {
+                if (typeof BattleFeedback !== 'undefined' && BattleFeedback.relicAcquired) {
+                    BattleFeedback.relicAcquired(relic);
+                } else {
+                    alert(`${relic.emoji} Получена реликвия «${relic.name}»! ${relic.description}`);
+                }
             }
             return true;
         }
@@ -2414,6 +2416,52 @@ class Game {
             return true;
         }
         return false;
+    }
+
+    commitTreasureClaim(type, nodeId) {
+        const roomId = String(nodeId || '');
+        if (!this.player || !roomId || !this.runSave ||
+            typeof this.runSave.save !== 'function') return false;
+        const claimed = Array.isArray(this.player.claimedTreasureNodes)
+            ? this.player.claimedTreasureNodes : [];
+        if (claimed.includes(roomId)) return false;
+
+        let snapshot;
+        let relicIdsBefore;
+        try {
+            snapshot = JSON.stringify(this.player);
+            if (typeof snapshot !== 'string') return false;
+            relicIdsBefore = new Set(Array.isArray(this.player.relics) ? this.player.relics : []);
+            if (this.applyTreasureReward(type, { silent: true }) !== true) {
+                this.player = JSON.parse(snapshot);
+                return false;
+            }
+            this.player.claimedTreasureNodes = [...claimed, roomId];
+            if (this.runSave.save(this) !== true) {
+                this.player = JSON.parse(snapshot);
+                return false;
+            }
+        } catch (error) {
+            try { this.player = JSON.parse(snapshot); } catch (restoreError) {
+                console.error('Не удалось откатить награду сокровищницы:', restoreError);
+            }
+            console.warn('Награда сокровищницы отменена: checkpoint не сохранён.', error);
+            return false;
+        }
+
+        if (type === 'relic' && Array.isArray(this.player.relics)) {
+            const relicId = this.player.relics.find(id => !relicIdsBefore.has(id));
+            const relic = relicId && typeof RELIC_CATALOG !== 'undefined'
+                ? RELIC_CATALOG[relicId] : null;
+            if (relic) {
+                if (typeof BattleFeedback !== 'undefined' && BattleFeedback.relicAcquired) {
+                    BattleFeedback.relicAcquired(relic);
+                } else {
+                    alert(`${relic.emoji} Получена реликвия «${relic.name}»! ${relic.description}`);
+                }
+            }
+        }
+        return true;
     }
 
     openTreasure() {
@@ -2452,12 +2500,8 @@ class Game {
             const button = document.createElement('button');
             button.textContent = choice.text;
             button.onclick = () => {
-                const resolved = Array.isArray(this.player.claimedTreasureNodes)
-                    ? this.player.claimedTreasureNodes : [];
-                if (claimed || (nodeId && resolved.includes(nodeId)) ||
-                    !this.applyTreasureReward(choice.type)) return;
+                if (claimed || !this.commitTreasureClaim(choice.type, nodeId)) return;
                 claimed = true;
-                this.player.claimedTreasureNodes = [...resolved, nodeId].filter(Boolean);
                 modal.__gameModalCleanup?.(false);
                 modal.remove();
                 this.continueJourney();
