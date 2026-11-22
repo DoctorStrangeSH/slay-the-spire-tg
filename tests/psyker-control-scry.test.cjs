@@ -198,6 +198,7 @@ test('Mental Projection and Multiplier turn paralyzed Telekinesis into four hits
 
     assert.equal(battle.playCard(0).success, true);
     battle.hand = [{ ...PSYKER_CARDS.mentalProjection }];
+    assert.match(PSYKER_CARDS.mentalProjection.description, /следующая карта срабатывает трижды/i);
     assert.equal(battle.playCard(0).success, true);
     assert.equal(battle.echoStacks, 2);
     assert.equal(battle.exhaustPile.some(card => card.id === 'mentalProjection'), true);
