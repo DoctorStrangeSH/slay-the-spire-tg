@@ -169,9 +169,10 @@ test('Berserker self-damage activates HP-loss synergies only for actual HP lost'
         maxHp: 40,
         powers: ['bloodletting', 'battleMadness', 'beastSkin', 'painIsPower']
     });
+    // The draw pile's last element is the top card.
     instance.drawPile = [
-        { id: 'self_damage_draw', type: 'skill', cost: 0 },
-        { id: 'unused_draw', type: 'skill', cost: 0 }
+        { id: 'unused_draw', type: 'skill', cost: 0 },
+        { id: 'self_damage_draw', type: 'skill', cost: 0 }
     ];
 
     play(instance, 'sacrificialStrike');
