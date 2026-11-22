@@ -115,3 +115,28 @@ test('achievement and cosmetic journal fits Telegram mobile viewport and safe ar
     assert.ok(styles.includes('.cathedral-challenge-group summary { cursor: pointer; padding: 12px 4px; min-height: 44px;'));
     assert.ok(styles.includes('grid-template-columns: minmax(0, 1fr);'));
 });
+
+test('mobile battle keeps the enemy, player, hand and controls inside the Telegram viewport', () => {
+    const styles = readFileSync(join(__dirname, '../css/cathedral.css'), 'utf8');
+    assert.ok(styles.includes('height: var(--game-viewport-height, 100dvh);'));
+    assert.ok(styles.includes('overflow: hidden;\n    display: flex;\n    flex-direction: column;'));
+    assert.ok(styles.includes('height: clamp(125px, var(--game-viewport-26, 26dvh), 172px);'));
+    assert.ok(styles.includes('overflow-x: auto;\n    overflow-y: hidden;\n    touch-action: pan-x;'));
+});
+
+test('mobile battle actions use a six-column thumb-friendly grid', () => {
+    const styles = readFileSync(join(__dirname, '../css/cathedral.css'), 'utf8');
+    assert.ok(styles.includes('display: grid;\n    grid-template-columns: repeat(3, minmax(0, 1fr));'));
+    assert.ok(styles.includes('grid-template-columns: repeat(6, minmax(0, 1fr));'));
+    assert.ok(styles.includes('#action-buttons .play-btn, #action-buttons .end-btn {\n    grid-column: span 3;'));
+    assert.ok(styles.includes('#action-buttons .relic-btn, #action-buttons .deck-btn,\n  #action-buttons .discard-btn {\n    grid-column: span 2;'));
+    assert.ok(styles.includes('min-height: 44px;'));
+});
+
+test('short Telegram viewports keep battle actions reachable while the battlefield scrolls', () => {
+    const styles = readFileSync(join(__dirname, '../css/cathedral.css'), 'utf8');
+    assert.ok(styles.includes('@media (max-width: 640px) and (max-height: 520px)'));
+    assert.ok(styles.includes('position: sticky;\n    bottom: 0;\n    z-index: 12;'));
+    assert.ok(styles.includes('padding: 5px 3px max(5px, env(safe-area-inset-bottom));'));
+    assert.ok(styles.includes('overscroll-behavior-y: contain;'));
+});
