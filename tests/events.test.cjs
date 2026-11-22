@@ -316,3 +316,32 @@ test('psyker mind chain requires elite victory with active paralysis and three c
     assert.equal(state.recordCombatChallenge(true), false);
     assert.equal(unlocks.length, 1);
 });
+
+test('every normal and rare encounter has a unique identity and actionable choices', () => {
+    const state = game();
+    const encounters = [
+        ...state.getEventsForAct(),
+        ...state.getRareEventsForAct()
+    ];
+    const names = encounters.map(event => event.name);
+    assert.ok(encounters.length >= 20, 'the release event pool should remain populated');
+    assert.equal(new Set(names).size, names.length,
+        'normal and rare pools must not contain duplicate encounter names');
+
+    for (const event of encounters) {
+        assert.equal(typeof event.name, 'string', 'every encounter needs a name');
+        assert.ok(event.name.trim().length > 0);
+        assert.equal(typeof event.description, 'string',
+            `encounter ${event.name} needs descriptive text`);
+        assert.ok(event.description.trim().length > 0);
+        assert.ok(Array.isArray(event.options) && event.options.length > 0,
+            `encounter ${event.name} needs at least one choice`);
+        for (const option of event.options) {
+            assert.equal(typeof option.text, 'string',
+                `encounter ${event.name} has a choice without text`);
+            assert.ok(option.text.trim().length > 0);
+            assert.equal(typeof option.action, 'function',
+                `choice "${option.text}" in ${event.name} needs an action`);
+        }
+    }
+});
