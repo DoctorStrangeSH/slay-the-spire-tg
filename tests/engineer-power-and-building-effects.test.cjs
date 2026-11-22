@@ -58,6 +58,34 @@ test('Living Steel and Calibration improve new constructions at placement', () =
     assert.equal(turret.block, 1);
 });
 
+test('playing Engineer passive powers activates their combined construction synergies', () => {
+    const { api, battle } = setup();
+    const powerIds = [
+        'livingSteel', 'calibration', 'overproduction',
+        'modularConstruction', 'systemOverload'
+    ];
+
+    for (const id of powerIds) {
+        battle.hand = [{ ...api.ENGINEER_CARDS[id] }];
+        battle.energy = 10;
+        assert.equal(battle.playCard(0).success, true, id + ' should be playable');
+        assert.ok(battle.hasPower(id), id + ' should become active after being played');
+    }
+
+    battle.drawPile = [{ id: 'synergy_draw', type: api.CARD_TYPES.SKILL, cost: 0 }];
+    const turret = addBuilding(api, battle, 'smallTurret');
+
+    assert.equal(turret.maxHp, 11, 'Living Steel adds five maximum HP');
+    assert.equal(turret.hp, 11);
+    assert.equal(turret.damage, 4, 'Calibration adds one damage');
+    assert.equal(turret.block, 3, 'Calibration and Modular Construction stack block');
+    assert.equal(battle.hand.length, 1);
+    assert.equal(battle.hand[0].id, 'synergy_draw', 'Overproduction draws on placement');
+
+    battle.buildings.demolishBuilding(battle, turret.id);
+    assert.equal(battle.enemy.hp, 97, 'System Overload triggers when the construction is removed');
+});
+
 test('Overproduction draws exactly one card when a construction is placed', () => {
     const { api, battle } = setup();
     battle.player.relics.push('overproduction');
