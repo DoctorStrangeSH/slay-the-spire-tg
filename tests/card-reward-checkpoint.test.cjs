@@ -43,7 +43,7 @@ test('failed reward-offer checkpoint blocks the choice until retry', () => {
 
     assert.equal(game.checkpointRewardOffer(choices), false);
     assert.equal(game.rewardCheckpointPending, true);
-    assert.deepEqual(game.offeredCards.map(card => card.id), ['guard', 'bash']);
+    assert.deepEqual(JSON.parse(JSON.stringify(game.offeredCards.map(card => card.id))), ['guard', 'bash']);
     assert.equal(game.gameState, 'map');
 
     assert.equal(game.runSave.save(game), true);
@@ -85,7 +85,7 @@ test('skipping a card reward is checkpointed before the pending offer is cleared
 
     assert.equal(game.commitCardReward(), true);
     assert.deepEqual(snapshot, { deck: ['strike'], offers: 0 });
-    assert.deepEqual(game.player.deck.map(card => card.id), ['strike']);
+    assert.deepEqual(JSON.parse(JSON.stringify(game.player.deck.map(card => card.id))), ['strike']);
     assert.equal(game.offeredCards.length, 0);
 });
 
