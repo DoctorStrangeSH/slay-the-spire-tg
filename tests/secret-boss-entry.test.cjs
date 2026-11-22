@@ -100,3 +100,64 @@ test('secret boss victory records its flag and one-time reward exactly once', ()
     assert.equal(game.player.gold, 110);
     assert.equal(context.results.length, 1);
 });
+
+test('merchant debt collector appears only after the deal floor and settles the debt once', () => {
+    const { Game } = loadGame({ alert: () => {} });
+    const game = Object.create(Game.prototype);
+    game.act = 1;
+    game.floor = 4;
+    game.player = {
+        heroId: 'berserk', hp: 60, maxHp: 80, gold: 80, deck: [], relics: [],
+        veiledMerchantDebt: 'owed', veiledMerchantAct: 1, veiledMerchantFloor: 4,
+        veiledMerchantDeals: 1
+    };
+
+    assert.equal(game.canEncounterVeiledMerchantCollector(), false,
+        'collector must not appear on the same floor as the loan');
+    assert.equal(game.getEventsForAct().some(event => event.name === 'Сборщик Долгов'), false);
+
+    game.floor = 5;
+    assert.equal(game.canEncounterVeiledMerchantCollector(), true);
+    const collector = game.getEventsForAct().find(event => event.name === 'Сборщик Долгов');
+    assert.ok(collector, 'collector event should be added after the loan floor');
+
+    const settle = collector.options.find(option => option.text.includes('Закрыть договор'));
+    assert.ok(settle);
+    assert.equal(settle.action(), false, '80 gold is not enough to settle a 100-gold debt');
+    assert.equal(game.player.gold, 80);
+    assert.equal(game.player.veiledMerchantDebt, 'owed');
+
+    game.player.gold = 100;
+    assert.equal(settle.action(), true);
+    assert.equal(game.player.gold, 0);
+    assert.equal(game.player.veiledMerchantDebt, 'settled');
+    assert.equal(game.canEncounterVeiledMerchantCollector(), false,
+        'settled debt must not schedule another collector');
+    assert.equal(game.getEventsForAct().some(event => event.name === 'Сборщик Долгов'), false);
+});
+
+test('merchant default is recorded as a permanent outcome for the secret boss', () => {
+    const { Game } = loadGame({ alert: () => {} });
+    const game = Object.create(Game.prototype);
+    game.act = 2;
+    game.floor = 7;
+    game.player = {
+        heroId: 'engineer', hp: 55, maxHp: 80, gold: 80, deck: [], relics: [],
+        veiledMerchantDebt: 'owed', veiledMerchantAct: 1, veiledMerchantFloor: 12,
+        veiledMerchantDeals: 1
+    };
+
+    const collector = game.getEventsForAct().find(event => event.name === 'Сборщик Долгов');
+    assert.ok(collector);
+    const decline = collector.options.find(option => option.text.includes('Отказаться платить'));
+    assert.ok(decline);
+    assert.equal(decline.action(), true);
+    assert.equal(game.player.veiledMerchantDebt, 'defaulted');
+    assert.equal(game.canEncounterVeiledMerchantCollector(), false);
+    let encountered = null;
+    game.act = 3;
+    game.beginEncounter = enemy => { encountered = enemy; };
+    game.startBossBattle();
+    assert.equal(encountered.isSecretBoss, true);
+    assert.equal(encountered.consequence, 'defaulted');
+});
