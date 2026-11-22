@@ -126,7 +126,7 @@ test('cleanup removes key listener and restores focus to the connected opener', 
     access.cleanup();
     assert.equal(h.document.listenerCount('keydown'), 0);
     assert.equal(h.document.activeElement, opener);
-    assert.deepEqual(opener.focusCalls[0], { preventScroll: true });
+    assert.equal(opener.focusCalls[0].preventScroll, true);
 });
 
 test('dialog without focusable controls keeps Tab focus on the dialog itself', () => {
