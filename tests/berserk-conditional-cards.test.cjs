@@ -184,8 +184,8 @@ test('Berserker self-damage activates HP-loss synergies only for actual HP lost'
     assert.equal(instance.hand.length, 1);
     assert.equal(instance.hand[0].id, 'self_damage_draw',
         'Battle Madness draws from self-damage');
-    assert.equal(instance.beastSkinBlockNextTurn, 3,
-        'Beast Skin stores block equal to the actual HP lost');
+    assert.equal(instance.beastSkinBlockNextTurn, 1,
+        'Beast Skin grants one block per HP-loss event, not per HP point');
     assert.equal(instance.statusEffects.player.strength, 1,
         'Pain Is Power reacts once to the HP-loss event');
 });
