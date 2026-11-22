@@ -78,3 +78,39 @@ test('all four shop operations use the shared atomic purchase path', () => {
     assert.match(shopSource, /hpBefore/);
     assert.match(shopSource, /removedCard/);
 });
+
+test('shop cannot close until the exit checkpoint succeeds', () => {
+    const { instance, visit } = fixture(false);
+    assert.equal(instance.commitShopVisitClose(visit), false);
+    assert.equal(visit.closed, false);
+
+    instance.runSave.save = () => true;
+    assert.equal(instance.commitShopVisitClose(visit), true);
+    assert.equal(visit.closed, true);
+});
+
+test('shop remains open when exit checkpoint throws', () => {
+    const { instance, visit } = fixture(true);
+    instance.runSave.save = () => { throw new Error('storage unavailable'); };
+
+    assert.equal(instance.commitShopVisitClose(visit), false);
+    assert.equal(visit.closed, false);
+});
+
+test('already closed shop cannot be committed a second time', () => {
+    const { instance, visit } = fixture(true);
+    visit.closed = true;
+    instance.runSave.save = () => assert.fail('closed visit must not be saved again');
+
+    assert.equal(instance.commitShopVisitClose(visit), false);
+    assert.equal(visit.closed, true);
+});
+
+test('shop leave action uses the guarded checkpoint before dismissing the modal', () => {
+    const start = gameSource.indexOf('    openShop() {');
+    const end = gameSource.indexOf('    continueJourney()', start);
+    const shopSource = gameSource.slice(start, end);
+    assert.match(shopSource, /if \(!this\.commitShopVisitClose\(visit\)\)\s*\{/);
+    assert.ok(shopSource.indexOf('commitShopVisitClose(visit)') < shopSource.indexOf('modal.remove()'));
+    assert.match(shopSource, /merchant-save-warning/);
+});
