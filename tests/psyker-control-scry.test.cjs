@@ -241,7 +241,9 @@ test('post-action Psyker powers do not trigger on an Absolute Control skip turn'
     assert.equal(battle.statusEffects.enemy.paralysis, 0);
 });
 
-test('Mental Storm can finish an enemy after its announced action', () => {
+test('Mental Storm description matches its actual post-action trigger and can finish an enemy', () => {
+    const { PSYKER_CARDS } = api();
+    assert.match(PSYKER_CARDS.mentalStorm.description, /после действия врага/i);
     const battle = createBattle(['mentalStorm']);
     battle.enemy.hp = 3;
     battle.enemyIntent = 'defend';
