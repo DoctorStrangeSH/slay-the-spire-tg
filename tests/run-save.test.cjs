@@ -729,11 +729,7 @@ test('merchant contract outcome and collector timing survive a fresh Game restor
     const memory = storage();
     const persistence = new RunSave(memory);
     const original = game();
-    const next = original.mapGenerator.getAvailableNodes(original.currentNodeId)[0];
-    assert.ok(next, 'seed must expose a next room');
-    original.mapGenerator.visitNode(next.id);
-    original.currentNodeId = next.id;
-    original.floor = next.floor;
+    moveGameToRoom(original, 'battle');
     original.runId = 'merchant-contract-reload';
     original.player.veiledMerchantDebt = 'owed';
     original.player.veiledMerchantAct = 1;
@@ -743,10 +739,10 @@ test('merchant contract outcome and collector timing survive a fresh Game restor
 
     const reloaded = Object.create(Game.prototype);
     reloaded.runSave = new RunSave(memory);
-    assert.equal(reloaded.runSave.restore(reloaded), true);
+    reloaded.showMap = () => {};
+    assert.equal(reloaded.continueSavedGame(), true);
 
-    assert.equal(reloaded.runId, undefined,
-        'RunSave restores player and map state; Game assigns runId from the snapshot');
+    assert.equal(reloaded.runId, 'merchant-contract-reload');
     assert.equal(reloaded.player.veiledMerchantDebt, 'owed');
     assert.equal(reloaded.player.veiledMerchantAct, 1);
     assert.equal(reloaded.player.veiledMerchantFloor, 0);
@@ -759,7 +755,8 @@ test('merchant contract outcome and collector timing survive a fresh Game restor
     assert.equal(persistence.save(reloaded), true);
     const secondReload = Object.create(Game.prototype);
     secondReload.runSave = new RunSave(memory);
-    assert.equal(secondReload.runSave.restore(secondReload), true);
+    secondReload.showMap = () => {};
+    assert.equal(secondReload.continueSavedGame(), true);
     assert.equal(secondReload.player.veiledMerchantDebt, 'defaulted');
     assert.equal(secondReload.canEncounterVeiledMerchantCollector(), false);
 });
