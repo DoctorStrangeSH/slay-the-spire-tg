@@ -1148,14 +1148,61 @@ class Game {
         }
     }
 
+    checkpointRewardOffer(cards) {
+        if (!Array.isArray(cards) || cards.length < 1 || cards.length > 3 ||
+            !this.player || !this.runSave || typeof this.runSave.save !== 'function') return false;
+        this.offeredCards = cards.map(card => ({ ...card }));
+        this.gameState = 'map';
+        this.rewardCheckpointPending = this.runSave.save(this) !== true;
+        return !this.rewardCheckpointPending;
+    }
+
+    commitCardReward(index = null) {
+        if (!this.player || !Array.isArray(this.offeredCards) || !this.offeredCards.length ||
+            !this.runSave || typeof this.runSave.save !== 'function') return false;
+        if (index !== null && (!Number.isInteger(index) || !this.offeredCards[index])) return false;
+
+        let deckSnapshot;
+        let offersSnapshot;
+        const previousState = this.gameState;
+        try {
+            deckSnapshot = JSON.stringify(this.player.deck);
+            offersSnapshot = JSON.stringify(this.offeredCards);
+            if (typeof deckSnapshot !== 'string' || typeof offersSnapshot !== 'string') return false;
+
+            if (index !== null) this.player.deck.push({ ...this.offeredCards[index] });
+            this.offeredCards = [];
+            this.gameState = 'map';
+            if (this.runSave.save(this) !== true) {
+                this.player.deck = JSON.parse(deckSnapshot);
+                this.offeredCards = JSON.parse(offersSnapshot);
+                this.gameState = previousState;
+                return false;
+            }
+            this.rewardCheckpointPending = false;
+            return true;
+        } catch (error) {
+            try {
+                if (typeof deckSnapshot === 'string') this.player.deck = JSON.parse(deckSnapshot);
+                if (typeof offersSnapshot === 'string') this.offeredCards = JSON.parse(offersSnapshot);
+                this.gameState = previousState;
+            } catch (restoreError) {
+                console.error('Не удалось откатить выбор награды:', restoreError);
+            }
+            console.warn('Выбор награды отменён: checkpoint не сохранён.', error);
+            return false;
+        }
+    }
+
     offerCard(cards = null) {
         const previous = document.getElementById('reward-modal');
         previous?.__gameModalCleanup?.(false);
         previous?.remove();
         const returnFocus = document.activeElement;
-        this.offeredCards = Array.isArray(cards)
+        const choices = Array.isArray(cards)
             ? cards
             : getRandomRewardCards(this.player.heroId, 3);
+        this.checkpointRewardOffer(choices);
 
         const modal = document.createElement('div');
         modal.className = 'modal';
@@ -1163,6 +1210,7 @@ class Game {
         modal.innerHTML = `
             <div class="modal-content">
                 <h3>Выберите карту:</h3>
+                ${this.rewardCheckpointPending ? '<p class="reward-save-warning" role="alert">Награда ещё не сохранена. Повторите сохранение, чтобы выбрать карту безопасно.</p><button type="button" class="reward-save-retry">Повторить сохранение</button>' : ''}
                 <div class="reward-cards">
                     ${this.offeredCards.map((card, index) => `
                         <div class="reward-card reward-reveal card-rarity-${CardArt.rarity(card).key}" style="--reveal-order: ${index}" role="group" tabindex="0" aria-label="Посмотреть карту: ${card.name}" onclick="game.showCardModalFromReward(${index})" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();game.showCardModalFromReward(${index})}">
@@ -1171,11 +1219,11 @@ class Game {
                             <div class="reward-card-rarity"><span aria-hidden="true">${CardArt.rarity(card).sigil}</span> ${CardArt.rarity(card).label}</div>
                             ${CardArt.rarity(card).key === 'rare' ? '<span class="reward-rare-crest" aria-hidden="true">✧</span>' : ''}
                             <div class="reward-card-cost">${card.cost}⚡</div>
-                            <button onclick="event.stopPropagation(); game.takeCardFromReward(${index})">Взять</button>
+                            <button data-reward-action onclick="event.stopPropagation(); game.takeCardFromReward(${index})" ${this.rewardCheckpointPending ? 'disabled' : ''}>Взять</button>
                         </div>
                     `).join('')}
                 </div>
-                <button onclick="game.skipCardReward()">Пропустить</button>
+                <button data-reward-action onclick="game.skipCardReward()" ${this.rewardCheckpointPending ? 'disabled' : ''}>Пропустить</button>
             </div>
         `;
 
@@ -1183,20 +1231,35 @@ class Game {
         modal.setAttribute('aria-modal', 'true');
         modal.setAttribute('aria-label', 'Выбор награды');
         document.body.appendChild(modal);
+        const retry = modal.querySelector('.reward-save-retry');
+        retry?.addEventListener('click', () => {
+            this.rewardCheckpointPending = !this.runSave || this.runSave.save(this) !== true;
+            if (this.rewardCheckpointPending) {
+                modal.querySelector('.reward-save-warning').textContent =
+                    'Сохранение пока недоступно. Награда останется здесь — попробуйте ещё раз.';
+                return;
+            }
+            modal.querySelector('.reward-save-warning')?.remove();
+            retry.remove();
+            modal.querySelectorAll('[data-reward-action]').forEach(button => { button.disabled = false; });
+        });
         bindGameModalAccessibility(modal, {
             label: 'Выбор награды', returnFocus,
-            initialFocus: modal.querySelector('.reward-card button') || modal.querySelector('button')
+            initialFocus: modal.querySelector('.reward-card button:not(:disabled)') ||
+                modal.querySelector('.reward-save-retry') || modal.querySelector('button')
         });
+        return true;
     }
 
     skipCardReward() {
-        if (!this.offeredCards.length) return;
-        this.offeredCards = [];
+        if (!this.offeredCards.length || this.rewardCheckpointPending ||
+            !this.commitCardReward()) return false;
         const rewardModal = document.getElementById('reward-modal');
         rewardModal?.__gameModalCleanup?.(false);
         rewardModal?.remove();
         this.closeCardModal();
         this.continueJourney();
+        return true;
     }
 
     showCardModalFromReward(index) {
@@ -1209,16 +1272,14 @@ class Game {
 
     takeCardFromReward(index) {
         const card = this.offeredCards[index];
-        if (card) {
-            this.offeredCards = []; // Защита от повторной выдачи при двойном клике.
-            this.player.deck.push({ ...card });
-            const modal = document.getElementById('reward-modal');
-            modal?.__gameModalCleanup?.(false);
-            if (modal) modal.remove();
-            this.closeCardModal();
-            alert(`Карта "${card.name}" добавлена!`);
-            this.continueJourney();
-        }
+        if (!card || this.rewardCheckpointPending || !this.commitCardReward(index)) return false;
+        const modal = document.getElementById('reward-modal');
+        modal?.__gameModalCleanup?.(false);
+        modal?.remove();
+        this.closeCardModal();
+        alert(`Карта "${card.name}" добавлена!`);
+        this.continueJourney();
+        return true;
     }
 
     showCardModal(card, context = 'view', returnFocus = document.activeElement) {
