@@ -480,7 +480,7 @@ const PSYKER_CARDS = {
         type: CARD_TYPES.POWER,
         rarity: CARD_RARITY.RARE,
         cost: 3,
-        description: 'В начале хода наносите 3 урона ВСЕМ врагам',
+        description: 'После действия врага наносите ему 3 урона',
         emoji: '⛈️'
     },
     absoluteControl: {
