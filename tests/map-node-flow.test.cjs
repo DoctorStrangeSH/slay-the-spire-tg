@@ -7,7 +7,7 @@ const vm = require('node:vm');
 const constants = readFileSync(join(__dirname, '../js/config/constants.js'), 'utf8');
 const gameSource = readFileSync(join(__dirname, '../js/systems/Game.js'), 'utf8');
 const { Game, NODE_TYPES } = vm.runInNewContext(
-    constants + '\\n' + gameSource + '\\n({ Game, NODE_TYPES })',
+    constants + '\n' + gameSource + '\n({ Game, NODE_TYPES })',
     { console, Math, Date, JSON, alert() {} }
 );
 
@@ -15,7 +15,6 @@ function fixture(type, { visited = false, hasChronicle = true, floor = 2 } = {})
     const calls = [];
     const current = { id: 'current', floor: 1, type: NODE_TYPES.START };
     const node = { id: 'next-room', floor, type, visited };
-    const alerts = [];
     const game = Object.create(Game.prototype);
     game.currentNodeId = current.id;
     game.floor = 1;
@@ -37,7 +36,7 @@ function fixture(type, { visited = false, hasChronicle = true, floor = 2 } = {})
     ]) {
         game[method] = (...args) => calls.push([method, ...args]);
     }
-    return { game, node, current, calls, alerts, setAlert(fn) { alerts.push(fn); } };
+    return { game, node, current, calls };
 }
 
 test('each reachable room type dispatches to exactly its own room handler', () => {
@@ -89,7 +88,7 @@ test('secret room without Chronicle is rejected before marking the room visited'
     let alertMessage = '';
     const context = { alert(message) { alertMessage = message; } };
     const alertGame = vm.runInNewContext(
-        constants + '\\n' + gameSource + '\\nGame;',
+        constants + '\n' + gameSource + '\nGame;',
         { console, Math, Date, JSON, alert: context.alert }
     );
     const instance = Object.create(alertGame.prototype);
