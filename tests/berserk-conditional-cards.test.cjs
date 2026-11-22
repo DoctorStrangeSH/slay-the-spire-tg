@@ -170,3 +170,32 @@ test('Blood Sacrifice doubles existing strength after its self-damage', () => {
     assert.equal(instance.statusEffects.player.strength, 6);
     assert.equal(instance.exhaustPile.length, 1);
 });
+
+
+test('every Berserker card that costs HP discloses the exact self-damage in its description', () => {
+    const { BERSERK_CARDS } = api();
+    const expectedCosts = {
+        wildLunge: '1 урона',
+        sacrificialStrike: '3 HP',
+        bloodWhirlwind: '2 HP',
+        sacrificialBlade: '5 HP',
+        bloodRitual: '3 HP',
+        bestialInstinct: '1 урона',
+        beastRoar: '1 урона',
+        scarletVeil: '2 HP',
+        lastStand: '5 HP',
+        bloodSacrifice: '5 HP',
+        scarletFog: '4 HP',
+        finalBattle: '3 HP'
+    };
+
+    for (const [cardId, costText] of Object.entries(expectedCosts)) {
+        assert.ok(BERSERK_CARDS[cardId].description.includes(costText),
+            cardId + ' must disclose its self-damage');
+    }
+    assert.deepEqual(
+        Object.keys(BERSERK_CARDS).filter(cardId => BERSERK_CARDS[cardId].selfDamage).sort(),
+        Object.keys(expectedCosts).sort(),
+        'the coverage list must include every self-damaging Berserker card'
+    );
+});
