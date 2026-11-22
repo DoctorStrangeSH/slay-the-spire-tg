@@ -759,4 +759,20 @@ test('merchant contract outcome and collector timing survive a fresh Game restor
     assert.equal(secondReload.continueSavedGame(), true);
     assert.equal(secondReload.player.veiledMerchantDebt, 'defaulted');
     assert.equal(secondReload.canEncounterVeiledMerchantCollector(), false);
+
+    for (const outcome of ['settled', 'declined', 'purchased']) {
+        const scenario = game();
+        scenario.player.veiledMerchantDebt = outcome;
+        scenario.player.veiledMerchantAct = 1;
+        scenario.player.veiledMerchantFloor = 0;
+        scenario.player.veiledMerchantDeals = 1;
+        scenario.runId = 'merchant-' + outcome + '-reload';
+        assert.equal(persistence.save(scenario), true);
+
+        const restoredOutcome = Object.create(Game.prototype);
+        restoredOutcome.runSave = new RunSave(memory);
+        assert.equal(restoredOutcome.runSave.restore(restoredOutcome), true);
+        assert.equal(restoredOutcome.player.veiledMerchantDebt, outcome);
+        assert.equal(restoredOutcome.player.veiledMerchantDeals, 1);
+    }
 });
