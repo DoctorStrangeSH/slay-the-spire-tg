@@ -2577,6 +2577,24 @@ class Game {
         }
     }
 
+    commitShopVisitClose(visit) {
+        if (!visit || visit.closed === true || !this.runSave ||
+            typeof this.runSave.save !== 'function') return false;
+
+        visit.closed = true;
+        try {
+            if (this.runSave.save(this) !== true) {
+                visit.closed = false;
+                return false;
+            }
+            return true;
+        } catch (error) {
+            visit.closed = false;
+            console.warn('Магазин останется открытым: не удалось сохранить выход.', error);
+            return false;
+        }
+    }
+
     openShop() {
         const cards = Object.values(getCardsForHero(this.player.heroId));
         const nodeId = String(this.currentNodeId || '');
@@ -2817,8 +2835,18 @@ class Game {
         leave.textContent = 'Продолжить путь →';
         leave.onclick = () => {
             if (visit.closed) return;
-            visit.closed = true;
-            this.runSave.save(this);
+            if (!this.commitShopVisitClose(visit)) {
+                let warning = content.querySelector('.merchant-save-warning');
+                if (!warning) {
+                    warning = document.createElement('p');
+                    warning.className = 'merchant-save-warning';
+                    warning.setAttribute('role', 'alert');
+                    content.insertBefore(warning, leave);
+                }
+                warning.textContent = 'Не удалось сохранить выход. Магазин останется открыт — попробуйте ещё раз.';
+                leave.textContent = 'Повторить сохранение и выйти →';
+                return;
+            }
             modal.__gameModalCleanup?.(false);
             modal.remove();
             this.continueJourney();
