@@ -1365,13 +1365,21 @@ test('route-aware boss benchmark compares campfire policies while carrying route
                         eliteWins: rows.reduce((sum, item) => sum + item.eliteWins, 0),
                         combatAttempts: rows.reduce((sum, item) => sum + item.combatAttempts, 0),
                         combatWins: rows.reduce((sum, item) => sum + item.combatWins, 0),
-                        firstFailures: rows.filter(item => item.firstFailedEncounter).map(item => ({
-                            type: item.firstFailedEncounter.type,
-                            enemyId: item.firstFailedEncounter.enemyId,
-                            floor: item.firstFailedEncounter.floor,
-                            hpBefore: item.firstFailedEncounter.hpBefore,
-                            enemyHpRemaining: item.firstFailedEncounter.enemyHpRemaining
-                        })),
+                        firstFailureByEncounter: rows.reduce((summary, item) => {
+                            const failure = item.firstFailedEncounter;
+                            if (!failure) return summary;
+                            const key = `${failure.type}:${failure.enemyId}:floor-${failure.floor ?? 'unknown'}`;
+                            summary[key] = (summary[key] || 0) + 1;
+                            return summary;
+                        }, {}),
+                        firstFailureSamples: rows.filter(item => item.firstFailedEncounter)
+                            .slice(0, 3).map(item => ({
+                                type: item.firstFailedEncounter.type,
+                                enemyId: item.firstFailedEncounter.enemyId,
+                                floor: item.firstFailedEncounter.floor,
+                                hpBefore: item.firstFailedEncounter.hpBefore,
+                                enemyHpRemaining: item.firstFailedEncounter.enemyHpRemaining
+                            })),
                         averageRouteScore: Number((rows.reduce((sum, item) => sum + item.routeScore, 0)
                             / Math.max(1, rows.length)).toFixed(2)),
                         averageHpBeforeBoss: bossRows.length
