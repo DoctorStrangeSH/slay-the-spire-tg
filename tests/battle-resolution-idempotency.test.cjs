@@ -7,9 +7,11 @@ const vm = require('node:vm');
 
 const source = readFileSync(join(__dirname, '../js/systems/Game.js'), 'utf8');
 let resultCalls = 0;
+let relicRoll = null;
 const context = {
     document: { getElementById() { return null; } },
     BattleFeedback: { result() { resultCalls++; } },
+    chooseRelic() { return relicRoll; },
     Math,
     Date,
     console
@@ -73,4 +75,36 @@ test('a separate battle can resolve normally after the previous battle ended', (
     assert.equal(game.currentBattle.resultResolved, true);
     assert.equal(game.player.battleWins, 2);
     assert.equal(resultCalls, 2);
+});
+
+test('elite victory grants one relic and one elite reward even if resolved twice', () => {
+    resultCalls = 0;
+    relicRoll = { id: 'ironCrown', name: 'Железная корона', emoji: '👑', description: 'Тест' };
+    const game = makeGame();
+    game.currentBattleIsElite = true;
+
+    game.endBattle(true);
+    game.endBattle(true);
+
+    assert.equal(game.player.eliteWins, 1);
+    assert.equal(game.player.battleWins, 1);
+    assert.equal(game.player.relics.length, 1);
+    assert.equal(game.player.relics[0], 'ironCrown');
+    assert.ok(game.player.gold >= 25);
+    assert.equal(resultCalls, 1);
+    relicRoll = null;
+});
+
+test('elite victory grants fallback gold when the relic pool is exhausted', () => {
+    resultCalls = 0;
+    relicRoll = null;
+    const game = makeGame();
+    game.currentBattleIsElite = true;
+
+    game.endBattle(true);
+
+    assert.equal(game.player.eliteWins, 1);
+    assert.equal(game.player.relics.length, 0);
+    assert.ok(game.player.gold >= 75);
+    assert.equal(resultCalls, 1);
 });
