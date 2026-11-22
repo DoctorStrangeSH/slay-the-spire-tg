@@ -95,8 +95,8 @@ test('failed card selection checkpoint rolls back the deck and keeps the offer a
     game.offeredCards = choices.map(card => ({ ...card }));
 
     assert.equal(game.commitCardReward(0), false);
-    assert.deepEqual(game.player.deck.map(card => card.id), ['strike']);
-    assert.deepEqual(game.offeredCards.map(card => card.id), ['guard', 'bash']);
+    assert.deepEqual(JSON.parse(JSON.stringify(game.player.deck.map(card => card.id))), ['strike']);
+    assert.deepEqual(JSON.parse(JSON.stringify(game.offeredCards.map(card => card.id))), ['guard', 'bash']);
     assert.equal(game.gameState, 'map');
 });
 
@@ -106,8 +106,8 @@ test('failed skip checkpoint does not discard the pending reward', () => {
     game.offeredCards = choices.map(card => ({ ...card }));
 
     assert.equal(game.commitCardReward(), false);
-    assert.deepEqual(game.offeredCards.map(card => card.id), ['guard', 'bash']);
-    assert.deepEqual(game.player.deck.map(card => card.id), ['strike']);
+    assert.deepEqual(JSON.parse(JSON.stringify(game.offeredCards.map(card => card.id))), ['guard', 'bash']);
+    assert.deepEqual(JSON.parse(JSON.stringify(game.player.deck.map(card => card.id))), ['strike']);
 });
 
 test('invalid reward index cannot alter the deck or checkpoint', () => {
@@ -118,5 +118,5 @@ test('invalid reward index cannot alter the deck or checkpoint', () => {
 
     assert.equal(game.commitCardReward(9), false);
     assert.equal(saves, 0);
-    assert.deepEqual(game.player.deck.map(card => card.id), ['strike']);
+    assert.deepEqual(JSON.parse(JSON.stringify(game.player.deck.map(card => card.id))), ['strike']);
 });
